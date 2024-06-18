@@ -87,8 +87,8 @@
                         <ul class="font-light text-sm space-y-2 mt-2">
                             <li><a class="hover:underline" href="http://cpudb.stanford.edu/" target="_blank">Stanford CPU DB</a></li>
                             <li><a class="hover:underline" href="https://chip-dataset.vercel.app/" target="_blank">The CHIP Dataset</a></li>
-                            <li><a class="hover:underline" href="https://www.techpowerup.com/cpu-specs/">TechPowerUp</a></li>
-                            <li><a class="hover:underline" href="https://en.wikichip.org/wiki/WikiChip">WikiChip</a></li>
+                            <li><a class="hover:underline" href="https://www.techpowerup.com/cpu-specs/" target="_blank">TechPowerUp</a></li>
+                            <li><a class="hover:underline" href="https://en.wikichip.org/wiki/WikiChip" target="_blank">WikiChip</a></li>
                         </ul>
                     </div>
                     <div>
