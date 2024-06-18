@@ -67,14 +67,14 @@
                 </div>
             </section>
         </main>
-        <footer class="bg-gray-900 border-t-[12px] border-t-[#A32035] text-center text-white py-8 px-4 sm:px-6 lg:px-8 ">
+        <footer class="bg-black border-t-[12px] border-t-[#A32035] text-center text-white py-8 px-4 sm:px-6 lg:px-8 ">
             <div class="max-w-7xl mx-auto flex justify-between flex-col gap-8 lg:flex-row flex-wrap">
                 <div class="text-left">
                     <h1 class="text-2xl font-bold font-logo"><span class="text-[#A32035]">MIT</span> <span class="text-nowrap">PROCESSOR DB</span></h1>
                     <p class="text-sm">
                         Revealing Technical and Economic Trends in Computer Hardware</p>
                 </div>
-                <div class="flex justify-between text-left flex-col gap-8 lg:gap-20 lg:flex-row  ">
+                <div class="flex justify-between text-left flex-col gap-8 lg:gap-32 lg:flex-row  ">
                     <div>
                         <h4 class="font-bold text-md">Relevant links</h4>
                         <ul class="font-light text-sm space-y-2 mt-2">
@@ -91,13 +91,13 @@
                             <li><a class="hover:underline" href="https://en.wikichip.org/wiki/WikiChip" target="_blank">WikiChip</a></li>
                         </ul>
                     </div>
-                    <div>
+                    <!-- <div>
                         <h4 class="font-bold text-md">Social</h4>
                         <ul class="font-light text-sm space-y-2 mt-2">
                             <li><a class="hover:underline" href="#">Facebook</a></li>
                             <li><a class="hover:underline" href="#">X</a></li>
                         </ul>
-                    </div>
+                    </div> -->
 
 
                 </div>
