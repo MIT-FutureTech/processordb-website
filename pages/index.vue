@@ -78,7 +78,7 @@
                     </div>
                     <div class="flex justify-between text-left flex-col gap-8 lg:gap-32 lg:flex-row  ">
                         <div>
-                            <h4 class="font-bold text-md">Relevant links</h4>
+                            <h4 class="font-medium text-md">Relevant links</h4>
                             <ul class="font-light text-sm space-y-2 mt-2">
                                 <li><a class="hover:underline py-2" href="https://futuretech.mit.edu/" target="_blank">MIT
                                         Futuretech</a></li>
@@ -88,7 +88,7 @@
                             </ul>
                         </div>
                         <div>
-                            <h4 class="font-bold text-md">Data sources</h4>
+                            <h4 class="font-medium text-md">Data sources</h4>
                             <ul class="font-light text-sm space-y-2 mt-2">
                                 <li><a class="hover:underline py-2" href="http://cpudb.stanford.edu/" target="_blank">Stanford
                                         CPU DB</a></li>
@@ -118,7 +118,7 @@
                     </p>
                     <p>
                         <a href="#">
-                            CC-BY-SA
+                            <!-- CC-BY-SA -->
                         </a>
                     </p>
 
