@@ -141,19 +141,19 @@ Our goal is to track and analyze trends in hardware development comprehensively'
 
 const team = [
     {
+        name: 'Neil Thompson',
+        affiliation: 'MIT Futuretech',
+        image: '/neil_thompson_hs.jpeg',
+    },
+    {
         name: 'Jonathan Koomey',
         affiliation: 'Koomey Analytics',
         image: '/koomey_hs.jpg',
     },
     {
-        name: 'Sylvia J Downing',
-        affiliation: 'Azimuth AI',
+        name: 'Sylvia Downing',
+        affiliation: 'Sylvility Consulting',
         image: '/profile-placeholder.png',
-    },
-    {
-        name: 'Neil Thompson',
-        affiliation: 'MIT Futuretech',
-        image: '/neil_thompson_hs.jpeg',
     },
     {
         name: 'Emanuele Del Sozzo',
