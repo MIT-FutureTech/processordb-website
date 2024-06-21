@@ -1,106 +1,111 @@
 <template>
-        <div class="text-gray-800">
-            <div class="hero h-[90vh] flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
-                <div class="flex flex-col items-center justify-center">
-                    <div class="flex flex-col items-center justify-center text-center">
-                        <h1 class="text-3xl sm:text-4xl md:text-7xl font-bold font-logo text-gray-800 [text-shadow:_0px_2px_0_rgb(0_0_0_/_40%)]"><span
-                                class="text-[#A32035] block sm:inline">MIT</span> <span class="text-nowrap">
-                                PROCESSOR DB
-                            </span></h1>
-                        <p class="text-lg sm:text-xl md:text-2xl">
-                            Revealing Technical and Economic Trends in Computer Hardware</p>
-                    </div>
+    <div class="text-gray-800">
+        <div class="hero h-[90vh] flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col items-center justify-center">
+                <div class="flex flex-col items-center justify-center text-center">
+                    <h1
+                        class="text-3xl sm:text-4xl md:text-7xl font-bold font-logo text-gray-800 [text-shadow:_0px_2px_0_rgb(0_0_0_/_40%)]">
+                        <span class="text-[#A32035] block sm:inline">MIT</span> <span class="text-nowrap">
+                            PROCESSOR DB
+                        </span></h1>
+                    <p class="text-lg sm:text-xl md:text-2xl">
+                        Revealing Technical and Economic Trends in Computer Hardware</p>
+                </div>
 
-                    <div
-                        class="flex flex-col items-center justify-center mt-32 bg-[#A32035] text-white py-4 px-4 md:px-8 rounded-full text-sm sm:text-base">
-                        <p class="font-bold">COMING SOON</p>
-                        <p class="uppercase">Launching Late 2024 to Early 2025!</p>
-                    </div>
+                <div
+                    class="flex flex-col items-center justify-center mt-32 bg-[#A32035] text-white py-4 px-4 md:px-8 rounded-full text-sm sm:text-base">
+                    <p class="font-bold">COMING SOON</p>
+                    <p class="uppercase">Launching Late 2024 to Early 2025!</p>
                 </div>
             </div>
-            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32 mb-16">
-                <section>
-                    <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">About</h2>
-                    <p class="text-lg text-left leading-loose mt-4">
-                        We are an interdisciplinary research team dedicated to creating the most comprehensive database of
-                        hardware chips, encompassing CPUs, GPUs, FPGAs, and other domain-specific chips from around the
-                        globe. Our goal is to track and analyze trends in hardware development comprehensively. We
-                        appreciate your feedback, which is vital for maintaining and enhancing the quality of our vibrant
-                        and esteemed community!
-                    </p>
-                </section>
-                <section>
-                    <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">Team</h2>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-16 mt-8">
-                        <!-- <div class="flex items-center flex-wrap justify-center mt-16 gap-x-64 gap-y-16"> -->
-                        <div v-for="(member, index) in team" :key="index">
-                            <div class="flex flex-col items-center justify-center">
-                                <img :src="member.image" class="w-32 h-32 rounded-full" alt="team member">
-                                <p class="font-medium text-gray-700 text-center mt-4">{{ member.name }}</p>
-                                <p class="text-xs text-gray-700 text-nowrap">{{ member.affiliation }}</p>
-                            </div>
+        </div>
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32 mb-16">
+            <section>
+                <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">About</h2>
+                <p class="text-lg text-left leading-loose mt-4">
+                    We are an interdisciplinary research team dedicated to creating the most comprehensive database of
+                    hardware chips, encompassing CPUs, GPUs, FPGAs, and other domain-specific chips from around the
+                    globe. Our goal is to track and analyze trends in hardware development comprehensively. We
+                    appreciate your feedback, which is vital for maintaining and enhancing the quality of our vibrant
+                    and esteemed community!
+                </p>
+            </section>
+            <section>
+                <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">Team</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-16 mt-8">
+                    <!-- <div class="flex items-center flex-wrap justify-center mt-16 gap-x-64 gap-y-16"> -->
+                    <div v-for="(member, index) in team" :key="index">
+                        <div class="flex flex-col items-center justify-center">
+                            <img :src="member.image" class="w-32 h-32 rounded-full" alt="team member">
+                            <p class="font-medium text-gray-700 text-center mt-4">{{ member.name }}</p>
+                            <p class="text-xs text-gray-700 text-nowrap">{{ member.affiliation }}</p>
                         </div>
+                    </div>
 
-                    </div>
-                </section>
-                <section>
-                    <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">Steering committee</h2>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-16 mt-8">
-                        <!-- <div class="flex items-center flex-wrap justify-center mt-16"> -->
-                        <div v-for="(member, index) in steeringCommittee" :key="index">
-                            <div class="flex flex-col items-center justify-center">
-                                <img :src="member.image" class=" w-32 h-32 rounded-full" alt="team member">
-                                <p class="font-medium text-gray-700 text-center mt-4">{{ member.name }}</p>
-                                <p class="text-xs text-gray-700 text-nowrap">{{ member.affiliation }}</p>
-                            </div>
+                </div>
+            </section>
+            <section>
+                <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">Steering committee</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-16 mt-8">
+                    <!-- <div class="flex items-center flex-wrap justify-center mt-16"> -->
+                    <div v-for="(member, index) in steeringCommittee" :key="index">
+                        <div class="flex flex-col items-center justify-center">
+                            <img :src="member.image" class=" w-32 h-32 rounded-full" alt="team member">
+                            <p class="font-medium text-gray-700 text-center mt-4">{{ member.name }}</p>
+                            <p class="text-xs text-gray-700 text-nowrap">{{ member.affiliation }}</p>
                         </div>
+                    </div>
 
-                    </div>
-                </section>
-                <section>
-                    <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">Collaborators</h2>
-                    <div
-                        class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-16 mt-8 place-content-center place-items-center">
-                        <a href="https://futuretech.mit.edu/" target="_blank"><img src="/mitfuturetechlogo.png" class="max-h-[200px]" alt="team member"></a>
-                        <a  href="https://www.koomey.com/analyticspage.html"
-                        target="_blank"><img src="/koomeyanalyticslogo.png" class="max-h-[200px]" alt="team member"></a>
+                </div>
+            </section>
+            <section>
+                <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">Collaborators</h2>
+                <div
+                    class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-16 mt-8 place-content-center place-items-center">
+                    <a href="https://futuretech.mit.edu/" target="_blank" aria-label="MIT Futuretech"><img
+                            src="/mitfuturetechlogo.png" class="max-h-[200px]" alt="team member"></a>
+                    <a href="https://www.koomey.com/analyticspage.html" target="_blank"
+                        aria-label="Koomey Analytics"><img src="/koomeyanalyticslogo.png" class="max-h-[200px]"
+                            alt="team member"></a>
 
+                </div>
+            </section>
+        </main>
+        <footer class="bg-black border-t-[12px] border-t-[#A32035] text-center text-white py-8 px-4 sm:px-6 lg:px-8 ">
+            <div class="max-w-7xl mx-auto flex justify-between flex-col gap-8 lg:flex-row flex-wrap">
+                <div class="text-left">
+                    <h2 class="text-2xl font-bold font-logo"><span class="text-[#A32035]">MIT</span> <span
+                            class="text-nowrap">PROCESSOR DB</span></h2>
+                    <p class="text-sm">
+                        Revealing Technical and Economic Trends in Computer Hardware</p>
+                </div>
+                <div class="flex justify-between text-left flex-col gap-8 lg:gap-32 lg:flex-row  ">
+                    <div>
+                        <h2 class="font-medium text-md">Relevant links</h2>
+                        <ul class="font-light text-sm space-y-2 mt-2">
+                            <li><a class="hover:underline py-2" href="https://futuretech.mit.edu/" target="_blank"
+                                    aria-label="MIT Futuretech">MIT
+                                    Futuretech</a></li>
+                            <li><a class="hover:underline py-2" href="https://www.koomey.com/analyticspage.html"
+                                    target="_blank" aria-label="Koomey Analytics">Koomey Analytics</a></li>
+                        </ul>
                     </div>
-                </section>
-            </main>
-            <footer class="bg-black border-t-[12px] border-t-[#A32035] text-center text-white py-8 px-4 sm:px-6 lg:px-8 ">
-                <div class="max-w-7xl mx-auto flex justify-between flex-col gap-8 lg:flex-row flex-wrap">
-                    <div class="text-left">
-                        <h1 class="text-2xl font-bold font-logo"><span class="text-[#A32035]">MIT</span> <span
-                                class="text-nowrap">PROCESSOR DB</span></h1>
-                        <p class="text-sm">
-                            Revealing Technical and Economic Trends in Computer Hardware</p>
+                    <div>
+                        <h3 class="font-medium text-md">Data sources</h3>
+                        <ul class="font-light text-sm space-y-2 mt-2">
+                            <li><a class="hover:underline py-2" href="http://cpudb.stanford.edu/" target="_blank"
+                                    aria-label="Stanford CPU DB">Stanford
+                                    CPU DB</a></li>
+                            <li><a class="hover:underline py-2" href="https://chip-dataset.vercel.app/" target="_blank"
+                                    aria-label="The CHIP Dataset">The
+                                    CHIP Dataset</a></li>
+                            <li><a class="hover:underline py-2" href="https://www.techpowerup.com/cpu-specs/"
+                                    target="_blank" aria-label="TechPowerUp">TechPowerUp</a></li>
+                            <li><a class="hover:underline py-2" href="https://en.wikichip.org/wiki/WikiChip"
+                                    target="_blank" aria-label="TechPowerUp">WikiChip</a></li>
+                        </ul>
                     </div>
-                    <div class="flex justify-between text-left flex-col gap-8 lg:gap-32 lg:flex-row  ">
-                        <div>
-                            <h4 class="font-medium text-md">Relevant links</h4>
-                            <ul class="font-light text-sm space-y-2 mt-2">
-                                <li><a class="hover:underline py-2" href="https://futuretech.mit.edu/" target="_blank">MIT
-                                        Futuretech</a></li>
-                                <li><a class="hover:underline py-2"
-                                        href="https://www.koomey.com/analyticspage.html"
-                                        target="_blank">Koomey Analytics</a></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 class="font-medium text-md">Data sources</h4>
-                            <ul class="font-light text-sm space-y-2 mt-2">
-                                <li><a class="hover:underline py-2" href="http://cpudb.stanford.edu/" target="_blank">Stanford
-                                        CPU DB</a></li>
-                                <li><a class="hover:underline py-2" href="https://chip-dataset.vercel.app/" target="_blank">The
-                                        CHIP Dataset</a></li>
-                                <li><a class="hover:underline py-2" href="https://www.techpowerup.com/cpu-specs/"
-                                        target="_blank">TechPowerUp</a></li>
-                                <li><a class="hover:underline py-2" href="https://en.wikichip.org/wiki/WikiChip"
-                                        target="_blank">WikiChip</a></li>
-                            </ul>
-                        </div>
-                        <!-- <div>
+                    <!-- <div>
                             <h4 class="font-bold text-md">Social</h4>
                             <ul class="font-light text-sm space-y-2 mt-2">
                                 <li><a class="hover:underline py-2" href="#">Facebook</a></li>
@@ -109,23 +114,23 @@
                         </div> -->
 
 
-                    </div>
-
                 </div>
-                <div class="max-w-7xl mx-auto  border-t border-t-white flex justify-between gap-8 mt-16 pt-8 flex-col sm:flex-row">
-                    <p class="text-center text-sm">
-                        © {{ new Date().getFullYear() }} MIT Processor Database
-                    </p>
-                    <p>
-                        <a href="#">
-                            <!-- CC-BY-SA -->
-                        </a>
-                    </p>
 
-                </div>
-            </footer>
+            </div>
+            <div
+                class="max-w-7xl mx-auto  border-t border-t-white flex justify-between gap-8 mt-16 pt-8 flex-col sm:flex-row">
+                <p class="text-center text-sm">
+                    © {{ new Date().getFullYear() }} MIT Processor Database
+                </p>
+                <p>
+                    <a href="https://accessibility.mit.edu/" target="_blank" aria-label="MIT Acessability">
+                        Accessibility
+                    </a>
+                </p>
 
-        </div>
+            </div>
+        </footer>
+    </div>
 </template>
 
 <script setup>
@@ -137,6 +142,9 @@ useHead({
 dedicated to creating the most comprehensive database of hardware chips, encompassing CPUs, GPUs, FPGAs, and other domain-specific chips from around the globe.\
 Our goal is to track and analyze trends in hardware development comprehensively' }
     ],
+    htmlAttrs: {
+        lang: 'en',
+    },
 })
 
 const team = [
