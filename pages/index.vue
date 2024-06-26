@@ -161,7 +161,7 @@ const team = [
     {
         name: 'Sylvia Downing',
         affiliation: 'Sylvility Consulting',
-        image: '/profile-placeholder.png',
+        image: '/sylviaprofile.jpg'
     },
     {
         name: 'Emanuele Del Sozzo',
