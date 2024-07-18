@@ -36,7 +36,7 @@
                     <!-- <div class="flex items-center flex-wrap justify-center mt-16 gap-x-64 gap-y-16"> -->
                     <div v-for="(member, index) in team" :key="index">
                         <div class="flex flex-col items-center justify-center">
-                            <img :src="member.image" class="w-32 h-32 rounded-full" alt="team member">
+                            <img :src="member.image" class="object-cover object-top w-32 h-32 rounded-full" alt="team member">
                             <p class="font-medium text-gray-700 text-center mt-4">{{ member.name }}</p>
                             <p class="text-xs text-gray-700 text-nowrap">{{ member.affiliation }}</p>
                         </div>
@@ -50,7 +50,7 @@
                     <!-- <div class="flex items-center flex-wrap justify-center mt-16"> -->
                     <div v-for="(member, index) in steeringCommittee" :key="index">
                         <div class="flex flex-col items-center justify-center">
-                            <img :src="member.image" class=" w-32 h-32 rounded-full" alt="team member">
+                            <img :src="member.image" class="object-cover object-top w-32 h-32 rounded-full" alt="team member">
                             <p class="font-medium text-gray-700 text-center mt-4">{{ member.name }}</p>
                             <p class="text-xs text-gray-700 text-nowrap">{{ member.affiliation }}</p>
                         </div>
@@ -186,7 +186,12 @@ const steeringCommittee = [
         name: 'Dave Byrne',
         affiliation: 'Federal Reserve Board',
         image: '/byrne.jpeg',
-    },
+    }, {
+        name: 'Eric Masanet',
+        affiliation: 'UCSB',
+        image: '/Eric-Masanet.jpg',
+        description: 'Eric Masanet holds the Mellichamp Chair in Sustainability Science for Emerging Technologies in the Bren School, with a courtesy appointment in the Department of Mechanical Engineering. At UCSB, he leads the Industrial Sustainability Analysis Laboratory, which develops models, datasets, and roadmaps for decarbonizing the industrial and information technology sectors while achieving broader sustainability and equity benefits. He is also a Faculty Scientist in the Energy Analysis & Environmental Impacts Division at Lawrence Berkeley National Laboratory.'
+    }
 ]
 </script>
 
