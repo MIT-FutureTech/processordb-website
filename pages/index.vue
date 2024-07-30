@@ -191,7 +191,20 @@ const steeringCommittee = [
         affiliation: 'UCSB',
         image: '/Eric-Masanet.jpg',
         description: 'Eric Masanet holds the Mellichamp Chair in Sustainability Science for Emerging Technologies in the Bren School, with a courtesy appointment in the Department of Mechanical Engineering. At UCSB, he leads the Industrial Sustainability Analysis Laboratory, which develops models, datasets, and roadmaps for decarbonizing the industrial and information technology sectors while achieving broader sustainability and equity benefits. He is also a Faculty Scientist in the Energy Analysis & Environmental Impacts Division at Lawrence Berkeley National Laboratory.'
-    }
+    },
+    {
+        name: 'Samuel Naffziger',
+        affiliation: 'AMD',
+        image: '/S_Naffziger_fellow_small.png',
+        description: 'Samuel Naffziger is SVP and Corporate Fellow at AMD responsible for technical strategy and product architecture.   He has been the lead innovator behind many of AMD’s low power features and chiplet architecture products.   He has over 35 years of industry experience with a background in microprocessors and circuit design, starting at Hewlett Packard, moving to Intel and then at AMD since 2006.  He received the BSEE from CalTech in 1988 and MSEE from Stanford in 1993 and holds over 150 US patents in the field.  He has authored 100s of publications and presentations on processors, chiplet architecture and power management and is a Fellow of the IEEE.'
+    },
+    {
+        name: 'Eric J. Dahlen',
+        affiliation: 'Intel',
+        image: '/Eric_Dahlen.jpg',
+        description: 'Graduated from Washington State University with a BSEE in 1988.  Spent over 35 years working for Intel Corporation in a variety of roles ranging from CPU design to chipset architecture, to system validation, to server system performance, to Cloud solution architecture and modeling, and culminating with 10 years as the lead Cloud technologist in the server group.  Retired to focus on parenthood and recreation as of August 2024.'
+    },
+
 ]
 </script>
 
