@@ -1,107 +1,46 @@
 <template>
     <div class="text-gray-800">
-        <div class="hero h-[90vh] flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col items-center justify-center">
-                <div class="flex flex-col items-center justify-center text-center">
-                    <h1
-                        class="text-3xl sm:text-4xl md:text-7xl font-bold font-logo text-gray-800 [text-shadow:_0px_2px_0_rgb(0_0_0_/_40%)]">
-                        <span class="text-[#A32035] block sm:inline">MIT</span> <span class="text-nowrap">
+        <div class="bg-black border-b-4 border-b-[#A32035] sticky top-0 z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <NuxtLink to="/" class="inline-block">
+                    <h1 class="text-lg md:text-2xl font-bold font-logo text-gray-50">
+                        <span class="text-[#A32035] inline">MIT</span> <span class="text-nowrap">
                             PROCESSOR DB
                         </span>
                     </h1>
-                    <p class="text-lg sm:text-xl md:text-2xl">
-                        Revealing Technical and Economic Trends in Computer Hardware</p>
-                </div>
-
-                <div
-                    class="flex flex-col items-center justify-center mt-32 bg-[#A32035] text-white py-4 px-4 md:px-8 rounded-xl text-sm sm:text-base">
-                    <p class="font-bold">COMING SOON</p>
-                    <p class="uppercase">Launching Late 2024 to Early 2025!</p>
-                </div>
-                <div class="mt-6 flex flex-col items-center justify-center relative">
-
-                    <p class="font-medium bg-white/70 p-2 text-center">Stay informed about our launch and other
-                        updates!<br>Sign up to get notified.</p>
-                    <form @submit.prevent="submitEmail" class="flex gap-2">
-                        <input class="border-[#A32035] border text-gray-800 text-sm py-2 px-4 rounded-xl" type="email"
-                            placeholder="Enter your email" v-model="email">
-                        <!-- honeypot -->
-                        <input type="text" name="b_3f8c3e3d3c" tabindex="-1" value="" class="hidden" >
-                        <button class="bg-[#A32035] text-white py-2 px-4 rounded-xl hover:opacity-90"
-                            :disabled="submitting"
-                        >Subscribe</button>
-                    </form>
-                    <p class="text-sm  absolute top-full" v-if="showMessage">
-                        Thanks for subscribing!
-                    </p>
-                </div>
-
-
+                </NuxtLink>
             </div>
         </div>
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32 mb-16">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32 mb-16 mt-16">
             <section>
-                <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">About</h2>
-                <p class="text-lg text-left leading-loose mt-4">
-                    We are an interdisciplinary research team dedicated to creating the most comprehensive database of
-                    hardware chips, encompassing CPUs, GPUs, FPGAs, and other domain-specific chips from around the
-                    globe. Our goal is to track and analyze trends in hardware development comprehensively. We
-                    appreciate your feedback, which is vital for maintaining and enhancing the quality of our vibrant
-                    and esteemed community!
-                </p>
-            </section>
-            <section>
-                <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">
-                    <NuxtLink to="/team" class="inline-block hover:opacity-80">Team</NuxtLink>
-                </h2>
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-16 mt-8">
-                    <!-- <div class="flex items-center flex-wrap justify-center mt-16 gap-x-64 gap-y-16"> -->
-                    <div v-for="(member, index) in team" :key="index">
-                        <NuxtLink :to="`/team#${member.name.replace(' ', '-').toLowerCase()}`"
-                            class="inline-block hover:opacity-80">
-                            <div class="flex flex-col items-center justify-center">
-                                <img :src="member.image" class="object-cover object-top w-32 h-32 rounded-full"
-                                    alt="team member">
-                                <p class="font-medium text-gray-700 text-center mt-4">{{ member.name }}</p>
-                                <p class="text-xs text-[#A32035] text-nowrap">{{ member.affiliation }}</p>
-                            </div>
-                        </NuxtLink>
+                <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">Team</h2>
+                <div v-for="(member, index) in team" :key="index" class="py-16 scroll-mt-16" :id="member.name.replace(' ', '-').toLowerCase()">
+                    <div class="flex flex-col lg:flex-row gap-4" >
+                        <img :src="member.image" class="object-cover object-top w-56 h-56 rounded-lg  shadow-sm"
+                            alt="team member">
+                        <div class="flex flex-col justify-left">
+
+                            <p class="font-medium text-xl text-gray-700">{{ member.name }}</p>
+                            <p class="text-sm text-[#A32035] text-nowrap">{{ member.affiliation }}</p>
+                            <div class="max-w-prose text-sm " v-html="member.description"></div>
+                        </div>
                     </div>
 
                 </div>
             </section>
             <section>
-                <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">
-                    <NuxtLink to="/team#steering-committee" class="inline-block hover:opacity-80">Steering committee
-                    </NuxtLink>
-                </h2>
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-16 mt-8">
-                    <!-- <div class="flex items-center flex-wrap justify-center mt-16"> -->
-                    <div v-for="(member, index) in steeringCommittee" :key="index">
-                        <NuxtLink :to="`/team#${member.name.replace(' ', '-').toLowerCase()}`"
-                            class="inline-block hover:opacity-80">
+                <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl" id="steering-committee">Steering committee</h2>
+                <div v-for="(member, index) in steeringCommittee" :key="index" class="py-16 scroll-mt-16" :id="member.name.replace(' ', '-').toLowerCase()">
+                    <div class="flex flex-col lg:flex-row gap-4" >
+                        <img :src="member.image" class="object-cover object-top w-56 h-56 rounded-lg  shadow-sm"
+                            alt="team member">
+                        <div class="flex flex-col justify-left">
 
-                            <div class="flex flex-col items-center justify-center">
-                                <img :src="member.image" class="object-cover object-top w-32 h-32 rounded-full"
-                                    alt="team member">
-                                <p class="font-medium text-gray-700 text-center mt-4">{{ member.name }}</p>
-                                <p class="text-xs text-[#A32035] text-nowrap">{{ member.affiliation }}</p>
-                            </div>
-                        </NuxtLink>
-
+                            <p class="font-medium text-xl text-gray-700">{{ member.name }}</p>
+                            <p class="text-sm text-[#A32035] text-nowrap">{{ member.affiliation }}</p>
+                            <div class="max-w-prose text-sm " v-html="member.description"></div>
+                        </div>
                     </div>
-
-                </div>
-            </section>
-            <section>
-                <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">Collaborators</h2>
-                <div
-                    class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-16 mt-8 place-content-center place-items-center">
-                    <a href="https://futuretech.mit.edu/" target="_blank" aria-label="MIT Futuretech"><img
-                            src="/mitfuturetechlogo.png" class="max-h-[200px]" alt="team member"></a>
-                    <a href="https://www.koomey.com/analyticspage.html" target="_blank"
-                        aria-label="Koomey Analytics"><img src="/koomeyanalyticslogo.png" class="max-h-[200px]"
-                            alt="team member"></a>
 
                 </div>
             </section>
@@ -181,6 +120,7 @@ Our goal is to track and analyze trends in hardware development comprehensively'
         lang: 'en',
     },
 })
+
 const team = [
     {
         name: 'Neil Thompson',
@@ -195,7 +135,7 @@ const team = [
         name: 'Jonathan Koomey',
         affiliation: 'Koomey Analytics',
         image: '/koomey_hs.jpg',
-        description: `
+        description:`
         <p class="mt-2">Jonathan Koomey is a researcher, author, lecturer, and entrepreneur who is one of the leading international
 experts on the economics of climate solutions and the energy and environmental effects of information
 technology. Dr. Koomey was a lecturer in Earth Systems, School of Earth, Energy, & Environmental Sciences at
@@ -238,7 +178,7 @@ University of California, Berkeley.</p>
         description: `
             <p class="mt-2">Rebecca Wenjing Lyu is a postdoctoral fellow at the MIT Sloan School of Management and at the Initiative on the Digital Economy, MIT. Rebecca’s research focuses on the role of AI, big data, and cloud computing in innovation of firms. Another stream of research of Rebecca’s work is evaluating the contribution of immigrants (entrepreneurs, scientist, etc.) as well as their mobility. Rebecca received her Ph.D. from Tsinghua University (Business Administration).</p>
             `
-    },
+            },
 
 ]
 
@@ -300,36 +240,12 @@ he is a member of the National Academy of Engineering.</p>
     {
         name: 'Daniel Armbrust',
         affiliation: 'Silicon Catalyst',
-        image: '/Daniel Armbrust.png',
+        image : '/Daniel Armbrust.png',
         description: `<p class="mt-2">Daniel Armbrust is co-founder and director of Silicon Catalyst which incubates semiconductor startups.  Its portfolio companies have raised more than $0.5B in venture funding and are valued at over $1.9B.  Armbrust serves as an advisor, board member, board chairman and angel investor for many semiconductor startups.  Daniel is an affiliate with Lawrence Berkeley National Labs and recently was appointed to the Industrial Advisory Committee, which advises the Department of Commerce on the R&D strategy for the CHIPS Act.  He served as President and CEO of the SEMATECH semiconductor consortium and held various positions in semiconductor manufacturing and development over 25 years at IBM.</p>`
 
     }
 
 ]
-
-const email = ref('')
-const submitting = ref(false)
-const showMessage = ref(false)
-function submitEmail() {
-    submitting.value = true
-    $fetch('https://processordb.mit.edu/api/subscribe', {
-        method: 'POST',
-        body: JSON.stringify({
-            email: email.value
-        })
-    }).then(res => {
-        showMessage.value = true
-        setTimeout(() => {
-            showMessage.value = false
-        }, 3000)
-    }).catch(err => {
-        console.log(err)
-    }).finally(() => {
-        submitting.value = false
-    })
-   
-
-}
 </script>
 
 
