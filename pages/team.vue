@@ -243,9 +243,15 @@ he is a member of the National Academy of Engineering.</p>
         image : '/Daniel Armbrust.png',
         description: `<p class="mt-2">Daniel Armbrust is co-founder and director of Silicon Catalyst which incubates semiconductor startups.  Its portfolio companies have raised more than $0.5B in venture funding and are valued at over $1.9B.  Armbrust serves as an advisor, board member, board chairman and angel investor for many semiconductor startups.  Daniel is an affiliate with Lawrence Berkeley National Labs and recently was appointed to the Industrial Advisory Committee, which advises the Department of Commerce on the R&D strategy for the CHIPS Act.  He served as President and CEO of the SEMATECH semiconductor consortium and held various positions in semiconductor manufacturing and development over 25 years at IBM.</p>`
 
+    },
+    {
+        name: 'Joshua R. Smith',
+        affiliation: 'University of Washington',
+        image: '/Josh143_V2_xl-headcrop.jpg',
+        description: `<p class="mt-2">Joshua R. Smith is the Milton and Delia Zeutschel Professor, jointly appointed in the Allen School of Computer Science, and in the Department of Electrical and Computer Engineering at the University of Washington, Seattle. He leads the University of Washington's Amazon Science Hub, a multi-disciplinary research center that supports research in areas of mutual interest to UW and Amazon. He also leads the Sensor Systems lab, which focuses on inventing new sensor systems, devising new ways to power and communicate with them, and developing algorithms for using them. For over twenty years he has been working on battery-free sensing systems that operate using energy harvested from RF signals. This work includes RF energy harvesting, wireless power transfer, and ultra-low power communication. He created the Wireless Identification and Sensing Platform (WISP), an open source platform for research on RF-powered sensing systems.  He has also introduced new low power communication techniques, including Ambient Backscatter and communication via Modulated Johnson Noise. Ambient Backscatter systems are often powered by ambient RF signals, and communicate by reflecting those same pre-existing RF signals. His work on WISP and energy harvesting systems led him to begin looking at the historical scaling of the energy efficiency of digital electronics, in order to explain the progress to date on battery-free, energy harvesting systems, as well as make predictions about their future. He is a co-founder with colleagues and former students of Waveworks (formerly Jeeva Wireless), Wibotic, and Proprio. He is a Fellow of the IEEE and a Fellow of the National Academy of Inventors.</p>`
     }
 
-]
+].sort((a, b) => a.name.localeCompare(b.name))
 </script>
 
 
