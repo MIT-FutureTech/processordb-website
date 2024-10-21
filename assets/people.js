@@ -78,7 +78,7 @@ export const steeringCommittee = [
     },
     {
         name: 'Eric Dahlen',
-        affiliation: '',
+        affiliation: 'Independent Consultant',
         image: '/Eric_Dahlen.jpg',
         description: 'Eric Dahlen retired from Intel Corporation as a Senior Principal Engineer after a 35-year career.  His primary role for the last 10 years has been chief technologist for Cloud in the data center group, with a secondary role providing technical leadership on server and data center sustainability.  Areas of expertise include CPU component architecture, server system and performance architecture, I/O interface technology, memory technology, and cloud solutions.  Eric is also a father and an avid golfer.'
     },
@@ -135,13 +135,13 @@ he is a member of the National Academy of Engineering.</p>
 
     {
         name: 'Joseph Schutz',
-        affiliation: '',
+        affiliation: 'Independent Consultant',
         image: '/joseph_schutz.png',
         description: `<p class="mt-2">Joseph Schutz started at Intel in 1981 and developed ten progressively more sophisticated processors through 2005, after which he joined Intel Labs as its director. His expertise spans from device physics to system software.</p>`
     },
     {
         name: 'Bill Maimone',
-        affiliation: '',
+        affiliation: 'Independent Consultant',
         image: '/bill_maimone.jpg',
         description: `<p class="mt-2">Bill Maimone has BS and MS degrees from MIT in Computer Science and Engineering, and a BS in Journalism from MIT. Bill's 1986 Masters thesis explored how to make efficient use of multiple CPUs on a single chip well before that became common practice.  Though his work shifted after graduation from hardware to software, in each of his industry software positions he worked closely with hardware vendors including Intel, AMD and Nvidia to improve real-world performance and power efficiency. In the past, he's worked at Oracle, Ingres, Anaplan, and Heavy AI.</p>`
     },
