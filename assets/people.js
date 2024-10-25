@@ -78,7 +78,7 @@ export const steeringCommittee = [
     },
     {
         name: 'Eric Dahlen',
-        affiliation: '',
+        affiliation: 'Independent Consultant',
         image: '/Eric_Dahlen.jpg',
         description: 'Eric Dahlen retired from Intel Corporation as a Senior Principal Engineer after a 35-year career.  His primary role for the last 10 years has been chief technologist for Cloud in the data center group, with a secondary role providing technical leadership on server and data center sustainability.  Areas of expertise include CPU component architecture, server system and performance architecture, I/O interface technology, memory technology, and cloud solutions.  Eric is also a father and an avid golfer.'
     },
@@ -135,17 +135,31 @@ he is a member of the National Academy of Engineering.</p>
 
     {
         name: 'Joseph Schutz',
-        affiliation: '',
+        affiliation: 'Independent Consultant',
         image: '/joseph_schutz.png',
         description: `<p class="mt-2">Joseph Schutz started at Intel in 1981 and developed ten progressively more sophisticated processors through 2005, after which he joined Intel Labs as its director. His expertise spans from device physics to system software.</p>`
     },
     {
         name: 'Bill Maimone',
-        affiliation: '',
+        affiliation: 'Independent Consultant',
         image: '/bill_maimone.jpg',
         description: `<p class="mt-2">Bill Maimone has BS and MS degrees from MIT in Computer Science and Engineering, and a BS in Journalism from MIT. Bill's 1986 Masters thesis explored how to make efficient use of multiple CPUs on a single chip well before that became common practice.  Though his work shifted after graduation from hardware to software, in each of his industry software positions he worked closely with hardware vendors including Intel, AMD and Nvidia to improve real-world performance and power efficiency. In the past, he's worked at Oracle, Ingres, Anaplan, and Heavy AI.</p>`
-    
-
+    },
+    {
+        name: 'Shekhar Borkar',
+        affiliation: 'Qualcomm Inc.',
+        image: '/ShekharBorkar.jpg',
+        description: `<p class="mt-2">Shekhar Borkar is Sr. Director of Technology at Qualcomm Inc. He started his career with Intel Corp. since 1981, worked on the 8051 family of microcontrollers, supercomputers, high performance, low power digital circuits research, and served as the principal investigator of several DARPA & DOE funded projects. He has authored over 100 peer reviewed publications in conferences and journals, over 60 invited papers and keynotes, five book chapters, and has more than 60 issued patents. Shekhar served as the TPC chairman of VLSI Circuit Symposium in 2002, and as the conference chairman in 2004. Shekhar was an adjunct faculty at Oregon Graduate Institute, and taught a graduate course on VLSI design for more than 10 years. His research interests are low power, high performance digital circuits and system level optimization. Shekhar holds M.Sc. in Physics from University of Bombay in 1979, and MSEE from University of Notre Dame in 1981. </p>`
+    },
+    {
+        name: 'Rob Aitken',
+        affiliation: 'US Department of Commerce',
+        image: '/aitken.jpg',
+        description: `<p class="mt-2">Rob Aitken is a Program Manager with the National Advanced Packaging Manufacturing Program, part of the CHIPS R&D Office at the US Department of Commerce, where he is focused on EDA for next generation packaging. Previously, he worked on technology strategy at Synopsys, was an Arm Fellow responsible for technology direction at Arm Research, and worked on various aspects of chip design at Artisan, Agilent, and HP. He was involved in early efforts in design-technology co-optimization, design-for-test/reliability/manufacturability, statistical process variation, emerging memory technology, and secure design for the IoT. He has worked on 15+ Moore's law nodes, holds 50+ US patents and has published over 100 technical papers on a wide range of topics. He holds a Ph.D. from McGill University in Canada. Dr. Aitken is an IEEE Fellow and serves on a number of conference and workshop committees, including Program Co-Chair for Hot Chips 2024.</p>`
     }
 
-].sort((a, b) => a.name.localeCompare(b.name))
+].sort((a, b) => {
+    const lastNameA = a.name.split(" ").slice(-1)[0];
+    const lastNameB = b.name.split(" ").slice(-1)[0];
+    return lastNameA.localeCompare(lastNameB);
+  });

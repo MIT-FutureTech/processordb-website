@@ -3,9 +3,11 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ["@nuxtjs/tailwindcss"],
   css: ["@/assets/css/main.css"],
+
   tailwindcss: {
     exposeConfig: true,
   },
+
   app: {
     head: {
       charset: 'utf-8',
@@ -14,5 +16,7 @@ export default defineNuxtConfig({
         { rel: "icon", type: "image/png", href: "/cpu.png",  sizes:"32x32" }
       ]
     }
-  }
+  },
+
+  compatibilityDate: "2024-10-15"
 })

@@ -54,7 +54,7 @@
                 <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">
                     <NuxtLink to="/team" class="inline-block hover:opacity-80">Team</NuxtLink>
                 </h2>
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-16 mt-8">
+                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-16 mt-8">
                     <!-- <div class="flex items-center flex-wrap justify-center mt-16 gap-x-64 gap-y-16"> -->
                     <div v-for="(member, index) in team" :key="index">
                         <NuxtLink :to="`/team#${member.name.replace(' ', '-').toLowerCase()}`"
@@ -75,7 +75,7 @@
                     <NuxtLink to="/team#steering-committee" class="inline-block hover:opacity-80">Steering committee
                     </NuxtLink>
                 </h2>
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-16 mt-8">
+                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-16 mt-8">
                     <!-- <div class="flex items-center flex-wrap justify-center mt-16"> -->
                     <div v-for="(member, index) in steeringCommittee" :key="index">
                         <NuxtLink :to="`/team#${member.name.replace(' ', '-').toLowerCase()}`"
