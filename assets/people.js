@@ -156,6 +156,12 @@ he is a member of the National Academy of Engineering.</p>
         affiliation: 'US Department of Commerce',
         image: '/aitken.jpg',
         description: `<p class="mt-2">Rob Aitken is a Program Manager with the National Advanced Packaging Manufacturing Program, part of the CHIPS R&D Office at the US Department of Commerce, where he is focused on EDA for next generation packaging. Previously, he worked on technology strategy at Synopsys, was an Arm Fellow responsible for technology direction at Arm Research, and worked on various aspects of chip design at Artisan, Agilent, and HP. He was involved in early efforts in design-technology co-optimization, design-for-test/reliability/manufacturability, statistical process variation, emerging memory technology, and secure design for the IoT. He has worked on 15+ Moore's law nodes, holds 50+ US patents and has published over 100 technical papers on a wide range of topics. He holds a Ph.D. from McGill University in Canada. Dr. Aitken is an IEEE Fellow and serves on a number of conference and workshop committees, including Program Co-Chair for Hot Chips 2024.</p>`
+    },
+    {
+        name: 'Jeff Wilcox',
+        affiliation: 'Intel',
+        image: '/Jeff.jpg',        
+        description: `<p class="mt-2">Jeff is a Senior Fellow at Intel Corporation and leads the team responsible for the architecture, power, performance and power management firmware for all client SOC products.  He returned to Intel in 2022 from Apple where he was the Director of Mac System Architecture.  Over the course of his 30 year career he has led many innovative SOC and chipset initiatives including the first mobile optimized Centrino platform, the first Atom platform, and the Mac transition to Apple Silicon. </p>`
     }
 
 ].sort((a, b) => {
