@@ -8,7 +8,7 @@
       </div>
      
     <!-- SoC Information -->
-    <section class="mb-8">
+    <section class="mb-8 text-sm">
       <h1 class="text-3xl font-bold mb-4">{{ soc.name }}</h1>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- General SoC Info -->
@@ -38,7 +38,7 @@
     </section>
 
     <!-- Processors -->
-    <section class="mb-8">
+    <section class="mb-8 text-sm">
       <h2 class="text-2xl font-bold mb-4">Processors</h2>
       <div class="space-y-6">
         <!-- CPU Section -->
@@ -87,7 +87,7 @@
     <!-- Benchmarks -->
     <section class="mb-8">
       <h2 class="text-2xl font-bold mb-4">Benchmarks</h2>
-      <table class="min-w-full bg-white shadow rounded-lg">
+      <table class="min-w-full bg-white shadow rounded-lg text-left text-sm">
         <thead>
           <tr>
             <th class="py-2 px-4 border-b">Benchmark Name</th>
@@ -110,7 +110,7 @@
     <!-- Economics -->
     <section>
       <h2 class="text-2xl font-bold mb-4">Economic Data</h2>
-      <table class="min-w-full bg-white shadow rounded-lg">
+      <table class="min-w-full bg-white shadow rounded-lg text-left text-sm">
         <thead>
           <tr>
             <th class="py-2 px-4 border-b">Year</th>
