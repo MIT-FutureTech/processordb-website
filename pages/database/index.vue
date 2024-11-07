@@ -25,11 +25,11 @@ const { data } = await useFetch(
     key: 'socs'
   }
 )
-console.log(data.value.data)
+
 SoCs.value = data.value.data
 const filterData = ref(data.value.data)
+
 function setFilteredData(data) {
   filterData.value = data
-  console.log('asdkasjdjaskldj')
 }
 </script>

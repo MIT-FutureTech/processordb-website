@@ -168,13 +168,25 @@ watch(
   }
 )
 
+function capitalizeFirstLetter(str) {
+  if (str && str.length > 0) {
+    return str.charAt(0).toUpperCase() + str.slice(1)
+  }
+  return str;
+}
+
 // Ensure chart is only drawn after DOM is ready
 onMounted(() => {
   plotReady.value = true
+
   // Populate manufacturers list
   manufacturers.value = Array.from(
-    new Set(props.data.map((soc) => soc.manufacturer_name).filter(Boolean))
+  new Set(
+    props.data
+      .map((soc) => capitalizeFirstLetter(soc.manufacturer_name)) // Capitalize the first letter
+      .filter(Boolean)
   )
+);
   drawChart()
 })
 
@@ -188,7 +200,7 @@ function drawChart() {
     // Apply manufacturer filter
     if (
       selectedManufacturer.value &&
-      soc.manufacturer_name !== selectedManufacturer.value
+      soc.manufacturer_name.toLowerCase() !== selectedManufacturer.value.toLowerCase()
     ) {
       return
     }
