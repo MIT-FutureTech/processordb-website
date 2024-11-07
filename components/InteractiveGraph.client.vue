@@ -1,75 +1,82 @@
 <template>
   <div class="scatter-plot">
-    <!-- Processor Type Selection -->
-    <div class="mb-4">
-      <label class="font-bold mr-2">Processor Types:</label>
-      <label v-for="(dataset, index) in datasets" :key="index" class="mr-4">
-        <input
-          type="checkbox"
-          v-model="selectedDatasets"
-          :value="dataset"
-          class="mr-1"
-        />
-        {{ dataset }}
-      </label>
-    </div>
+    <div class="flex justify-start gap-4 items-center mb-4">
 
-    <!-- Manufacturer Filter -->
-    <div class="mb-4">
-      <label class="font-bold mr-2">Manufacturer:</label>
-      <select v-model="selectedManufacturer" class="border rounded px-2 py-1">
-        <option value="">All</option>
-        <option
-          v-for="manufacturer in manufacturers"
-          :key="manufacturer"
-          :value="manufacturer"
-        >
-          {{ manufacturer }}
-        </option>
-      </select>
-    </div>
+   <!-- Processor Type Selection -->
+<div class="mb-4">
+  <label class="font-semibold text-gray-700 block mb-2">Processor Types</label>
+  <div class="flex space-x-2">
+    <label
+      v-for="(dataset, index) in datasets"
+      :key="index"
+      class="flex items-center border rounded px-3 py-1 cursor-pointer transition-colors hover:bg-gray-200"
+      :class="{'bg-[#A32035] text-white': selectedDatasets.includes(dataset)}"
+    >
+      <input
+        type="checkbox"
+        v-model="selectedDatasets"
+        :value="dataset"
+        class="hidden"
+      />
+      <span>{{ dataset }}</span>
+    </label>
+  </div>
+</div>
 
-    <!-- X Axis Selection -->
-    <div class="mb-4">
-      <label class="font-bold mr-2">X-Axis:</label>
-      <select v-model="xAxis" class="border rounded px-2 py-1">
-        <option
-          v-for="option in xAxisOptions"
-          :key="option.value"
-          :value="option"
-        >
-          {{ option.label }}
-        </option>
-      </select>
-    </div>
+<!-- Manufacturer Filter -->
+<div class="mb-4">
+  <label class="font-semibold text-gray-700 block mb-2">Manufacturer</label>
+  <select
+    v-model="selectedManufacturer"
+    class="border rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring"
+  >
+    <option value="">All</option>
+    <option v-for="manufacturer in manufacturers" :key="manufacturer" :value="manufacturer">
+      {{ manufacturer }}
+    </option>
+  </select>
+</div>
 
-    <!-- Y Axis Selection -->
-    <div class="mb-4">
-      <label class="font-bold mr-2">Y-Axis:</label>
-      <select v-model="yAxis" class="border rounded px-2 py-1">
-        <option
-          v-for="option in yAxisOptions"
-          :key="option.value"
-          :value="option"
-        >
-          {{ option.label }}
-        </option>
-      </select>
-    </div>
+<!-- X Axis Selection -->
+<div class="mb-4">
+  <label class="font-semibold text-gray-700 block mb-2">X-Axis</label>
+  <select
+    v-model="xAxis"
+    class="border rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring"
+  >
+    <option v-for="option in xAxisOptions" :key="option.value" :value="option">
+      {{ option.label }}
+    </option>
+  </select>
+</div>
 
-    <!-- Color Categorization Selection -->
-    <div class="mb-4">
-      <label class="font-bold mr-2">Color By:</label>
-      <select v-model="colorBy" class="border rounded px-2 py-1">
-        <option
-          v-for="option in colorOptions"
-          :key="option.value"
-          :value="option"
-        >
-          {{ option.label }}
-        </option>
-      </select>
-    </div>
+<!-- Y Axis Selection -->
+<div class="mb-4">
+  <label class="font-semibold text-gray-700 block mb-2">Y-Axis</label>
+  <select
+    v-model="yAxis"
+    class="border rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring"
+  >
+    <option v-for="option in yAxisOptions" :key="option.value" :value="option">
+      {{ option.label }}
+    </option>
+  </select>
+</div>
+
+<!-- Color Categorization Selection -->
+<div class="mb-4">
+  <label class="font-semibold text-gray-700 block mb-2">Color By</label>
+  <select
+    v-model="colorBy"
+    class="border rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring"
+  >
+    <option v-for="option in colorOptions" :key="option.value" :value="option">
+      {{ option.label }}
+    </option>
+  </select>
+</div>
+</div>
+
 
     <!-- Plotly Chart -->
     <client-only>
@@ -140,9 +147,22 @@ const manufacturers = ref([])
 const traces = shallowRef([])
 const layout = shallowRef({})
 
+// 
+watch(props.data.value, () => {
+  plotReady.value = true
+  // Populate manufacturers list
+  manufacturers.value = Array.from(
+    new Set(props.data.map((soc) => soc.manufacturer_name).filter(Boolean))
+  )
+  drawChart()
+}, {
+  deep: true
+})
+
+ 
 // Watcher for changes
 watch(
-  [selectedDatasets, xAxis, yAxis, colorBy, selectedManufacturer],
+  [ selectedDatasets, xAxis, yAxis, colorBy, selectedManufacturer],
   () => {
     drawChart()
   }

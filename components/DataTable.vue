@@ -1,13 +1,13 @@
 <template>
     <div>
-        
+
         <div class="flex justify-end  gap-2 items-center mb-4 text-xs">
-            <input type="text" v-model="filters.manufacturer" placeholder="Filter by Manufacturer"
-                class="border p-2 mr-2" />
+            <input type="text" v-model="filters.manufacturer" placeholder="Search processors" class="border p-2 mr-2" />
             <select v-model="filters.processorType" class="border p-2 mr-2">
-                <option value="">All</option>
+                <option value="">All processor types</option>
                 <option value="CPU">CPU</option>
                 <option value="GPU">GPU</option>
+                <option value="FPGA">FPGA</option>
             </select>
             <div class="mr-4">
                 Showing {{ displayedSocs.length }} of {{ pagination.totalRecords }} records
@@ -39,9 +39,14 @@
                         <DropdownMenuLabel>Columns</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem v-for="column in allColumns" :key="column.value">
-                            <label class="block">
-                                <input type="checkbox" v-model="selectedColumns" :value="column.value" />
-                                {{ column.label }}
+                            <label class="flex items-center gap-2 cursor-pointer"
+                                :class="{ '': selectedColumns.includes(column.value) }">
+                                <input type="checkbox" class="accent-[#A32035] text-white" v-model="selectedColumns"
+                                    :value="column.value" />
+                                <span class="">
+                                    {{ column.label }}
+
+                                </span>
                             </label>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -54,7 +59,7 @@
         <table class="table-auto w-full border-collapse border border-gray-200 text-xs text-left">
             <thead>
                 <tr>
-                    <th v-for="column in displayedColumns" :key="column.value" class="border px-2 py-0.5 cursor-pointer"
+                    <th v-for="column in displayedColumns" :key="column.value" class="border px-2 py-1 cursor-pointer"
                         @click="sortBy(column.value)">
                         {{ column.label }}
                         <span v-if="sortField === column.value">
@@ -65,41 +70,74 @@
             </thead>
             <tbody>
                 <tr class="hover:bg-[#F1F5F9] even:bg-gray-50" v-for="soc in displayedSocs" :key="soc.soc_id">
-                    <td v-if="selectedColumns.includes('manufacturer_name')" class="border px-2 py-0.5">
-                        {{ soc.manufacturer_name }}
+                    <td v-if="selectedColumns.includes('manufacturer_name')" class="border px-2 py-1">
+                        <button class="hover:underline" @click="filters.manufacturer = soc.manufacturer_name">
+                            {{ soc.manufacturer_name }}
+                        </button>
                     </td>
-                    <td v-if="selectedColumns.includes('soc_name')" class="border px-2 py-0.5">
-                        {{ soc.soc_name }}
-                    </td>
-                    <td v-if="selectedColumns.includes('processor_type')" class="border px-2 py-0.5">
+                    <td v-if="selectedColumns.includes('processor_type')" class="border px-2 py-1">
                         <div v-for="processor in soc.processors" :key="processor.model">
-                            {{ processor.processor_type }}
+                            <button @click="filters.processorType = processor.processor_type">
+                                {{ processor.processor_type }}
+                            </button>
                         </div>
                     </td>
-                    <td v-if="selectedColumns.includes('processor_family')" class="border px-2 py-0.5">
+                    <td v-if="selectedColumns.includes('processor_family')" class="border px-2 py-1">
                         <div v-for="processor in soc.processors" :key="processor.family">
                             {{ processor.family || 'N/A' }}
                         </div>
                     </td>
-                    <td v-if="selectedColumns.includes('model')" class="border px-2 py-0.5">
+                    <td v-if="selectedColumns.includes('model')" class="border px-2 py-1">
                         <div v-for="processor in soc.processors" :key="processor.model">
                             {{ processor.model || 'N/A' }}
                         </div>
                     </td>
-                    <td v-if="selectedColumns.includes('release_date')" class="border px-2 py-0.5">
+                    <td v-if="selectedColumns.includes('release_date')" class="border px-2 py-1">
                         {{ formatDate(soc.release_date) }}
                     </td>
-                    <td v-if="selectedColumns.includes('clock')" class="border px-2 py-0.5">
+                    <td v-if="selectedColumns.includes('clock')" class="border px-2 py-1">
                         <div v-for="processor in soc.processors" :key="processor.clock">
-                            {{ processor.clock ? processor.clock + ' GHz' : 'N/A' }}
+                            {{ processor.clock ? processor.clock + ' MHz' : 'N/A' }}
                         </div>
                     </td>
-                    <td v-if="selectedColumns.includes('tdp')" class="border px-2 py-0.5">
+                    <td v-if="selectedColumns.includes('tdp')" class="border px-2 py-1">
                         <div v-for="processor in soc.processors" :key="processor.tdp">
                             {{ processor.tdp ? processor.tdp + ' W' : 'N/A' }}
                         </div>
                     </td>
-                    <td v-if="selectedColumns.includes('details')" class="border px-2 py-0.5 text-[#A32035] hover:underline">
+                    <td v-if="selectedColumns.includes('die_sizes')" class="border px-2 py-1">
+                        <div v-for="processor in soc.processors" :key="processor.die_sizes">
+                            {{ soc.die_sizes ? soc.die_sizes + ' mm^2' : 'N/A' }}
+                        </div>
+                    </td>
+
+                    <td v-if="selectedColumns.includes('total_transistor_count')" class="border px-2 py-1">
+                        <div v-for="processor in soc.processors" :key="processor.total_transistor_count">
+                            {{ soc.total_transistor_count ? soc.total_transistor_count + ' million' : 'N/A' }}
+                        </div>
+                    </td>
+                    <td v-if="selectedColumns.includes('lithography')" class="border px-2 py-1">
+                        <div v-for="processor in soc.processors" :key="processor.lithography">
+                            {{ processor.lithography ? processor.lithography + ' nm' : 'N/A' }}
+                        </div>
+                    </td>
+                    <td v-if="selectedColumns.includes('fp64_ops')" class="border px-2 py-1">
+                        <div v-for="processor in soc.processors" :key="processor.fp64_ops">
+                            {{ processor.fp64_ops ? processor.fp64_ops + ' GFLOPS' : 'N/A' }}
+                        </div>
+                    </td>
+                    <td v-if="selectedColumns.includes('fp32_ops')" class="border px-2 py-1">
+                        <div v-for="processor in soc.processors" :key="processor.fp32_ops">
+                            {{ processor.fp32_ops ? processor.fp32_ops + ' GFLOPS' : 'N/A' }}
+                        </div>
+                    </td>
+                    <td v-if="selectedColumns.includes('fp16_ops')" class="border px-2 py-1">
+                        <div v-for="processor in soc.processors" :key="processor.fp16_ops">
+                            {{ processor.fp16_ops ? processor.fp16_ops + ' GFLOPS' : 'N/A' }}
+                        </div>
+                    </td>
+                    <td v-if="selectedColumns.includes('details')"
+                        class="border px-2 py-1 text-[#A32035] hover:underline">
                         <NuxtLink :to="`/database/soc/${soc.soc_id}`">Details</NuxtLink>
                     </td>
                 </tr>
@@ -125,6 +163,9 @@ const props = defineProps({
         required: true,
     }
 })
+
+
+const emit = defineEmits(['filteredData'])
 
 
 // State for SoCs
@@ -157,17 +198,23 @@ const filters = ref({
 // State for selected columns
 const allColumns = [
     { label: 'Manufacturer', value: 'manufacturer_name' },
-    { label: 'SoC Name', value: 'soc_name' },
+    // { label: 'SoC', value: 'soc_name' },
     { label: 'Processor Type', value: 'processor_type' },
     { label: 'Processor Family', value: 'processor_family' },
     { label: 'Model', value: 'model' },
     { label: 'Release Date', value: 'release_date' },
-    { label: 'Clock (GHz)', value: 'clock' },
+    { label: 'Clock (MHz)', value: 'clock' },
     { label: 'TDP (W)', value: 'tdp' },
+    { label: 'Die Size (mm^2)', value: 'die_sizes', hiddenBydefault: true },
+    { label: 'Transistors (million)', value: 'total_transistor_count', hiddenBydefault: true },
+    { label: 'Lithography (nm)', value: 'lithography', hiddenBydefault: true },
+    { label: 'FP64 Operations (GFLOPS)', value: 'fp64_ops', hiddenBydefault: true },
+    { label: 'FP32 Operations (GFLOPS)', value: 'fp32_ops', hiddenBydefault: true },
+    { label: 'FP16 Operations (GFLOPS)', value: 'fp16_ops', hiddenBydefault: true },
     { label: 'Details', value: 'details' },
 ]
 
-const selectedColumns = ref(allColumns.map((column) => column.value))
+const selectedColumns = ref(allColumns.filter((column) => !column.hiddenBydefault).map((column) => column.value))
 
 // Computed property for displayed columns
 const displayedColumns = computed(() =>
@@ -177,6 +224,7 @@ const displayedColumns = computed(() =>
 // Computed property for displayed SoCs
 const displayedSocs = ref([])
 
+
 // Function to apply filters, sorting, and pagination
 const applyFiltersAndSorting = () => {
     let filteredSocs = socs.value
@@ -184,12 +232,11 @@ const applyFiltersAndSorting = () => {
     // Apply filters
     if (filters.value.manufacturer) {
         filteredSocs = filteredSocs.filter((soc) =>
-            soc.manufacturer_name
-                ?.toLowerCase()
-                .includes(filters.value.manufacturer.toLowerCase()) ||
-            soc.name?.toLowerCase().includes(filters.value.manufacturer.toLowerCase()) 
-        )
+            soc.manufacturer_name?.toLowerCase().includes(filters.value.manufacturer.toLowerCase()) ||
+            soc.soc_name?.toLowerCase().includes(filters.value.manufacturer.toLowerCase())
+        );
     }
+
     if (filters.value.processorType) {
         filteredSocs = filteredSocs.filter((soc) => {
             if (soc.processors == null) return false
@@ -203,16 +250,25 @@ const applyFiltersAndSorting = () => {
         )
     }
 
+    
+    
     // Apply sorting (case-insensitive)
     if (sortField.value) {
         filteredSocs.sort((a, b) => {
-            const aValue = getFieldValue(a, sortField.value).toLowerCase()
-            const bValue = getFieldValue(b, sortField.value).toLowerCase()
-            if (aValue < bValue) return sortOrder.value === 'asc' ? -1 : 1
-            if (aValue > bValue) return sortOrder.value === 'asc' ? 1 : -1
-            return 0
-        })
+            const aValue = getFieldValue(a, sortField.value);
+            const bValue = getFieldValue(b, sortField.value);
+
+            // Try to parse values as numbers
+            const aParsed = isNaN(parseFloat(aValue)) ? aValue.toString().toLowerCase() : parseFloat(aValue);
+            const bParsed = isNaN(parseFloat(bValue)) ? bValue.toString().toLowerCase() : parseFloat(bValue);
+
+            if (aParsed < bParsed) return sortOrder.value === 'asc' ? -1 : 1;
+            if (aParsed > bParsed) return sortOrder.value === 'asc' ? 1 : -1;
+            return 0;
+        });
     }
+
+
 
     // Update total records and pages
     pagination.value.pageSize = Number(pagination.value.pageSize)
