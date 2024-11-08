@@ -59,59 +59,83 @@
 
           <!-- CPU Section -->
           <div v-for="cpu in cpus" :key="cpu.cpu_id" class="bg-white shadow rounded-lg p-6">
-            <h3 class="text-xl font-semibold mb-4">CPU: {{ cpu.model }}</h3>
+            <h3 class="text-xl font-bold mb-4">CPU {{ cpu.model }}</h3>
             <div class="flex space-x-4">
               <!-- Left column -->
               <ul class="space-y-2 flex-1">
-                <li><strong>Processor Family:</strong> {{ cpu.family || '-' }}</li>
-                <li><strong>Processor Code Name:</strong> {{ cpu.code_name || '-' }}</li>
+                <!-- General Information -->
+                <li><strong>Processor Family:</strong> {{ soc.name.split(' ')[0] || '-' }}</li>
+                <li><strong>Processor Code Name:</strong> {{ soc.name.split(' ')[1] || '-' }}</li>
                 <li><strong>Microarchitecture:</strong> {{ cpu.microarchitecture || '-' }}</li>
-                <li><strong>Processor Model:</strong> {{ cpu.model || '-' }}</li>
-                <li><strong>Processor Clock (MHz):</strong> {{ cpu.clock || '-' }}</li>
-                <li><strong>Processor Clock - Max - (MHz):</strong> {{ cpu.max_clock || '-' }}</li>
-                <li><strong>Threads/Core:</strong> {{ cpu.threads_per_core || '-' }}</li>
-                <li><strong>Cores:</strong> {{ cpu.core_count || '-' }}</li>
+                <li><strong>Processor Model:</strong> {{ soc.name.split(' ')[2] || '-' }}</li>
+                <li><strong>Processor Clock (MHz):</strong> {{ cpu.core_info.clock || '-' }}</li>
+                <li><strong>Processor Clock - Max - (MHz):</strong> {{ cpu.core_info.max_clock || '-' }}</li>
+                <li><strong>Threads/Core:</strong> {{ cpu.core_info.threads_per_core || '-' }}</li>
+                <li><strong>Cores:</strong> {{ cpu.core_info.core_count || '-' }}</li>
                 <li><strong>TDP(W):</strong> {{ cpu.tdp || '-' }}</li>
-                <li><strong>Lithography (nm):</strong> {{ cpu.lithography || '-' }}</li>
-                <li><strong>L1 Cache KB:</strong> {{ cpu.l1_cache || '-' }}</li>
-                <li><strong>L1 Data Cache KB:</strong> {{ cpu.l1_cache_data || '-' }}</li>
-                <li><strong>L1 Cache Latency (clock cycles):</strong> {{ cpu.l1_cache_latency || '-' }}</li>
-                <li><strong>L1 Instruction Cache KB:</strong> {{ cpu.l1_cache_instruction || '-' }}</li>
-                <li><strong>L2 Cache KB:</strong> {{ cpu.l2_cache || '-' }}</li>
-                <li><strong>L2 Cache Latency (clock cycles):</strong> {{ cpu.l2_cache_latency || '-' }}</li>
-                <li><strong>L3 Cache MB:</strong> {{ cpu.l3_cache || '-' }}</li>
-                <li><strong>L3 Cache Latency (clock cycles):</strong> {{ cpu.l3_cache_latency || '-' }}</li>
-                <li><strong>L4 Cache MB:</strong> {{ cpu.l4_cache || '-' }}</li>
-                <li><strong>Bus Speed MT/s:</strong> {{ cpu.bus_speed || '-' }}</li>
-              </ul>
+                <li class="pb-8"><strong>Lithography (nm):</strong> {{ cpu.lithography || '-' }}</li>
 
-              <!-- Right column -->
-              <ul class="space-y-2 flex-1">
-                <li><strong>Max Memory Size (GB):</strong> {{ cpu.max_memory_size || '-' }}</li>
-                <li><strong>Memory Type:</strong> {{ cpu.memory_type || '-' }}</li>
-                <li><strong>Max Number of Memory Channels:</strong> {{ cpu.max_memory_channels || '-' }}</li>
-                <li><strong>Max Memory Bandwidth (GB/s):</strong> {{ cpu.max_memory_bandwidth || '-' }}</li>
+                <!-- Cache Information -->
+                <h4 class="text-xl font-bold mb-4">Cache Information</h4>
+                <li><strong>L1 Cache KB:</strong> {{ cpu.cache_info.l1_cache || '-' }}</li>
+                <li><strong>L1 Data Cache KB:</strong> {{ cpu.cache_info.l1_cache_data || '-' }}</li>
+                <li><strong>L1 Cache Latency (clock cycles):</strong> {{ cpu.cache_info.l1_cache_latency || '-' }}</li>
+                <li><strong>L1 Instruction Cache KB:</strong> {{ cpu.cache_info.l1_cache_instruction || '-' }}</li>
+                <li><strong>L2 Cache KB:</strong> {{ cpu.cache_info.l2_cache || '-' }}</li>
+                <li><strong>L2 Cache Latency (clock cycles):</strong> {{ cpu.cache_info.l2_cache_latency || '-' }}</li>
+                <li><strong>L3 Cache MB:</strong> {{ cpu.cache_info.l3_cache || '-' }}</li>
+                <li><strong>L3 Cache Latency (clock cycles):</strong> {{ cpu.cache_info.l3_cache_latency || '-' }}</li>
+                <li><strong>L4 Cache MB:</strong> {{ cpu.cache_info.l4_cache || '-' }}</li>
+                <li class="pb-8"><strong>Bus Speed MT/s:</strong> {{ cpu.additional_info.bus_speed || '-' }}</li>
+
+                <!-- Frequency Information -->
+                <h4 class="text-xl font-bold mb-4">Frequency Information</h4>
                 <li><strong>Turbo Boost Max Technology 3.0 Frequency (MHz):</strong> {{
                   cpu.turbo_boost_max_technology_3_frequency || '-' }}</li>
                 <li><strong>Turbo Frequency 1 Core:</strong> {{ cpu.turbo_frequency_1core || '-' }}</li>
                 <li><strong>Turbo Frequency 2 Cores:</strong> {{ cpu.turbo_frequency_2core || '-' }}</li>
-                <li><strong>eDRAM MB:</strong> {{ cpu.edram || '-' }}</li>
-                <li><strong>Instruction Set Width:</strong> {{ cpu.instruction_set_width || '-' }}</li>
-                <li><strong>MIPS:</strong> {{ cpu.mips || '-' }}</li>
+
+              </ul>
+
+              <!-- Right column -->
+              <ul class="space-y-2 flex-1">
+                <!-- Memory Information -->
+                <h4 class="text-xl font-bold mb-4">Memory Information</h4>
+                <li><strong>Max Memory Size (GB):</strong> {{ cpu.memory_info.max_memory_size || '-' }}</li>
+                <li><strong>Memory Type:</strong> {{ cpu.memory_info.memory_type || '-' }}</li>
+                <li><strong>Max Number of Memory Channels:</strong> {{ cpu.memory_info.max_memory_channels || '-' }}
+                </li>
+                <li class="pb-8"><strong>Max Memory Bandwidth (GB/s):</strong> {{ cpu.memory_info.max_memory_bandwidth
+                  || '-' }}</li>
+
+                <!-- Performance Information -->
+                <h4 class="text-xl font-bold mb-4">Performance Information</h4>
+                <li><strong>MIPS:</strong> {{ cpu.performance_info.mips || '-' }}</li>
+                <li><strong>FP16 (operations per cycle per core):</strong> {{ cpu.performance_info.fp16_ops || '-' }}
+                </li>
+                <li><strong>FP32 (operations per cycle per core):</strong> {{ cpu.performance_info.fp32_ops || '-' }}
+                </li>
+                <li><strong>FP32 Theoretical MFLOP/s:</strong> {{ cpu.performance_info.fp32_theoretical_mflops || '-' }}
+                </li>
+                <li><strong>FP32 Measured GFLOPs:</strong> {{ cpu.performance_info.fp32_measured_gflops || '-' }}</li>
+                <li class="pb-8"><strong>FP64 (operations per cycle per core):</strong> {{ cpu.performance_info.fp64_ops
+                  || '-' }}
+                </li>
+
+                <!-- Additional Information -->
+                <h4 class="text-xl font-bold mb-4">Additional Information</h4>
+                <li><strong>eDRAM MB:</strong> {{ cpu.additional_info.edram || '-' }}</li>
+                <li><strong>Instruction Set Width:</strong> {{ cpu.additional_info.instruction_set_width || '-' }}</li>
                 <li><strong>Processor Graphics:</strong> {{ cpu.graphics || '-' }}</li>
-                <li><strong>Graphics Max Dynamic Frequency (MHz):</strong> {{ cpu.graphics_max_dynamic_frequency || '-'
+                <li><strong>Graphics Max Dynamic Frequency (MHz):</strong> {{
+                  cpu.additional_info.graphics_max_dynamic_frequency || '-' }}</li>
+                <li><strong>Graphics Base Frequency (MHz):</strong> {{ cpu.additional_info.graphics_base_frequency ||
+                  '-' }}</li>
+                <li><strong>Graphics Max Memory Size (GB):</strong> {{ cpu.additional_info.graphics_memory_size || '-'
                   }}</li>
-                <li><strong>Graphics Base Frequency (MHz):</strong> {{ cpu.graphics_base_frequency || '-' }}</li>
-                <li><strong>Graphics Max Memory Size (GB):</strong> {{ cpu.graphics_memory_size || '-' }}</li>
-                <li><strong>FP16 (operations per cycle per core):</strong> {{ cpu.fp16_ops || '-' }}</li>
-                <li><strong>FP32 (operations per cycle per core):</strong> {{ cpu.fp32_ops || '-' }}</li>
-                <li><strong>FP32 Theoretical MFLOP/s:</strong> {{ cpu.fp32_theoretical_mflops || '-' }}</li>
-                <li><strong>FP32 Measured GFLOPs:</strong> {{ cpu.fp32_measured_gflops || '-' }}</li>
-                <li><strong>FP64 (operations per cycle per core):</strong> {{ cpu.fp64_ops || '-' }}</li>
               </ul>
             </div>
           </div>
-
 
           <!-- GPU Section -->
           <div v-for="gpu in gpus" :key="gpu.soc_id" class="bg-white shadow rounded-lg p-6">
@@ -131,10 +155,10 @@
                 <li><strong>Memory Type:</strong> {{ gpu.memory_type || '-' }}</li>
                 <li><strong>Memory Bus (bits):</strong> {{ gpu.memory_bus || '-' }}</li>
                 <li><strong>Memory Bandwidth (GB/s):</strong> {{ gpu.memory_bandwidth || '-' }}</li>
-                <li><strong>L0 Cache (KB):</strong> {{ gpu.l0_cache || '-' }}</li>
-                <li><strong>L1 Cache (KB):</strong> {{ gpu.l1_cache || '-' }}</li>
-                <li><strong>L2 Cache (KB):</strong> {{ gpu.l2_cache || '-' }}</li>
-                <li><strong>L3 Cache (KB):</strong> {{ gpu.l3_cache || '-' }}</li>
+                <li><strong>L0 Cache (KB):</strong> {{ gpu.cache_info.l0_cache || '-' }}</li>
+                <li><strong>L1 Cache (KB):</strong> {{ gpu.cache_info.l1_cache || '-' }}</li>
+                <li><strong>L2 Cache (KB):</strong> {{ gpu.cache_info.l2_cache || '-' }}</li>
+                <li><strong>L3 Cache (KB):</strong> {{ gpu.cache_info.l3_cache || '-' }}</li>
                 <li><strong>Pixel Rate (GPixel/s):</strong> {{ gpu.pixel_rate || '-' }}</li>
               </ul>
 
@@ -227,6 +251,7 @@ const formatDate = (date) => {
 // Assign data to refs
 soc.value = data.value
 cpus.value = data.value.processors.filter((p) => p.processor_type === 'CPU')
+console.log(soc.value)
 gpus.value = data.value.processors.filter((p) => p.processor_type === 'GPU')
 benchmarks.value = data.value.benchmarks
 economics.value = data.value.economics
