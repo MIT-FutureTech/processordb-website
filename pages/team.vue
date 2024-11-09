@@ -1,16 +1,6 @@
 <template>
     <div class="text-gray-800">
-        <div class="bg-black border-b-4 border-b-[#A32035] sticky top-0 z-10">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <NuxtLink to="/" class="inline-block">
-                    <h1 class="text-lg md:text-2xl font-bold font-logo text-gray-50">
-                        <span class="text-[#A32035] inline">MIT</span> <span class="text-nowrap">
-                            PROCESSOR DB
-                        </span>
-                    </h1>
-                </NuxtLink>
-            </div>
-        </div>
+        <Navbar/>
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32 mb-16 mt-16">
             <section>
                 <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">Team</h2>

@@ -1,5 +1,6 @@
 <template>
     <div class="text-gray-800">
+        <Navbar />
         <div class="hero h-[90vh] flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col items-center justify-center">
                 <div class="flex flex-col items-center justify-center text-center">

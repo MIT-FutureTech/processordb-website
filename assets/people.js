@@ -56,7 +56,22 @@ University of California, Berkeley.</p>
             <p class="mt-2">Rebecca Wenjing Lyu is a postdoctoral fellow at the MIT Sloan School of Management and at the Initiative on the Digital Economy, MIT. Rebecca’s research focuses on the role of AI, big data, and cloud computing in innovation of firms. Another stream of research of Rebecca’s work is evaluating the contribution of immigrants (entrepreneurs, scientist, etc.) as well as their mobility. Rebecca received her Ph.D. from Tsinghua University (Business Administration).</p>
             `
     },
-
+    {
+        name: 'Andrew Souza',
+        affiliation: 'MIT Futuretech',
+        image: '/andrew_souza.jpeg',
+        description: `
+            <p class="mt-2">Andrew is a Webmaster on FutureTech research project at the MIT’s Computer Science and Artificial Intelligence Lab. He holds a bachelor's degree in Software Engineering from the University of Brasília.</p>
+            `
+    },
+    {
+        name: 'João Zarbiélli',
+        affiliation: 'MIT Futuretech',
+        image: '/joao_zarbielli.png',
+        description: `
+            <p class="mt-2">João is a Webmaster on FutureTech research project at the MIT’s Computer Science and Artificial Intelligence Lab. He is an Software Engineering undergraduate student from the University of Brasília, Brazil.</p>
+            `
+    }
 ]
 
 export const steeringCommittee = [
