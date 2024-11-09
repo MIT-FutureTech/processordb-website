@@ -1,57 +1,58 @@
 <template>
     <div>
-
-        <div class="flex justify-end  gap-2 items-center mb-4 text-xs">
-            <input type="text" v-model="filters.manufacturer" placeholder="Search processors" class="border p-2 mr-2" />
-            <select v-model="filters.processorType" class="border p-2 mr-2">
-                <option value="">All processor types</option>
-                <option value="CPU">CPU</option>
-                <option value="GPU">GPU</option>
-                <option value="FPGA">FPGA</option>
-            </select>
-            <div class="mr-4">
-                Showing {{ displayedSocs.length }} of {{ pagination.totalRecords }} records
+        <div class="flex justify-between gap-4 items-center mb-4">
+            <div class="flex justify-start gap-4 items-center ">
+                <slot name="filters"></slot>
             </div>
 
-            <!-- Pagination Control -->
-            <div class="flex items-center space-x-2">
-                <button @click="prevPage" :disabled="pagination.currentPage === 1"
-                    class="px-2 py-1 bg-[#A32035] text-white disabled:opacity-50 text-xs">
-                    < </button>
-                        <input type="number" v-model.number="pagination.currentPage" min="1"
-                            :max="pagination.totalPages" class="border p-1 max-w-12 text-center text-xs hide-arrow" />
-                        <button @click="nextPage" :disabled="pagination.currentPage === pagination.totalPages"
-                            class="px-2 py-1 bg-[#A32035] text-white disabled:opacity-50 text-xs">
-                            >
-                        </button>
-            </div>
+            <div class="flex justify-end  gap-2 items-center text-xs">
+                <input type="text" v-model="filters.manufacturer" placeholder="Search processors"
+                    class="border p-2 mr-2" />
+                <div class="mr-4">
+                    Showing {{ displayedSocs.length }} of {{ pagination.totalRecords }} records
+                </div>
 
-            <div>
-                <DropdownMenu>
-                    <DropdownMenuTrigger class="px-1 py-1 bg-[#A32035] text-white"><svg
-                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="size-4">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125Z" />
-                        </svg>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuLabel>Columns</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem v-for="column in allColumns" :key="column.value">
-                            <label class="flex items-center gap-2 cursor-pointer"
-                                :class="{ '': selectedColumns.includes(column.value) }">
-                                <input type="checkbox" class="accent-[#A32035] text-white" v-model="selectedColumns"
-                                    :value="column.value" />
-                                <span class="">
-                                    {{ column.label }}
+                <!-- Pagination Control -->
+                <div class="flex items-center space-x-2">
+                    <button @click="prevPage" :disabled="pagination.currentPage === 1"
+                        class="px-2 py-1 bg-[#A32035] text-white disabled:opacity-50 text-xs">
+                        < </button>
+                            <input type="number" v-model.number="pagination.currentPage" min="1"
+                                :max="pagination.totalPages"
+                                class="border p-1 max-w-12 text-center text-xs hide-arrow" />
+                            <button @click="nextPage" :disabled="pagination.currentPage === pagination.totalPages"
+                                class="px-2 py-1 bg-[#A32035] text-white disabled:opacity-50 text-xs">
+                                >
+                            </button>
+                </div>
 
-                                </span>
-                            </label>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger class="px-1 py-1 bg-[#A32035] text-white"><svg
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125Z" />
+                            </svg>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuLabel>Columns</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem v-for="column in allColumns" :key="column.value">
+                                <label class="flex items-center gap-2 cursor-pointer"
+                                    :class="{ '': selectedColumns.includes(column.value) }">
+                                    <input type="checkbox" class="accent-[#A32035] text-white" v-model="selectedColumns"
+                                        :value="column.value" />
+                                    <span class="">
+                                        {{ column.label }}
 
+                                    </span>
+                                </label>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                </div>
             </div>
         </div>
 
@@ -71,25 +72,36 @@
             <tbody>
                 <tr class="hover:bg-[#F1F5F9] even:bg-gray-50" v-for="soc in displayedSocs" :key="soc.soc_id">
                     <td v-if="selectedColumns.includes('manufacturer_name')" class="border px-2 py-1">
-                        <button class="hover:underline" @click="filters.manufacturer = soc.manufacturer_name">
+                        <NuxtLink class="hover:underline" :to="`/database/manufacturer/${slugify(soc.manufacturer_name)}`">
                             {{ soc.manufacturer_name }}
-                        </button>
+                        </NuxtLink>
                     </td>
                     <td v-if="selectedColumns.includes('processor_type')" class="border px-2 py-1">
                         <div v-for="processor in soc.processors" :key="processor.model">
-                            <button @click="filters.processorType = processor.processor_type">
+                            <NuxtLink class="hover:underline" :to="`/database/processorType/${slugify(processor.processor_type)}`">
                                 {{ processor.processor_type }}
-                            </button>
+                            </NuxtLink>
                         </div>
                     </td>
                     <td v-if="selectedColumns.includes('processor_family')" class="border px-2 py-1">
                         <div v-for="processor in soc.processors" :key="processor.family">
-                            {{ processor.family || 'N/A' }}
+                            <NuxtLink class="hover:underline" :to="`/database/manufacturer/${slugify(soc.manufacturer_name)}/family/${slugify(processor.family)}`">
+                                {{ processor.family }}
+                            </NuxtLink>
+                        </div>
+                    </td>
+                    <td v-if="selectedColumns.includes('microarchitecture')" class="border px-2 py-1">
+                        <div v-for="processor in soc.processors" :key="processor.microarchitecture">
+                            <NuxtLink class="hover:underline" :to="`/database/manufacturer/${slugify(soc.manufacturer_name)}/microarchitecture/${slugify(processor.microarchitecture)}`">
+                                {{ processor.microarchitecture }}                                
+                            </NuxtLink>
                         </div>
                     </td>
                     <td v-if="selectedColumns.includes('model')" class="border px-2 py-1">
                         <div v-for="processor in soc.processors" :key="processor.model">
-                            {{ processor.model || 'N/A' }}
+                            <NuxtLink class="hover:underline" :to="`/database/soc/${soc.soc_id}`">
+                                {{ processor.model }}
+                            </NuxtLink>
                         </div>
                     </td>
                     <td v-if="selectedColumns.includes('release_date')" class="border px-2 py-1">
@@ -186,8 +198,8 @@ const pagination = ref({
 })
 
 // State for sorting
-const sortField = ref('')
-const sortOrder = ref('asc')
+const sortField = ref('release_date')
+const sortOrder = ref('desc')
 
 // State for filters
 const filters = ref({
@@ -201,6 +213,7 @@ const allColumns = [
     // { label: 'SoC', value: 'soc_name' },
     { label: 'Processor Type', value: 'processor_type' },
     { label: 'Processor Family', value: 'processor_family' },
+    { label: 'Microarchitecture', value: 'microarchitecture' },
     { label: 'Model', value: 'model' },
     { label: 'Release Date', value: 'release_date' },
     { label: 'Clock (MHz)', value: 'clock' },
@@ -224,6 +237,31 @@ const displayedColumns = computed(() =>
 // Computed property for displayed SoCs
 const displayedSocs = ref([])
 
+// Helper function to get field value for sorting
+const getFieldValue = (soc, field) => {
+    if (field === 'manufacturer_name' || field === 'soc_name' || field === 'release_date') {
+        return soc[field] || ''
+    } else if (
+        [
+            'processor_type',
+            'processor_family',
+            'model',
+            'clock',
+            'tdp',
+        ].includes(field)
+    ) {
+        // For processor fields, get the first processor's field value
+        if (soc.processors && soc.processors.length > 0) {
+            const processor = soc.processors[0]
+            const processorField =
+                field === 'processor_family' ? 'family' : field
+            return processor[processorField] || ''
+        }
+        return ''
+    }
+    return ''
+}
+
 
 // Function to apply filters, sorting, and pagination
 const applyFiltersAndSorting = () => {
@@ -237,21 +275,8 @@ const applyFiltersAndSorting = () => {
         );
     }
 
-    if (filters.value.processorType) {
-        filteredSocs = filteredSocs.filter((soc) => {
-            if (soc.processors == null) return false
-            return filters.value.processorType === '' ||
-                soc.processors.some((processor) =>
-                    (processor.processor_type || '')
-                        ?.toLowerCase()
-                        .includes(filters.value.processorType.toLowerCase())
-                )
-        }
-        )
-    }
 
-    
-    
+
     // Apply sorting (case-insensitive)
     if (sortField.value) {
         filteredSocs.sort((a, b) => {
@@ -330,31 +355,6 @@ const sortBy = (field) => {
     }
 }
 
-// Helper function to get field value for sorting
-const getFieldValue = (soc, field) => {
-    if (field === 'manufacturer_name' || field === 'soc_name' || field === 'release_date') {
-        return soc[field] || ''
-    } else if (
-        [
-            'processor_type',
-            'processor_family',
-            'model',
-            'clock',
-            'tdp',
-        ].includes(field)
-    ) {
-        // For processor fields, get the first processor's field value
-        if (soc.processors && soc.processors.length > 0) {
-            const processor = soc.processors[0]
-            const processorField =
-                field === 'processor_family' ? 'family' : field
-            return processor[processorField] || ''
-        }
-        return ''
-    }
-    return ''
-}
-
 // Helper function to format date
 const formatDate = (date) => {
     if (!date) return 'N/A'
@@ -362,6 +362,13 @@ const formatDate = (date) => {
         timeZone: 'UTC',
         year: 'numeric',
     })
+}
+
+function slugify(str) {
+  return str
+    .toLowerCase()
+    .replace(/[^\w ]+/g, '')
+    .replace(/ +/g, '-')
 }
 </script>
 

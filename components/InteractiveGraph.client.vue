@@ -5,9 +5,9 @@
        <div class="flex items-end justify-center gap-4 flex-1">
 
       <div class="">
-        <label class="text-gray-700 block text-sm mb-0.5">X-Axis</label>
+        <label class="text-gray-700 block text-xs mb-0.5">X-Axis</label>
         <DropdownMenu>
-          <DropdownMenuTrigger class="bg-gray-50 hover:bg-gray-100 flex items-center gap-2 rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring">
+          <DropdownMenuTrigger class="bg-gray-50 hover:bg-gray-100 flex items-center gap-2 rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring text-base">
             {{ xAxis?.label || "Select X-Axis" }} <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
   <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
 </svg>
@@ -21,14 +21,14 @@
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <span class="text-gray-700 text-lg p-1 flex items-center justify-center gap-2 font-semibold">
+      <span class="text-gray-500 text-lg p-1 flex items-center justify-center gap-2 font-thin">
         X
       </span>
       <!-- Y Axis Selection -->
       <div class="">
-        <label class="text-gray-700 block text-sm mb-0.5">Y-Axis</label>
+        <label class="text-gray-700 block text-xs mb-0.5">Y-Axis</label>
         <DropdownMenu>
-          <DropdownMenuTrigger class="bg-gray-50 hover:bg-gray-100 flex items-center gap-2 rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring">
+          <DropdownMenuTrigger class="bg-gray-50 hover:bg-gray-100 flex items-center gap-2 rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring text-base">
             {{ yAxis?.label || "Select Y-Axis" }} <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
   <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
 </svg>
@@ -46,9 +46,9 @@
 
       <!-- Color Categorization Selection -->
       <div class="">
-        <label class="text-gray-700 block text-sm mb-0.5">Group By</label>
+        <label class="text-gray-700 block text-xs mb-0.5">Group By</label>
         <DropdownMenu>
-          <DropdownMenuTrigger class="bg-gray-50 hover:bg-gray-100 flex items-center gap-2 rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring">
+          <DropdownMenuTrigger class="bg-gray-50 hover:bg-gray-100 flex items-center gap-2 rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring text-base">
             {{ groupBy?.label || "Select Group By" }}  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
   <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
 </svg>
