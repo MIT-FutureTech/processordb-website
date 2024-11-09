@@ -290,7 +290,7 @@
 <script setup>
 const route = useRoute()
 // Fetch data function
-const { data } = await useFetch(`http://localhost:3001/api/socs/${route.params.id}`)
+const { data } = await useFetch(`https://processordb.mit.edu/backend/api/socs/${route.params.id}`)
 
 // Data references
 const soc = ref({})
