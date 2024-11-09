@@ -3,7 +3,6 @@ export default defineCachedEventHandler(async (event) => {
     return data
 },
 {
-    maxAge: 60,
-    swr: 60,
+    swr: true,
 }
 )
