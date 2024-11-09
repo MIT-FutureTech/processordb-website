@@ -1,5 +1,5 @@
 export default defineCachedEventHandler(async (event) => {
-    const { data } = await $fetch('http://localhost:3001/api/socs')
+    const { data } = await $fetch('https://processordb.mit.edu/backend/api/socs')
     return data
 },
 {
