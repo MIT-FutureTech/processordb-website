@@ -3,9 +3,19 @@
     <Navbar />
     <div class="max-w-7xl mx-auto my-16">
       <div class="mt-16">
-        <span class="text-sm">Details</span>
-        <Breadcrumbs :crumbs="[
-                ]" />
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/database">Database</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            
+              <BreadcrumbItem>
+          
+              </BreadcrumbItem>
+           
+          </BreadcrumbList>
+        </Breadcrumb>
         <h1 class="text-4xl font-bold">{{ data.soc_name }}</h1>
       </div>
 
