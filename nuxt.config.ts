@@ -12,6 +12,10 @@ export default defineNuxtConfig({
       include: ["plotly.js-dist-min"],
     },
   },
+  plugins: [
+    // Ensure this runs on client side only
+    { src: '~/plugins/highcharts.client.js', mode: 'client' }
+  ],
 
   app: {
     head: {

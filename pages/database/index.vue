@@ -10,7 +10,7 @@
         <InteractiveGraph :data="filterData" />
       </div>
       <div class="mb-16">
-        <DataTable :data="SoCs" @filteredData="setFilteredData" />
+        <DataTable :data="filterData" />
       </div>
     </div>
    <Footer />
@@ -18,18 +18,41 @@
 </template>
 
 <script setup>
-const SoCs = ref([])
-// Fetch data function
-const { data } = await useFetch(
-  'http://localhost:3001/api/socs', {
-    key: 'socs'
-  }
-)
 
-SoCs.value = data.value.data
-const filterData = ref(data.value.data)
+const { data } = await useFetch('http://localhost:3001/api/socs', {
+  key: 'socs',
+  cache: true
+})
+// Define your filter values as ref variables
+const manufacturerNameFilter = ref('')
+const processorTypeFilter = ref('')
+const familyFilter = ref('')
+const codeNameFilter = ref('')
+const microarchitectureFilter = ref('')
+const modelFilter = ref('')
 
-function setFilteredData(data) {
-  filterData.value = data
-}
+const filterData = computed(() => {
+  return data.value.data.filter(item => {
+    // Check for manufacturer name filter
+    const matchesManufacturer = !manufacturerNameFilter.value || item.manufacturer_name.includes(manufacturerNameFilter.value)
+    
+    // Check for processor type filter
+    const matchesProcessorType = !processorTypeFilter.value || item.processors.some(proc => proc.processor_type.includes(processorTypeFilter.value))
+    
+    // Check for processor family filter
+    const matchesFamily = !familyFilter.value || item.processors.some(proc => proc.family.includes(familyFilter.value))
+    
+    // Check for code name filter
+    const matchesCodeName = !codeNameFilter.value || item.processors.some(proc => proc.code_name && proc.code_name.includes(codeNameFilter.value))
+    
+    // Check for microarchitecture filter
+    const matchesMicroarchitecture = !microarchitectureFilter.value || item.processors.some(proc => proc.microarchitecture.includes(microarchitectureFilter.value))
+    
+    // Check for model filter
+    const matchesModel = !modelFilter.value || item.processors.some(proc => proc.model.includes(modelFilter.value))
+    
+    // Return true if all filters match
+    return matchesManufacturer && matchesProcessorType && matchesFamily && matchesCodeName && matchesMicroarchitecture && matchesModel
+  })
+})
 </script>
