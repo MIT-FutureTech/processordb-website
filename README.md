@@ -56,20 +56,14 @@ yarn build
 bun run build
 ```
 
-Locally preview production build:
+## Deploy
 
 ```bash
-# npm
-npm run preview
+git pull origin main
 
-# pnpm
-pnpm run preview
+npm run build
 
-# yarn
-yarn preview
-
-# bun
-bun run preview
+pm2 start ecosystem.config.cjs
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
