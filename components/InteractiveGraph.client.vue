@@ -82,6 +82,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { color } from 'highcharts';
 
 // Props
 const props = defineProps({
@@ -255,7 +256,7 @@ const chartOptions = computed(() => {
       const xValue = getAxisData(item, xAxis.value);
       const yValue = getAxisData(item, yAxis.value);
       let colorCategory = getAxisData(item, groupBy.value);
-
+      console.log(colorCategory)
       if (xValue === null || yValue === null || colorCategory === null) return acc;
 
       // If grouping by manufacturer and manufacturer is not in top 10, assign to "Others"
@@ -269,7 +270,9 @@ const chartOptions = computed(() => {
         x: xFormattedValue,
         y: yValue,
         name: item.soc_name,
+        color: getColorForCategory(colorCategory),
         data: item,
+        
       };
 
       if (!acc[colorCategory]) {
