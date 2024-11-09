@@ -2,14 +2,31 @@
   <div class="text-gray-800">
     <Navbar />
 
-    <div class="max-w-[1400px] px-4 mx-auto">
-      <div class="mt-16">
-        <h1 class="text-4xl font-bold">{{pageTitle}}</h1>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="mt-4">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/database">Database</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <template v-for="(breadcrumb, index) in breadcrumbs" :key="index">
+              <BreadcrumbItem>
+                <BreadcrumbLink v-if="breadcrumb.link" :href="breadcrumb.link">
+                  {{ breadcrumb.label }}
+                </BreadcrumbLink>
+                <BreadcrumbPage v-else>{{ breadcrumb.label }}</BreadcrumbPage>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator v-if="index < breadcrumbs.length - 1" />
+            </template>
+          </BreadcrumbList>
+        </Breadcrumb>
+        <h1 class="text-4xl font-bold">{{ pageTitle }}</h1>
       </div>
-      <div class="my-16">
+      <div class="my-8">
         <InteractiveGraph :data="filterData" />
       </div>
-      <div class="mb-16">
+      <div class="mb-8">
         <DataTable :data="filterData">
           <template #filters>
             <div class="flex items-center gap-2">
@@ -24,8 +41,20 @@
 </template>
 
 <script setup>
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
+definePageMeta({
+  requiresAuth: true, // This will trigger the password protection middleware
+});
 
-const { data } = await useFetch('http://localhost:3001/api/socs', {
+
+const { data } = await useFetch('/api/socs', {
   key: 'socs',
   cache: true
 })
@@ -37,14 +66,15 @@ const codeNameFilter = ref('')
 const microarchitectureFilter = ref('')
 const modelFilter = ref('')
 function slugify(str) {
+  if (!str) return ''
   return str
     .toLowerCase()
-    .replace(/[^\w ]+/g, '')
-    .replace(/ +/g, '-')
+    .replace(/[^\w- ]+/g, '') // Allow hyphens by excluding them from the pattern
+    .replace(/ +/g, '-')      // Replace spaces with hyphens
 }
 
 const filterData = computed(() => {
-  return data.value.data.filter(item => {
+  return data.value.filter(item => {
     const matchesManufacturer =
       !manufacturerNameFilter.value ||
       slugify(item.manufacturer_name) === manufacturerNameFilter.value
@@ -106,7 +136,6 @@ const setFiltersFromRoute = () => {
   for (let i = 0; i < route.params.slug.length; i += 2) {
     const filter = route.params.slug[i]
     const value = route.params.slug[i + 1]
-    console.log(filter, value)
     // Set filters based on key
     switch (filter) {
       case 'manufacturer':
@@ -173,4 +202,51 @@ watch(pageTitle, (newTitle) => {
   document.title = newTitle
 })
 
+
+// Breadcrumbs based on active filters
+const breadcrumbs = computed(() => {
+  const firstMatch = filterData.value[0]
+  if (!firstMatch) return []
+
+  const crumbs = []
+
+  if (manufacturerNameFilter.value) {
+    crumbs.push({
+      label: firstMatch.manufacturer_name,
+      link: `/database/manufacturer/${slugify(firstMatch.manufacturer_name)}`
+    })
+  }
+
+  if (processorTypeFilter.value) {
+    const processorType = firstMatch.processors.find(proc => slugify(proc.processor_type) === processorTypeFilter.value)?.processor_type
+    if (processorType) {
+      crumbs.push({
+        label: processorType,
+        link: `/database/processorType/${slugify(processorTypeFilter.value)}`
+      })
+    }
+  }
+
+  if (familyFilter.value) {
+    const family = firstMatch.processors.find(proc => slugify(proc.family) === familyFilter.value)?.family
+    if (family) {
+      crumbs.push({
+        label: family,
+        link: `/database/manufacturer/${slugify(firstMatch.manufacturer_name)}/family/${slugify(familyFilter.value)}`
+      })
+    }
+  }
+
+  if (microarchitectureFilter.value) {
+    const microarchitecture = firstMatch.processors.find(proc => slugify(proc.microarchitecture) === microarchitectureFilter.value)?.microarchitecture
+    if (microarchitecture) {
+      crumbs.push({
+        label: microarchitecture,
+        link: `/database/manufacturer/${slugify(firstMatch.manufacturer_name)}/microarchitecture/${slugify(microarchitectureFilter.value)}`
+      })
+    }
+  }
+
+  return crumbs
+})
 </script>

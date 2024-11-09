@@ -297,7 +297,6 @@ const formatDate = (date) => {
 soc.value = data.value
 cpus.value = data.value.processors.filter((p) => p.processor_type === 'CPU')
 gpus.value = data.value.processors.filter((p) => p.processor_type === 'GPU')
-console.log(gpus.value)
 benchmarks.value = data.value.benchmarks
 economics.value = data.value.economics
 

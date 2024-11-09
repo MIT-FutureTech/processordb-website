@@ -16,6 +16,14 @@ export default defineNuxtConfig({
     // Ensure this runs on client side only
     { src: '~/plugins/highcharts.client.js', mode: 'client' }
   ],
+  routeRules: {
+    '/database': {
+      swr: true,
+      cache: {
+        maxAge: 60,
+      },
+    }
+  },
 
   app: {
     head: {

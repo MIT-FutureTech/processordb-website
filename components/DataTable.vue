@@ -5,48 +5,48 @@
                 <slot name="filters"></slot>
             </div>
 
-            <div class="flex justify-end  gap-2 items-center text-xs">
+            <div class="flex justify-center sm:justify-end flex-wrap   gap-2 items-center text-xs">
                 <input type="text" v-model="filters.manufacturer" placeholder="Search processors"
-                    class="border p-2 mr-2" />
+                    class="mr-8 outline-none bg-white border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2  text-gray-700  text-xs" />
                 <div class="mr-4">
-                    Showing {{ displayedSocs.length }} of {{ pagination.totalRecords }} records
+                    Showing {{ startRecord }}-{{ endRecord }} of {{ pagination.totalRecords }} records
                 </div>
 
                 <!-- Pagination Control -->
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center ">
                     <button @click="prevPage" :disabled="pagination.currentPage === 1"
-                        class="px-2 py-1 bg-[#A32035] text-white disabled:opacity-50 text-xs">
-                        < </button>
-                            <input type="number" v-model.number="pagination.currentPage" min="1"
-                                :max="pagination.totalPages"
-                                class="border p-1 max-w-12 text-center text-xs hide-arrow" />
-                            <button @click="nextPage" :disabled="pagination.currentPage === pagination.totalPages"
-                                class="px-2 py-1 bg-[#A32035] text-white disabled:opacity-50 text-xs">
-                                >
-                            </button>
+                        class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-gray-700  text-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="size-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                        </svg>
+                    </button>
+                    <input type="number" v-model.number="pagination.currentPage" min="1" :max="pagination.totalPages"
+                        class=" max-w-12 text-center outline-none bg-white border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2  text-gray-700  text-xs hide-arrow" />
+                    <button @click="nextPage" :disabled="pagination.currentPage === pagination.totalPages" class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-gray-700  text-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="size-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                        </svg>
+
+                    </button>
                 </div>
 
                 <div>
                     <DropdownMenu>
-                        <DropdownMenuTrigger class="px-1 py-1 bg-[#A32035] text-white"><svg
-                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                stroke="currentColor" class="size-4">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125Z" />
-                            </svg>
+                        <DropdownMenuTrigger
+                            class="outline-none bg-white hover:bg-gray-100 border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2  text-gray-700  text-xs">
+                            Show/hide columns
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                             <DropdownMenuLabel>Columns</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem v-for="column in allColumns" :key="column.value">
+                            <DropdownMenuItem v-for="column in allColumns" :key="column.value" asChild>
                                 <label class="flex items-center gap-2 cursor-pointer"
-                                    :class="{ '': selectedColumns.includes(column.value) }">
-                                    <input type="checkbox" class="accent-[#A32035] text-white" v-model="selectedColumns"
+                                    :class="{ 'border border-[#A32035] text-[#A32035] px-2 py-1 rounded': selectedColumns.includes(column.value) }">
+                                    <input type="checkbox" class="hidden" v-model="selectedColumns"
                                         :value="column.value" />
-                                    <span class="">
-                                        {{ column.label }}
-
-                                    </span>
+                                    <span>{{ column.label }}</span>
                                 </label>
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -56,106 +56,108 @@
             </div>
         </div>
 
-        <!-- SoC Table -->
-        <table class="table-auto w-full border-collapse border border-gray-200 text-xs text-left">
-            <thead>
-                <tr>
-                    <th v-for="column in displayedColumns" :key="column.value" class="border px-2 py-1 cursor-pointer"
+        <Table>
+            <!-- empty table -->
+            <TableCaption v-if="displayedSocs.length === 0">No SoCs found.</TableCaption>
+            <TableHeader>
+                <TableRow>
+                    <TableHead v-for="column in displayedColumns" :key="column.value" class="cursor-pointer"
                         @click="sortBy(column.value)">
-                        {{ column.label }}
-                        <span v-if="sortField === column.value">
-                            {{ sortOrder === 'asc' ? '↑' : '↓' }}
-                        </span>
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr class="hover:bg-[#F1F5F9] even:bg-gray-50" v-for="soc in displayedSocs" :key="soc.soc_id">
-                    <td v-if="selectedColumns.includes('manufacturer_name')" class="border px-2 py-1">
-                        <NuxtLink class="hover:underline" :to="`/database/manufacturer/${slugify(soc.manufacturer_name)}`">
+                        <div class="flex items-center flex-nowrap gap-2 text-nowrap">
+
+                            {{ column.label }}
+                            <span v-if="sortField === column.value">
+                                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                            </span>
+                        </div>
+                    </TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                <TableRow v-for="soc in displayedSocs" :key="soc.soc_id" class="hover:bg-[#F1F5F9] even:bg-gray-50">
+                    <TableCell v-if="selectedColumns.includes('manufacturer_name')">
+                        <NuxtLink class="text-[#A32035] hover:underline"
+                            :to="`/database/manufacturer/${slugify(soc.manufacturer_name)}`">
                             {{ soc.manufacturer_name }}
                         </NuxtLink>
-                    </td>
-                    <td v-if="selectedColumns.includes('processor_type')" class="border px-2 py-1">
+                    </TableCell>
+                    <TableCell v-if="selectedColumns.includes('processor_type')">
                         <div v-for="processor in soc.processors" :key="processor.model">
-                            <NuxtLink class="hover:underline" :to="`/database/processorType/${slugify(processor.processor_type)}`">
+                            <NuxtLink class="text-[#A32035] hover:underline"
+                                :to="`/database/processorType/${slugify(processor.processor_type)}`">
                                 {{ processor.processor_type }}
                             </NuxtLink>
                         </div>
-                    </td>
-                    <td v-if="selectedColumns.includes('processor_family')" class="border px-2 py-1">
+                    </TableCell>
+                    <TableCell v-if="selectedColumns.includes('processor_family')">
                         <div v-for="processor in soc.processors" :key="processor.family">
-                            <NuxtLink class="hover:underline" :to="`/database/manufacturer/${slugify(soc.manufacturer_name)}/family/${slugify(processor.family)}`">
+                            <NuxtLink class="text-[#A32035] hover:underline"
+                                :to="`/database/manufacturer/${slugify(soc.manufacturer_name)}/family/${slugify(processor.family)}`">
                                 {{ processor.family }}
                             </NuxtLink>
                         </div>
-                    </td>
-                    <td v-if="selectedColumns.includes('microarchitecture')" class="border px-2 py-1">
+                    </TableCell>
+                    <TableCell v-if="selectedColumns.includes('microarchitecture')">
                         <div v-for="processor in soc.processors" :key="processor.microarchitecture">
-                            <NuxtLink class="hover:underline" :to="`/database/manufacturer/${slugify(soc.manufacturer_name)}/microarchitecture/${slugify(processor.microarchitecture)}`">
-                                {{ processor.microarchitecture }}                                
+                            <NuxtLink class="text-[#A32035] hover:underline"
+                                :to="`/database/manufacturer/${slugify(soc.manufacturer_name)}/microarchitecture/${slugify(processor.microarchitecture)}`">
+                                {{ processor.microarchitecture }}
                             </NuxtLink>
                         </div>
-                    </td>
-                    <td v-if="selectedColumns.includes('model')" class="border px-2 py-1">
+                    </TableCell>
+                    <TableCell v-if="selectedColumns.includes('model')">
                         <div v-for="processor in soc.processors" :key="processor.model">
-                            <NuxtLink class="hover:underline" :to="`/database/soc/${soc.soc_id}`">
+                            <NuxtLink class="text-[#A32035] hover:underline" :to="`/database/soc/${soc.soc_id}`">
                                 {{ processor.model }}
                             </NuxtLink>
                         </div>
-                    </td>
-                    <td v-if="selectedColumns.includes('release_date')" class="border px-2 py-1">
+                    </TableCell>
+                    <TableCell v-if="selectedColumns.includes('release_date')">
                         {{ formatDate(soc.release_date) }}
-                    </td>
-                    <td v-if="selectedColumns.includes('clock')" class="border px-2 py-1">
+                    </TableCell>
+                    <TableCell v-if="selectedColumns.includes('clock')">
                         <div v-for="processor in soc.processors" :key="processor.clock">
-                            {{ processor.clock ? processor.clock + ' MHz' : 'N/A' }}
+                            {{ processor.clock ? processor.clock + ' MHz' : '' }}
                         </div>
-                    </td>
-                    <td v-if="selectedColumns.includes('tdp')" class="border px-2 py-1">
+                    </TableCell>
+                    <TableCell v-if="selectedColumns.includes('tdp')">
                         <div v-for="processor in soc.processors" :key="processor.tdp">
-                            {{ processor.tdp ? processor.tdp + ' W' : 'N/A' }}
+                            {{ processor.tdp ? processor.tdp + ' W' : '' }}
                         </div>
-                    </td>
-                    <td v-if="selectedColumns.includes('die_sizes')" class="border px-2 py-1">
-                        <div v-for="processor in soc.processors" :key="processor.die_sizes">
-                            {{ soc.die_sizes ? soc.die_sizes + ' mm^2' : 'N/A' }}
-                        </div>
-                    </td>
-
-                    <td v-if="selectedColumns.includes('total_transistor_count')" class="border px-2 py-1">
-                        <div v-for="processor in soc.processors" :key="processor.total_transistor_count">
-                            {{ soc.total_transistor_count ? soc.total_transistor_count + ' million' : 'N/A' }}
-                        </div>
-                    </td>
-                    <td v-if="selectedColumns.includes('lithography')" class="border px-2 py-1">
+                    </TableCell>
+                    <TableCell v-if="selectedColumns.includes('die_sizes')">
+                        {{ soc.die_sizes ? soc.die_sizes + ' mm²' : '' }}
+                    </TableCell>
+                    <TableCell v-if="selectedColumns.includes('total_transistor_count')">
+                        {{ soc.total_transistor_count ? soc.total_transistor_count + ' million' : '' }}
+                    </TableCell>
+                    <TableCell v-if="selectedColumns.includes('lithography')">
                         <div v-for="processor in soc.processors" :key="processor.lithography">
-                            {{ processor.lithography ? processor.lithography + ' nm' : 'N/A' }}
+                            {{ processor.lithography ? processor.lithography + ' nm' : '' }}
                         </div>
-                    </td>
-                    <td v-if="selectedColumns.includes('fp64_ops')" class="border px-2 py-1">
+                    </TableCell>
+                    <TableCell v-if="selectedColumns.includes('fp64_ops')">
                         <div v-for="processor in soc.processors" :key="processor.fp64_ops">
-                            {{ processor.fp64_ops ? processor.fp64_ops + ' GFLOPS' : 'N/A' }}
+                            {{ processor.fp64_ops ? processor.fp64_ops + ' GFLOPS' : '' }}
                         </div>
-                    </td>
-                    <td v-if="selectedColumns.includes('fp32_ops')" class="border px-2 py-1">
+                    </TableCell>
+                    <TableCell v-if="selectedColumns.includes('fp32_ops')">
                         <div v-for="processor in soc.processors" :key="processor.fp32_ops">
-                            {{ processor.fp32_ops ? processor.fp32_ops + ' GFLOPS' : 'N/A' }}
+                            {{ processor.fp32_ops ? processor.fp32_ops + ' GFLOPS' : '' }}
                         </div>
-                    </td>
-                    <td v-if="selectedColumns.includes('fp16_ops')" class="border px-2 py-1">
+                    </TableCell>
+                    <TableCell v-if="selectedColumns.includes('fp16_ops')">
                         <div v-for="processor in soc.processors" :key="processor.fp16_ops">
-                            {{ processor.fp16_ops ? processor.fp16_ops + ' GFLOPS' : 'N/A' }}
+                            {{ processor.fp16_ops ? processor.fp16_ops + ' GFLOPS' : '' }}
                         </div>
-                    </td>
-                    <td v-if="selectedColumns.includes('details')"
-                        class="border px-2 py-1 text-[#A32035] hover:underline">
-                        <NuxtLink :to="`/database/soc/${soc.soc_id}`">Details</NuxtLink>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-
+                    </TableCell>
+                    <TableCell v-if="selectedColumns.includes('details')">
+                        <NuxtLink class="text-[#A32035] hover:underline" :to="`/database/soc/${soc.soc_id}`">Details
+                        </NuxtLink>
+                    </TableCell>
+                </TableRow>
+            </TableBody>
+        </Table>
 
     </div>
 </template>
@@ -169,6 +171,15 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+    Table,
+    TableBody,
+    TableCaption,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table'
 const props = defineProps({
     data: {
         type: Array,
@@ -197,6 +208,7 @@ const pagination = ref({
     pageSize: 50,
 })
 
+
 // State for sorting
 const sortField = ref('release_date')
 const sortOrder = ref('desc')
@@ -206,11 +218,22 @@ const filters = ref({
     manufacturer: '',
     processorType: '',
 })
+// Computed property for the starting record index
+const startRecord = computed(() => {
+    return (pagination.value.currentPage - 1) * pagination.value.pageSize + 1
+})
+
+// Computed property for the ending record index
+const endRecord = computed(() => {
+    return Math.min(
+        pagination.value.currentPage * pagination.value.pageSize,
+        pagination.value.totalRecords
+    )
+})
 
 // State for selected columns
 const allColumns = [
     { label: 'Manufacturer', value: 'manufacturer_name' },
-    // { label: 'SoC', value: 'soc_name' },
     { label: 'Processor Type', value: 'processor_type' },
     { label: 'Processor Family', value: 'processor_family' },
     { label: 'Microarchitecture', value: 'microarchitecture' },
@@ -245,6 +268,7 @@ const getFieldValue = (soc, field) => {
         [
             'processor_type',
             'processor_family',
+            'microarchitecture',
             'model',
             'clock',
             'tdp',
@@ -261,7 +285,13 @@ const getFieldValue = (soc, field) => {
     }
     return ''
 }
-
+const stringSortFields = [
+    'manufacturer_name',
+    'processor_type',
+    'processor_family',
+    'microarchitecture',
+    'model'
+]
 
 // Function to apply filters, sorting, and pagination
 const applyFiltersAndSorting = () => {
@@ -272,28 +302,35 @@ const applyFiltersAndSorting = () => {
         filteredSocs = filteredSocs.filter((soc) =>
             soc.manufacturer_name?.toLowerCase().includes(filters.value.manufacturer.toLowerCase()) ||
             soc.soc_name?.toLowerCase().includes(filters.value.manufacturer.toLowerCase())
-        );
+        )
     }
-
-
 
     // Apply sorting (case-insensitive)
     if (sortField.value) {
         filteredSocs.sort((a, b) => {
-            const aValue = getFieldValue(a, sortField.value);
-            const bValue = getFieldValue(b, sortField.value);
+            const aValue = getFieldValue(a, sortField.value)
+            const bValue = getFieldValue(b, sortField.value)
 
-            // Try to parse values as numbers
-            const aParsed = isNaN(parseFloat(aValue)) ? aValue.toString().toLowerCase() : parseFloat(aValue);
-            const bParsed = isNaN(parseFloat(bValue)) ? bValue.toString().toLowerCase() : parseFloat(bValue);
+            // Handle null or empty values to always appear last
+            const aIsEmpty = aValue == null || aValue === ''
+            const bIsEmpty = bValue == null || bValue === ''
 
-            if (aParsed < bParsed) return sortOrder.value === 'asc' ? -1 : 1;
-            if (aParsed > bParsed) return sortOrder.value === 'asc' ? 1 : -1;
-            return 0;
-        });
+            if (aIsEmpty && !bIsEmpty) return 1
+            if (!aIsEmpty && bIsEmpty) return -1
+
+            // Determine sorting method based on column type
+            const useStringSort = stringSortFields.includes(sortField.value)
+            const aParsed = useStringSort ? aValue.toString().toLowerCase() : parseFloat(aValue)
+            const bParsed = useStringSort ? bValue.toString().toLowerCase() : parseFloat(bValue)
+
+            // Primary sort based on parsed values
+            if (aParsed < bParsed) return sortOrder.value === 'asc' ? -1 : 1
+            if (aParsed > bParsed) return sortOrder.value === 'asc' ? 1 : -1
+
+            // Secondary sort by unique identifier to ensure stability
+            return a.soc_id < b.soc_id ? -1 : 1
+        })
     }
-
-
 
     // Update total records and pages
     pagination.value.pageSize = Number(pagination.value.pageSize)
@@ -308,12 +345,10 @@ const applyFiltersAndSorting = () => {
     }
 
     // Apply pagination
-    const start =
-        (pagination.value.currentPage - 1) * pagination.value.pageSize
+    const start = (pagination.value.currentPage - 1) * pagination.value.pageSize
     const end = start + pagination.value.pageSize
     displayedSocs.value = filteredSocs.slice(start, end)
 }
-
 
 
 
@@ -357,7 +392,7 @@ const sortBy = (field) => {
 
 // Helper function to format date
 const formatDate = (date) => {
-    if (!date) return 'N/A'
+    if (!date) return ''
     return new Date(date).toLocaleDateString('en-US', {
         timeZone: 'UTC',
         year: 'numeric',
@@ -365,10 +400,12 @@ const formatDate = (date) => {
 }
 
 function slugify(str) {
-  return str
-    .toLowerCase()
-    .replace(/[^\w ]+/g, '')
-    .replace(/ +/g, '-')
+    if (!str) return ''
+
+    return str
+        .toLowerCase()
+        .replace(/[^\w- ]+/g, '') // Allow hyphens by excluding them from the pattern
+        .replace(/ +/g, '-')      // Replace spaces with hyphens
 }
 </script>
 

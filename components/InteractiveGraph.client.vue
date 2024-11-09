@@ -1,60 +1,66 @@
 <template>
   <div class="scatter-plot">
-    <div class="flex justify-space-between gap-4 items-center mb-4">
+    <div class="flex flex-col sm:flex-row sm:justify-space-between flex-wrap gap-4 items-center mb-4">
       <!-- X Axis Selection -->
-       <div class="flex items-end justify-center gap-4 flex-1">
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-center gap-4 flex-1">
 
-      <div class="">
-        <label class="text-gray-700 block text-xs mb-0.5">X-Axis</label>
-        <DropdownMenu>
-          <DropdownMenuTrigger class="bg-gray-50 hover:bg-gray-100 flex items-center gap-2 rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring text-base">
-            {{ xAxis?.label || "Select X-Axis" }} <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-  <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-</svg>
+        <div class="">
+          <label class="text-gray-700 block text-xs mb-0.5">X-Axis</label>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              class="bg-gray-50 hover:bg-gray-100 flex items-center gap-2 rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring text-base">
+              {{ xAxis?.label || "Select X-Axis" }} <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+              </svg>
 
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side-offset="0" align="start" class="w-full left-0">
-            <DropdownMenuItem v-for="option in xAxisOptions" :key="option.value" class="cursor-pointer"
-              @click="xAxis = option">
-              {{ option.label }}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side-offset="0" align="start" class="w-full left-0">
+              <DropdownMenuItem v-for="option in xAxisOptions" :key="option.value" class="cursor-pointer"
+                @click="xAxis = option">
+                {{ option.label }}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <span class="text-gray-500 text-lg p-1 flex items-center justify-center gap-2 font-thin">
+          X
+        </span>
+        <!-- Y Axis Selection -->
+        <div class="">
+          <label class="text-gray-700 block text-xs mb-0.5">Y-Axis</label>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              class="bg-gray-50 hover:bg-gray-100 flex items-center gap-2 rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring text-base">
+              {{ yAxis?.label || "Select Y-Axis" }} <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+              </svg>
+
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side-offset="0" align="start" class="w-full left-0">
+              <DropdownMenuItem v-for="option in yAxisOptions" :key="option.value" class="cursor-pointer"
+                @click="yAxis = option">
+                {{ option.label }}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-      <span class="text-gray-500 text-lg p-1 flex items-center justify-center gap-2 font-thin">
-        X
-      </span>
-      <!-- Y Axis Selection -->
-      <div class="">
-        <label class="text-gray-700 block text-xs mb-0.5">Y-Axis</label>
-        <DropdownMenu>
-          <DropdownMenuTrigger class="bg-gray-50 hover:bg-gray-100 flex items-center gap-2 rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring text-base">
-            {{ yAxis?.label || "Select Y-Axis" }} <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-  <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-</svg>
-
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side-offset="0" align="start" class="w-full left-0">
-            <DropdownMenuItem v-for="option in yAxisOptions" :key="option.value" class="cursor-pointer"
-              @click="yAxis = option">
-              {{ option.label }}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </div>
 
       <!-- Color Categorization Selection -->
       <div class="">
         <label class="text-gray-700 block text-xs mb-0.5">Group By</label>
         <DropdownMenu>
-          <DropdownMenuTrigger class="bg-gray-50 hover:bg-gray-100 flex items-center gap-2 rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring text-base">
-            {{ groupBy?.label || "Select Group By" }}  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-  <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-</svg>
+          <DropdownMenuTrigger
+            class="bg-gray-50 hover:bg-gray-100 flex items-center gap-2 rounded px-3 py-2 w-full text-gray-700 focus:outline-none focus:ring text-base">
+            {{ groupBy?.label || "Select Group By" }} <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+            </svg>
           </DropdownMenuTrigger>
           <DropdownMenuContent side-offset="0" align="start" class="w-full left-0">
-            <DropdownMenuItem v-for="option in groupOptions" :key="option.value" class="cursor-pointer"
+            <DropdownMenuItem v-for="option in filteredGroupOptions" :key="option.value" class="cursor-pointer"
               @click="groupBy = option">
               {{ option.label }}
             </DropdownMenuItem>
@@ -104,10 +110,28 @@ const groupOptions = [
   { label: 'Manufacturer', value: 'manufacturer_name', source: 'soc' },
   { label: 'Process Node', value: 'process_node', source: 'soc' },
 ];
+const route = useRoute()
+// Computed property for filtered group options based on route params
+const filteredGroupOptions = computed(() => {
+    const manufacturerFilterActive = route.params.slug?.includes('manufacturer')
+    const processorTypeFilterActive = route.params.slug?.includes('processorType')
 
+    return groupOptions.filter(option => {
+        // Exclude 'Manufacturer' option if manufacturer filter is active
+        if (option.value === 'manufacturer_name' && manufacturerFilterActive) {
+            return false
+        }
+        // Exclude 'Processor Type' option if processor type filter is active
+        if (option.value === 'processor_type' && processorTypeFilterActive) {
+            return false
+        }
+        return true
+    })
+})
+console.log(filteredGroupOptions)
 const xAxis = ref(xAxisOptions[0]);
 const yAxis = ref(yAxisOptions[0]);
-const groupBy = ref(groupOptions[0]);
+const groupBy = ref(filteredGroupOptions.value[0]);
 
 // Utility to get data based on selected axis options
 const getAxisData = (item, axis) => {
@@ -206,6 +230,7 @@ const chartOptions = computed(() => {
               x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
               y: yValue,
               name: item.soc_name,
+              data: item,
               color: seabornColors.processNode(processNode), // Gradient color based on exact process node value
             };
           }
@@ -244,6 +269,7 @@ const chartOptions = computed(() => {
         x: xFormattedValue,
         y: yValue,
         name: item.soc_name,
+        data: item,
       };
 
       if (!acc[colorCategory]) {
@@ -307,13 +333,79 @@ const chartOptions = computed(() => {
       startOnTick: false,
     },
     tooltip: {
-      formatter() {
-        return `<b>${this.point.name}</b><br>
-                ${xAxis.value.label}: ${xAxis.value.value === 'release_date' ? new Date(this.point.x).getFullYear() : this.point.x}<br>
-                ${yAxis.value.label}: ${this.point.y}<br>
-                Color By: ${this.series.name}`;
-      },
-    },
+  borderRadius: 3,
+  borderWidth: 0,
+  backgroundColor: 'none',
+  shadow: false,
+  useHTML: true,
+  formatter: function () {
+    if (this.point && typeof this.point === "object") {
+      const data = this.point.data;
+      const processor = data.processors && data.processors[0] ? data.processors[0] : {};
+
+      // Constructed name: Manufacturer + Family + Microarchitecture + Model
+      const name = `
+        ${data.manufacturer_name || '-'} 
+        ${processor.family || '-'} 
+        ${processor.microarchitecture || '-'} 
+        ${processor.model || '-'}
+      `.trim().replace(/\s+/g, ' ');
+
+      // Header with Name and Release Year
+      const header = `
+        <div class="flex w-full justify-between gap-8">
+          <div style="color: ${this.series.color}; white-space: normal;" class="font-bold">${name}</div>
+          <div class="font-bold">${new Date(data.release_date).getFullYear()}</div>
+        </div><br>
+      `;
+
+      // Manufacturer, Family, Microarchitecture, Model
+      const details = `
+        <div>
+          <span style="color: gray; font-size: 11px">Manufacturer:</span> ${data.manufacturer_name || '-'}<br>
+          <span style="color: gray; font-size: 11px">Family:</span> ${processor.family || '-'}<br>
+          <span style="color: gray; font-size: 11px">Microarchitecture:</span> ${processor.microarchitecture || '-'}<br>
+          <span style="color: gray; font-size: 11px">Model:</span> ${processor.model || '-'}<br>
+        </div><br>
+      `;
+
+      // Release Date, Process Node, Die Size, Transistor Count with conditional units
+      const specs = `
+        <div>
+          <span style="color: gray; font-size: 11px">Release Date:</span> ${new Date(data.release_date).getFullYear() || '-'}<br>
+          <span style="color: gray; font-size: 11px">Process Node:</span> ${data.process_node ? data.process_node + ' nm' : '-'}<br>
+          <span style="color: gray; font-size: 11px">Die Size:</span> ${data.die_sizes ? data.die_sizes + ' mm²' : '-'}<br>
+          <span style="color: gray; font-size: 11px">Transistor Count:</span> ${data.total_transistor_count ? data.total_transistor_count + ' million' : '-'}<br>
+        </div><br>
+      `;
+
+      // Clock Speeds, TDP, Lithography with conditional units
+      const performance = `
+        <div>
+          <span style="color: gray; font-size: 11px">Base Clock:</span> ${processor.clock ? processor.clock + ' MHz' : '-'}<br>
+          <span style="color: gray; font-size: 11px">Max Clock:</span> ${processor.max_clock ? processor.max_clock + ' MHz' : '-'}<br>
+          <span style="color: gray; font-size: 11px">TDP:</span> ${processor.tdp ? processor.tdp + ' W' : '-'}<br>
+          <span style="color: gray; font-size: 11px">Lithography:</span> ${processor.lithography ? processor.lithography + ' nm' : '-'}<br>
+        </div>
+      `;
+
+      return `
+        <div 
+          style="border-color: ${this.series.color};"
+          class="bg-white/70 backdrop-blur-sm shadow-sm p-4 border rounded-lg">
+          ${header}
+          ${details}
+          ${specs}
+          ${performance}
+        </div>
+      `;
+    }
+    return "unknown";
+  },
+},
+
+
+
     plotOptions: {
       scatter: {
         marker: {

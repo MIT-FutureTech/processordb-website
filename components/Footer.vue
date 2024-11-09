@@ -1,6 +1,6 @@
 <template>
     <footer class="bg-black border-t-[12px] border-t-[#A32035] text-center text-white py-8 px-4 sm:px-6 lg:px-8 ">
-      <div class="max-w-7xl mx-auto flex justify-between flex-col gap-8 lg:flex-row flex-wrap">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between flex-col gap-8 lg:flex-row flex-wrap">
         <div class="text-left">
           <h2 class="text-2xl font-bold font-logo"><span class="text-[#A32035]">MIT</span> <span
               class="text-nowrap">PROCESSOR DB</span></h2>
@@ -38,7 +38,7 @@
 
       </div>
       <div
-        class="max-w-7xl mx-auto  border-t border-t-white flex justify-between gap-8 mt-16 pt-8 flex-col sm:flex-row">
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 border-t border-t-white flex justify-between gap-8 mt-16 pt-8 flex-col sm:flex-row">
         <p class="text-center text-sm">
           © {{ new Date().getFullYear() }} MIT Processor Database
         </p>
