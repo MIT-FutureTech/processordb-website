@@ -1,5 +1,4 @@
 <template>
-
   <div class="text-gray-800 bg-gray-50">
     <Navbar />
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 pl-4">
@@ -47,7 +46,8 @@
               <ul class="space-y-2 flex-1">
                 <li class="pl-4"><strong>Die size (mm²):</strong> {{ soc.die_sizes || '-' }}</li>
                 <li class="pl-4"><strong>Number of Dies:</strong> {{ soc.number_of_die || '-' }}</li>
-                <li class="pl-4"><strong>Transistor density:</strong> {{ soc.transistor_density || (soc.total_transistor_count/soc.die_sizes).toFixed(2) || '-' }}</li>
+                <li class="pl-4"><strong>Transistor density:</strong> {{ soc.transistor_density ||
+                  (soc.total_transistor_count / soc.die_sizes).toFixed(2) || '-' }}</li>
                 <li class="pl-4"><strong>Voltage (low):</strong> {{ soc.voltage_range_low || '-' }}</li>
                 <li class="pl-4"><strong>Voltage (high):</strong> {{ soc.voltage_range_high || '-' }}</li>
                 <li class="pl-4"><strong>Platform:</strong> {{ soc.platform }}</li>
@@ -75,7 +75,7 @@
                     <li class="pl-4"><strong>Processor Family:</strong>
                       <NuxtLink class="underline font-medium hover:text-[#A32035]"
                         :to="`/database/manufacturer/${slugify(soc.manufacturer_name)}/family/${slugify(cpu.core_info.microarchitecture)}`">
-                          {{ cpu.core_info.family || '-' }}
+                        {{ cpu.core_info.family || '-' }}
                       </NuxtLink>
                     </li>
                     <li class="pl-4"><strong>Processor Code Name:</strong> {{ cpu.core_info.code_name || '-' }}</li>
@@ -123,9 +123,11 @@
                   <ul class="space-y-2">
                     <li class="pl-4"><strong>Turbo Boost Max Technology 3.0 Frequency (MHz):</strong> {{
                       cpu.additional_info.turbo_boost_max_technology_3_frequency || '-' }}</li>
-                    <li class="pl-4"><strong>Turbo Frequency 1 Core:</strong> {{ cpu.additional_info.turbo_frequency_1core || '-' }}
+                    <li class="pl-4"><strong>Turbo Frequency 1 Core:</strong> {{
+                      cpu.additional_info.turbo_frequency_1core || '-' }}
                     </li>
-                    <li class="pl-4"><strong>Turbo Frequency 2 Cores:</strong> {{ cpu.additional_info.turbo_frequency_2core || '-' }}
+                    <li class="pl-4"><strong>Turbo Frequency 2 Cores:</strong> {{
+                      cpu.additional_info.turbo_frequency_2core || '-' }}
                     </li>
                   </ul>
                 </div>
@@ -279,7 +281,7 @@
                     <li class="pl-4"><strong>Texture Mapping Units (TMUs):</strong> {{
                       gpu.compute_info.texture_mapping_units ||
                       '-'
-                    }}
+                      }}
                     </li>
                     <li class="pl-4"><strong>Render Output Units (ROPs):</strong> {{
                       gpu.compute_info.render_output_units || '-' }}
@@ -351,6 +353,19 @@
           </tbody>
         </table>
       </section>
+
+      <div class="flex justify-between font-semibold mt-8 mb-4">
+        <a href="https://processordb.mit.edu/database">
+          <div class="flex font-medium hover:text-[#A32035]">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+            </svg>
+            Database
+          </div>
+        </a>
+      </div>
+
     </div>
 
     <Footer />
