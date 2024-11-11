@@ -272,10 +272,10 @@
                     <h4 class="text-lg font-semibold mb-4">Compute Information</h4>
                     <li class="pl-4"><strong>Texture Rate (GTexel/s):</strong> {{ gpu.compute_info.texture_rate || '-'
                       }}</li>
-                    <li class="pl-4"><strong>FP16 (half) Performance (TFLOPS):</strong> {{ gpu.compute_info.fp16 || '-'
+                    <li class="pl-4"><strong>FP16 Performance (TFLOPS):</strong> {{ gpu.compute_info.fp16 || '-'
                       }}</li>
                     <li class="pl-4"><strong>FP32 Performance (TFLOPS):</strong> {{ gpu.compute_info.fp32 || '-' }}</li>
-                    <li class="pl-4"><strong>FP64 (double) Performance (GFLOPS):</strong> {{ gpu.compute_info.fp64 ||
+                    <li class="pl-4"><strong>FP64 Performance (GFLOPS):</strong> {{ gpu.compute_info.fp64 ||
                       '-' }}</li>
                     <li class="pl-4"><strong>Shader Units (SU):</strong> {{ gpu.compute_info.shader_units || '-' }}</li>
                     <li class="pl-4"><strong>Texture Mapping Units (TMUs):</strong> {{
@@ -327,7 +327,7 @@
           <tbody>
             <tr v-for="benchmark in benchmarks" :key="benchmark.benchmark_id">
               <td class="py-2 px-4 border-b">{{ benchmark.benchmark_name }}</td>
-              <td class="py-2 px-4 border-b">{{ benchmark.score }}</td>
+              <td class="py-2 px-4 border-b">{{ benchmark.score + ' TFLOP'}}</td>
             </tr>
           </tbody>
         </table>
