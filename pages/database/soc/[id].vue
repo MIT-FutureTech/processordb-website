@@ -47,7 +47,7 @@
               <ul class="space-y-2 flex-1">
                 <li class="pl-4"><strong>Die size (mm²):</strong> {{ soc.die_sizes || '-' }}</li>
                 <li class="pl-4"><strong>Number of Dies:</strong> {{ soc.number_of_die || '-' }}</li>
-                <li class="pl-4"><strong>Transistor density:</strong> {{ soc.transistor_density || '-' }}</li>
+                <li class="pl-4"><strong>Transistor density:</strong> {{ soc.transistor_density || (soc.total_transistor_count/soc.die_sizes).toFixed(2) || '-' }}</li>
                 <li class="pl-4"><strong>Voltage (low):</strong> {{ soc.voltage_range_low || '-' }}</li>
                 <li class="pl-4"><strong>Voltage (high):</strong> {{ soc.voltage_range_high || '-' }}</li>
                 <li class="pl-4"><strong>Platform:</strong> {{ soc.platform }}</li>
@@ -72,17 +72,27 @@
                 <div>
                   <h4 class="text-lg font-semibold mb-2">General Information</h4>
                   <ul class="space-y-2">
-                    <li class="pl-4"><strong>Processor Family:</strong> {{ soc.name.split(' ')[0] || '-' }}</li>
-                    <li class="pl-4"><strong>Processor Code Name:</strong> {{ soc.name.split(' ')[1] || '-' }}</li>
-                    <li class="pl-4"><strong>Microarchitecture:</strong> {{ cpu.microarchitecture || '-' }}</li>
-                    <li class="pl-4"><strong>Processor Model:</strong> {{ soc.name.split(' ')[2] || '-' }}</li>
+                    <li class="pl-4"><strong>Processor Family:</strong>
+                      <NuxtLink class="underline font-medium hover:text-[#A32035]"
+                        :to="`/database/manufacturer/${slugify(soc.manufacturer_name)}/family/${slugify(cpu.core_info.microarchitecture)}`">
+                          {{ cpu.core_info.family || '-' }}
+                      </NuxtLink>
+                    </li>
+                    <li class="pl-4"><strong>Processor Code Name:</strong> {{ cpu.core_info.code_name || '-' }}</li>
+                    <li class="pl-4"><strong>Microarchitecture:</strong>
+                      <NuxtLink class="underline font-medium hover:text-[#A32035]"
+                        :to="`/database/manufacturer/${slugify(soc.manufacturer_name)}/microarchitecture/${slugify(cpu.core_info.microarchitecture)}`">
+                        {{ cpu.core_info.microarchitecture || '-' }}
+                      </NuxtLink>
+                    </li>
+                    <li class="pl-4"><strong>Processor Model:</strong> {{ cpu.core_info.model || '-' }}</li>
                     <li class="pl-4"><strong>Processor Clock (MHz):</strong> {{ cpu.core_info.clock || '-' }}</li>
                     <li class="pl-4"><strong>Processor Clock - Max - (MHz):</strong> {{ cpu.core_info.max_clock || '-'
                       }}</li>
                     <li class="pl-4"><strong>Threads/Core:</strong> {{ cpu.core_info.threads_per_core || '-' }}</li>
                     <li class="pl-4"><strong>Cores:</strong> {{ cpu.core_info.core_count || '-' }}</li>
-                    <li class="pl-4"><strong>TDP(W):</strong> {{ cpu.tdp || '-' }}</li>
-                    <li class="pl-4"><strong>Lithography (nm):</strong> {{ cpu.lithography || '-' }}</li>
+                    <li class="pl-4"><strong>TDP(W):</strong> {{ cpu.core_info.tdp || '-' }}</li>
+                    <li class="pl-4"><strong>Lithography (nm):</strong> {{ cpu.core_info.lithography || '-' }}</li>
                   </ul>
                 </div>
 
@@ -112,10 +122,10 @@
                   <h4 class="text-lg font-semibold mb-2">Frequency Information</h4>
                   <ul class="space-y-2">
                     <li class="pl-4"><strong>Turbo Boost Max Technology 3.0 Frequency (MHz):</strong> {{
-                      cpu.turbo_boost_max_technology_3_frequency || '-' }}</li>
-                    <li class="pl-4"><strong>Turbo Frequency 1 Core:</strong> {{ cpu.turbo_frequency_1core || '-' }}
+                      cpu.additional_info.turbo_boost_max_technology_3_frequency || '-' }}</li>
+                    <li class="pl-4"><strong>Turbo Frequency 1 Core:</strong> {{ cpu.additional_info.turbo_frequency_1core || '-' }}
                     </li>
-                    <li class="pl-4"><strong>Turbo Frequency 2 Cores:</strong> {{ cpu.turbo_frequency_2core || '-' }}
+                    <li class="pl-4"><strong>Turbo Frequency 2 Cores:</strong> {{ cpu.additional_info.turbo_frequency_2core || '-' }}
                     </li>
                   </ul>
                 </div>
