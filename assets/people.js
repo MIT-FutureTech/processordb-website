@@ -177,7 +177,14 @@ he is a member of the National Academy of Engineering.</p>
         affiliation: 'Intel',
         image: '/Jeff.jpg',        
         description: `<p class="mt-2">Jeff is a Senior Fellow at Intel Corporation and leads the team responsible for the architecture, power, performance and power management firmware for all client SOC products.  He returned to Intel in 2022 from Apple where he was the Director of Mac System Architecture.  Over the course of his 30 year career he has led many innovative SOC and chipset initiatives including the first mobile optimized Centrino platform, the first Atom platform, and the Mac transition to Apple Silicon. </p>`
+    },
+    {
+        name: 'Anna Qingfeng Li',
+        affiliation: 'Meta (pending approval)',
+        image: '/anna-qingfeng-li.jpeg',        
+        description: ``
     }
+
 
 ].sort((a, b) => {
     const lastNameA = a.name.split(" ").slice(-1)[0];
