@@ -1,7 +1,3 @@
-{"files.associations": {
-    "*.css": "tailwindcss"
-},
-"editor.quickSuggestions": {
-    "strings": true
-}
+{
+    "nuxt.isNuxtApp": false
 }

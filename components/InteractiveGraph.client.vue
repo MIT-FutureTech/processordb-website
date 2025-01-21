@@ -114,22 +114,22 @@ const groupOptions = [
 const route = useRoute()
 // Computed property for filtered group options based on route params
 const filteredGroupOptions = computed(() => {
-    const manufacturerFilterActive = route.params.slug?.includes('manufacturer')
-    const processorTypeFilterActive = route.params.slug?.includes('processorType')
+  const manufacturerFilterActive = route.params.slug?.includes('manufacturer')
+  const processorTypeFilterActive = route.params.slug?.includes('processorType')
 
-    return groupOptions.filter(option => {
-        // Exclude 'Manufacturer' option if manufacturer filter is active
-        if (option.value === 'manufacturer_name' && manufacturerFilterActive) {
-            return false
-        }
-        // Exclude 'Processor Type' option if processor type filter is active
-        if (option.value === 'processor_type' && processorTypeFilterActive) {
-            return false
-        }
-        return true
-    })
+  return groupOptions.filter(option => {
+    // Exclude 'Manufacturer' option if manufacturer filter is active
+    if (option.value === 'manufacturer_name' && manufacturerFilterActive) {
+      return false
+    }
+    // Exclude 'Processor Type' option if processor type filter is active
+    if (option.value === 'processor_type' && processorTypeFilterActive) {
+      return false
+    }
+    return true
+  })
 })
-console.log(filteredGroupOptions)
+
 const xAxis = ref(xAxisOptions[0]);
 const yAxis = ref(yAxisOptions[0]);
 const groupBy = ref(filteredGroupOptions.value[0]);
@@ -256,7 +256,7 @@ const chartOptions = computed(() => {
       const xValue = getAxisData(item, xAxis.value);
       const yValue = getAxisData(item, yAxis.value);
       let colorCategory = getAxisData(item, groupBy.value);
-      console.log(colorCategory)
+
       if (xValue === null || yValue === null || colorCategory === null) return acc;
 
       // If grouping by manufacturer and manufacturer is not in top 10, assign to "Others"
@@ -272,7 +272,7 @@ const chartOptions = computed(() => {
         name: item.soc_name,
         color: getColorForCategory(colorCategory),
         data: item,
-        
+
       };
 
       if (!acc[colorCategory]) {
@@ -336,34 +336,34 @@ const chartOptions = computed(() => {
       startOnTick: false,
     },
     tooltip: {
-  borderRadius: 3,
-  borderWidth: 0,
-  backgroundColor: 'none',
-  shadow: false,
-  useHTML: true,
-  formatter: function () {
-    if (this.point && typeof this.point === "object") {
-      const data = this.point.data;
-      const processor = data.processors && data.processors[0] ? data.processors[0] : {};
+      borderRadius: 3,
+      borderWidth: 0,
+      backgroundColor: 'none',
+      shadow: false,
+      useHTML: true,
+      formatter: function () {
+        if (this.point && typeof this.point === "object") {
+          const data = this.point.data;
+          const processor = data.processors && data.processors[0] ? data.processors[0] : {};
 
-      // Constructed name: Manufacturer + Family + Microarchitecture + Model
-      const name = `
+          // Constructed name: Manufacturer + Family + Microarchitecture + Model
+          const name = `
         ${data.manufacturer_name || '-'} 
         ${processor.family || '-'} 
         ${processor.microarchitecture || '-'} 
         ${processor.model || '-'}
       `.trim().replace(/\s+/g, ' ');
 
-      // Header with Name and Release Year
-      const header = `
+          // Header with Name and Release Year
+          const header = `
         <div class="flex w-full justify-between gap-8">
           <div style="color: ${this.series.color}; white-space: normal;" class="font-bold">${name}</div>
           <div class="font-bold">${new Date(data.release_date).getFullYear()}</div>
         </div><br>
       `;
 
-      // Manufacturer, Family, Microarchitecture, Model
-      const details = `
+          // Manufacturer, Family, Microarchitecture, Model
+          const details = `
         <div>
           <span style="color: gray; font-size: 11px">Manufacturer:</span> ${data.manufacturer_name || '-'}<br>
           <span style="color: gray; font-size: 11px">Family:</span> ${processor.family || '-'}<br>
@@ -372,8 +372,8 @@ const chartOptions = computed(() => {
         </div><br>
       `;
 
-      // Release Date, Process Node, Die Size, Transistor Count with conditional units
-      const specs = `
+          // Release Date, Process Node, Die Size, Transistor Count with conditional units
+          const specs = `
         <div>
           <span style="color: gray; font-size: 11px">Release Date:</span> ${new Date(data.release_date).getFullYear() || '-'}<br>
           <span style="color: gray; font-size: 11px">Process Node:</span> ${data.process_node ? data.process_node + ' nm' : '-'}<br>
@@ -382,8 +382,8 @@ const chartOptions = computed(() => {
         </div><br>
       `;
 
-      // Clock Speeds, TDP, Lithography with conditional units
-      const performance = `
+          // Clock Speeds, TDP, Lithography with conditional units
+          const performance = `
         <div>
           <span style="color: gray; font-size: 11px">Base Clock:</span> ${processor.clock ? processor.clock + ' MHz' : '-'}<br>
           <span style="color: gray; font-size: 11px">Max Clock:</span> ${processor.max_clock ? processor.max_clock + ' MHz' : '-'}<br>
@@ -392,7 +392,7 @@ const chartOptions = computed(() => {
         </div>
       `;
 
-      return `
+          return `
         <div 
           style="border-color: ${this.series.color};"
           class="bg-white/70 backdrop-blur-sm shadow-sm p-4 border rounded-lg">
@@ -402,10 +402,10 @@ const chartOptions = computed(() => {
           ${performance}
         </div>
       `;
-    }
-    return "unknown";
-  },
-},
+        }
+        return "unknown";
+      },
+    },
 
 
 
