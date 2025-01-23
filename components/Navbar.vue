@@ -51,7 +51,7 @@
 import { ref } from 'vue';
 
 const links = ref([
-  { text: 'Manufacturers', to: '/manufacturers', icon: 'md-precisionmanufacturing' },
+  { text: 'Manufacturers', to: '/manufacturers/list', icon: 'md-precisionmanufacturing' },
   { text: 'SoCs', to: '/soc/list', icon: 'gi-circuitry' },
   { text: 'CPUs', to: '/cpu/list', icon: 'bi-cpu' },
   { text: 'GPUs', to: '/gpu/list', icon: 'bi-gpu-card' },
