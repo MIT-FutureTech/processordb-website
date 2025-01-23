@@ -57,14 +57,6 @@ University of California, Berkeley.</p>
             `
     },
     {
-        name: 'Andrew Souza',
-        affiliation: 'MIT Futuretech',
-        image: '/andrew_souza.jpeg',
-        description: `
-            <p class="mt-2">Andrew is a Webmaster on FutureTech research project at the MIT’s Computer Science and Artificial Intelligence Lab. He holds a bachelor's degree in Software Engineering from the University of Brasília.</p>
-            `
-    },
-    {
         name: 'João Zarbiélli',
         affiliation: 'MIT Futuretech',
         image: '/joao_zarbielli.png',
