@@ -55,9 +55,9 @@ const links = ref([
   { text: 'SoCs', to: '/soc/list', icon: 'gi-circuitry' },
   { text: 'CPUs', to: '/cpu/list', icon: 'bi-cpu' },
   { text: 'GPUs', to: '/gpu/list', icon: 'bi-gpu-card' },
-  { text: 'FPGAs', to: '/fpga/list', icon: 'gi-logic-gate-xor' },
-  { text: 'Economics', to: '/economics', icon: 'md-attachmoney' },
-  { text: 'Performances', to: '/performances', icon: 'gi-chart' },
+  // { text: 'FPGAs', to: '/fpga/list', icon: 'gi-logic-gate-xor' },
+  // { text: 'Economics', to: '/economics', icon: 'md-attachmoney' },
+  // { text: 'Performances', to: '/performances', icon: 'gi-chart' },
 ]);
 
 </script>
