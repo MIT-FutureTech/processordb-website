@@ -5,7 +5,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-8">
       <h1 class="text-4xl font-bold text-[#A32035] mb-4 sm:mb-0">SOCs</h1>
-      <NuxtLink to=""
+      <NuxtLink to="/soc/form"
         class="px-6 py-2.5 bg-[#A32035] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#8a1b2d] hover:shadow-lg text-center inline-flex items-center justify-center">
         <span class="mr-2">Add SoC</span>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

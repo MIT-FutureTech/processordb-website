@@ -12,7 +12,7 @@
         </NuxtLink>
       </div>
       
-      <NuxtLink to=""
+      <button @click="submitForm" v-show="isLoggedIn"
         class="px-6 py-2.5 bg-[#A32035] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#8a1b2d] hover:shadow-lg text-center inline-flex items-center justify-center">
         <span class="mr-2"> Save </span>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -20,11 +20,11 @@
             d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 9l-5 5-5-5M12 12.8V2.5"
             clip-rule="evenodd" />
         </svg>
-      </NuxtLink>
+      </button>
     </div>
 
     <div class="mt-8 -ml-4 mb-16">
-      <CpuForm :cpuData="cpuData" />
+      <CpuForm :cpuData="cpuData" :editMode=true ref="cpuFormRef" :readOnly="!isLoggedIn" />
     </div>
 
   </div>
@@ -37,15 +37,22 @@ import { useRoute } from 'vue-router'
 import Footer from '@/components/Footer.vue'
 import CpuForm from '@/components/Forms/CpuForm.vue'
 
+const PASSWORD = ref('processorDB-2024');
+const storedPassword = ref(null);
+const isLoggedIn = ref(false);
+
+onMounted(() => {
+  storedPassword.value = sessionStorage.getItem('protectedPassword');
+  isLoggedIn.value = storedPassword.value === PASSWORD.value;
+});
+
+const cpuFormRef = ref(null)
 const route = useRoute()
+const { data: cpuData } = await useFetch(`http://localhost:3001/api/cpus/${route.params.id}`)
 
-const { data: cpuData } = await useFetch(`http://localhost:3001/api/socs/${route.params.id}`, {
-  key: `cpu-${route.params.id}`,
-  transform: (response) => {
-    return response
-  },
-  server: true,
-  lazy: true
-})
-
+const submitForm = () => {
+  if (cpuFormRef.value) {
+    cpuFormRef.value.submitData()
+  }
+}
 </script>

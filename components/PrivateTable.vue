@@ -1,437 +1,354 @@
 <template>
-    <div>
-      <div class="flex justify-between gap-4 items-center mb-4">
-        <div class="flex justify-start gap-4 items-center ">
-          <slot name="filters"></slot>
+  <div>
+    <!-- Top Controls -->
+    <div class="flex justify-between gap-4 items-center mb-4">
+      <div class="flex justify-start gap-4 items-center">
+        <!-- Optional slot for extra filters -->
+        <slot name="filters"></slot>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <div class="mr-4">
+          Showing {{ startRecord }}-{{ endRecord }} of {{ pagination.totalRecords }} records
         </div>
-  
-        <div class="flex justify-center sm:justify-end flex-wrap   gap-2 items-center text-xs">
-          <div class="mr-4">
-            Showing {{ startRecord }}-{{ endRecord }} of {{ pagination.totalRecords }} records
-          </div>
-          <input type="text" v-model="filters.manufacturer" placeholder="Search" class="mr-2 outline-none bg-white border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2  text-gray-700  text-xs" />
-      
-          <!-- Pagination Control -->
-          <div class="flex items-center ">
-            <button @click="prevPage" :disabled="pagination.currentPage === 1" class=" px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-gray-700 text-xs has-tooltip">
-              <span class='tooltip rounded shadow-lg p-2 bg-white text-[#A32035] -mt-12 -ml-12'> Previous page </span>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-              </svg>
+        <input type="text" v-model="searchQuery" placeholder="Search"
+          class="mr-2 outline-none bg-white border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs" />
 
-            </button>
+        <!-- Pagination Controls -->
+        <div class="flex items-center">
+          <button @click="prevPage" :disabled="pagination.currentPage === 1"
+            class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-xs has-tooltip">
+            <span class="tooltip rounded shadow-lg p-2 bg-white text-[#A32035] -mt-12 -ml-12">
+              Previous page
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor" class="size-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+          <input type="number" v-model.number="pagination.currentPage" :min="1" :max="pagination.totalPages"
+            class="max-w-12 text-center outline-none bg-white border-[#A32035] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs hide-arrow" />
+          <button @click="nextPage" :disabled="pagination.currentPage === pagination.totalPages"
+            class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-gray-700 text-xs has-tooltip">
+            <span class="tooltip rounded shadow-lg p-2 bg-white text-[#A32035] -mt-12 -ml-6">
+              Next page
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor" class="size-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+        </div>
 
-            <input type="number" v-model.number="pagination.currentPage" min="1" :max="pagination.totalPages"
-              class=" max-w-12 text-center outline-none bg-white border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2  text-gray-700  text-xs hide-arrow" />
-
-            <button @click="nextPage" :disabled="pagination.currentPage === pagination.totalPages" class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-gray-700 text-xs has-tooltip">
-              <span class='tooltip rounded shadow-lg p-2 bg-white text-[#A32035] -mt-12 -ml-6'> Next page </span>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-              </svg>
-  
-            </button>
-          </div>
-  
-          <div>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                class="outline-none bg-white hover:bg-gray-100 border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2  text-gray-700  text-xs">
-                Show/Hide Columns
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuLabel>Columns</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem v-for="column in allColumns" :key="column.value" asChild>
-                  <label class="flex items-center gap-2 cursor-pointer"
-                    :class="{ 'border border-[#A32035] text-[#A32035] px-2 py-1 rounded': selectedColumns.includes(column.value) }">
-                    <input type="checkbox" class="hidden" v-model="selectedColumns" :value="column.value" />
-                    <span>{{ column.label }}</span>
-                  </label>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-  
-          </div>
+        <!-- Show/Hide Columns Dropdown -->
+        <div>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              class="outline-none bg-white hover:bg-gray-100 border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs">
+              Show/Hide Columns
+            </DropdownMenuTrigger>
+            <DropdownMenuContent class="max-h-96 overflow-y-auto">
+              <DropdownMenuLabel>Columns</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem v-for="column in allColumns" :key="column.value" asChild>
+                <label class="flex items-center gap-2 cursor-pointer px-2 py-1" :class="{
+                  'border border-[#A32035] text-[#A32035] px-2 py-1 rounded': selectedColumns.includes(column.value)
+                }">
+                  <input type="checkbox" class="hidden" v-model="selectedColumns" :value="column.value" />
+                  <span>{{ column.label }}</span>
+                </label>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-  
-      <Table>
-        <!-- empty table -->
-        <TableCaption v-if="displayedSocs.length === 0">No SoCs found.</TableCaption>
+
+    </div>
+
+    <!-- Table Container with Horizontal Scroll -->
+    <div :class="{ 'overflow-x-auto': displayedColumns.length > defaultColumnsOrder.length }">
+      <Table class="table-auto w-full">
+        <TableCaption v-if="displayedData.length === 0">No records found.</TableCaption>
         <TableHeader>
           <TableRow>
+            <!-- Loop through the selectable columns -->
             <TableHead v-for="column in displayedColumns" :key="column.value"
-              class="cursor-pointer text-gray-700 opacity-80 " @click="sortBy(column.value)">
-              <div class="flex items-center flex-nowrap gap-2 text-nowrap">
-  
+              class="cursor-pointer text-[#A32035] opacity-80" @click="sortBy(column.value)">
+              <div class="flex items-center gap-2">
                 {{ column.label }}
                 <span v-if="sortField === column.value">
                   {{ sortOrder === 'asc' ? '↑' : '↓' }}
                 </span>
               </div>
             </TableHead>
+            <!-- Fixed Details Column -->
+            <TableHead key="details" class="cursor-default text-[#A32035] opacity-80">
+              <div class="flex items-center gap-2">Details</div>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-for="(soc, index) in displayedSocs" :key="soc.soc_id"
-            class="hover:bg-[#F1F5F9] even:bg-gray-50">
-            <TableCell v-if="selectedColumns.includes('manufacturer_name')">
-              <span class="text-[#A32035]">
-                {{ soc.manufacturer_name }}
+          <TableRow v-for="row in displayedData" :key="uniqueId(row)" class="hover:bg-[#F1F5F9] even:bg-gray-50">
+            <!-- Loop through the selectable columns -->
+            <TableCell v-for="column in displayedColumns" :key="column.value">
+              <span class="text-black">
+                <template v-if="column.value === 'release_date'">
+                  {{ formatYear(row[column.value]) }}
+                </template>
+                <template v-else>
+                  {{ row[column.value] }}
+                </template>
               </span>
             </TableCell>
-            <TableCell v-if="selectedColumns.includes('processor_type')">
-              <div v-for="processor in soc.processors" :key="processor.model">
-                <span class="text-[#A32035]">
-                  {{ processor.processor_type }}
-                </span>
-              </div>
-            </TableCell>
-            <TableCell v-if="selectedColumns.includes('processor_family')">
-              <div v-for="processor in soc.processors" :key="processor.family">
-                <span class="text-[#A32035]">
-                  {{ processor.family }}
-                </span>
-              </div>
-            </TableCell>
-            <TableCell v-if="selectedColumns.includes('microarchitecture')">
-              <div v-for="processor in soc.processors" :key="processor.microarchitecture">
-                <span class="text-[#A32035]">
-                  {{ processor.microarchitecture }}
-                </span>
-              </div>
-            </TableCell>
-            <TableCell v-if="selectedColumns.includes('model')">
-              <div v-for="processor in soc.processors" :key="processor.model">
-                <NuxtLink class="text-[#A32035]" :to="`/database/soc/${soc.soc_id}`">
-                  {{ processor.model }}
-                </NuxtLink>
-              </div>
-            </TableCell>
-            <TableCell v-if="selectedColumns.includes('release_date')">
-              {{ formatDate(soc.release_date) }}
-            </TableCell>
-            <TableCell v-if="selectedColumns.includes('clock')">
-              <div v-for="processor in soc.processors" :key="processor.clock">
-                {{ processor.clock ? processor.clock + ' MHz' : '' }}
-              </div>
-            </TableCell>
-            <TableCell v-if="selectedColumns.includes('tdp')">
-              <div v-for="processor in soc.processors" :key="processor.tdp">
-                {{ processor.tdp ? processor.tdp + ' W' : '' }}
-              </div>
-            </TableCell>
-            <TableCell v-if="selectedColumns.includes('die_sizes')">
-              {{ soc.die_sizes ? soc.die_sizes + ' mm²' : '' }}
-            </TableCell>
-            <TableCell v-if="selectedColumns.includes('total_transistor_count')">
-              {{ soc.total_transistor_count ? soc.total_transistor_count + ' million' : '' }}
-            </TableCell>
-            <TableCell v-if="selectedColumns.includes('lithography')">
-              <div v-for="processor in soc.processors" :key="processor.lithography">
-                {{ processor.lithography ? processor.lithography + ' nm' : '' }}
-              </div>
-            </TableCell>
-            <TableCell v-if="selectedColumns.includes('fp64_ops')">
-              <div v-for="processor in soc.processors" :key="processor.fp64_ops">
-                {{ processor.fp64_ops ? processor.fp64_ops + ' GFLOPS' : '' }}
-              </div>
-            </TableCell>
-            <TableCell v-if="selectedColumns.includes('fp32_ops')">
-              <div v-for="processor in soc.processors" :key="processor.fp32_ops">
-                {{ processor.fp32_ops ? processor.fp32_ops + ' GFLOPS' : '' }}
-              </div>
-            </TableCell>
-            <TableCell v-if="selectedColumns.includes('fp16_ops')">
-              <div v-for="processor in soc.processors" :key="processor.fp16_ops">
-                {{ processor.fp16_ops ? processor.fp16_ops + ' GFLOPS' : '' }}
-              </div>
-            </TableCell>
-            <TableCell v-if="selectedColumns.includes('details')">
-              <NuxtLink class="text-[#A32035] hover:underline" :to="`/${className}/${soc.soc_id}`">Details
+            <!-- Fixed Details Column Cell -->
+            <TableCell key="details">
+              <NuxtLink class="text-[#A32035] hover:underline" :to="`/${props.className}/${uniqueId(row)}`">
+                Details
               </NuxtLink>
             </TableCell>
           </TableRow>
         </TableBody>
       </Table>
-  
     </div>
-  </template>
-  
-  <script setup lang="js">
-  import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-  } from '@/components/ui/dropdown-menu'
-  import {
-    Table,
-    TableBody,
-    TableCaption,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-  } from '@/components/ui/table'
-  const props = defineProps({
-    data: {
-      type: Array,
-      required: true,
-    },
-    className: {
-      type: String,
-      required: true
-    }
-  })
-  
-  
-  const emit = defineEmits(['filteredData'])
-  
-  
-  // State for SoCs
-  const socs = ref(props.data)
-  const className = ref(props.className)
+  </div>
+</template>
 
-  // Dropdown state for column selection
-  const showColumnDropdown = ref(false)
-  const toggleColumnDropdown = () => {
-    showColumnDropdown.value = !showColumnDropdown.value
+<script setup lang="js">
+import { ref, computed, watch } from 'vue'
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { NuxtLink } from '#components'
+
+// --- Props ---
+// - data: an array of objects (either CPU or GPU objects)
+// - className: a string ("cpu" or "gpu") indicating the type of data
+const props = defineProps({
+  data: { type: Array, required: true },
+  className: { type: String, required: true },
+})
+
+// --- Helper: Format Year ---
+// Returns only the year from a date.
+const formatYear = (date) => {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric' })
+}
+
+// --- Helper: Unique ID ---
+// For CPUs, use cpu_id; for GPUs, use gpu_id.
+const uniqueId = (row) => {
+  return props.className === 'cpu' ? row.cpu_id : row.gpu_id
+}
+
+// --- Helper: Format Column Label ---
+// Capitalizes keys (e.g. "cpu_id" becomes "Cpu Id")
+function formatColumnLabel(key) {
+  return key
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
+// --- Flatten Data ---
+// For CPU objects, extract manufacturer and release_date from SoC and add processor_type.
+// For GPU objects, add processor_type and ensure a model field is available.
+const flattenedData = computed(() => {
+  if (props.className === 'cpu') {
+    return props.data.map((item) => ({
+      ...item,
+      manufacturer: item.SoC?.Manufacturer?.name || '',
+      release_date: item.SoC?.release_date || '',
+      processor_type: 'CPU'
+    }))
+  } else if (props.className === 'gpu') {
+    return props.data.map((item) => ({
+      ...item,
+      manufacturer: item.SoC?.Manufacturer?.name || '',
+      release_date: item.SoC?.release_date || '',
+      processor_type: 'GPU',
+      model: item.model || item.name || '',
+      family: item.architecture || '',
+      microarchitecture: item.generation || '',
+      clock: item.base_clock || item.boost_clock || null,
+      tdp: item.tdp || null,
+    }))
   }
-  
-  // State for pagination
-  const pagination = ref({
-    totalRecords: 0,
-    totalPages: 0,
-    currentPage: 1,
-    pageSize: 50,
+  return props.data
+})
+
+// --- Default Columns (Visible by Default) ---
+// These columns appear by default and in this fixed order.
+const defaultColumnsOrder = [
+  { label: 'Manufacturer', value: 'manufacturer' },
+  { label: 'Processor Type', value: 'processor_type' },
+  { label: 'Processor Family', value: 'family' },
+  { label: 'Microarchitecture', value: 'microarchitecture' },
+  { label: 'Model', value: 'model' },
+  { label: 'Release Date', value: 'release_date' },
+  { label: 'Clock (MHz)', value: 'clock' },
+  { label: 'TDP (W)', value: 'tdp' },
+]
+const defaultColumnsOrderKeys = defaultColumnsOrder.map(col => col.value)
+
+// --- Default Hidden Keys ---
+// In addition to removing cpu_id/gpu_id, hide other system attributes.
+const defaultHiddenKeys = {
+  cpu: ['cpu_id', 'createdAt', 'updatedAt', 'soc_id', 'SoC', 'notes'],
+  gpu: ['gpu_id', 'createdAt', 'updatedAt', 'soc_id', 'SoC', 'cores', 'notes', 'l0_cache', 'l1_cache', 'l2_cache', 'l3_cache', 'fp16', 'fp32', 'fp64', 'pixel_shader', 'vertex_shader', 'shader_units', 'texture_mapping_units', 'render_output_units', 'compute_units', 'ray_tracing_units', 'system_shared_memory'],
+}
+
+// --- Additional Columns ---
+// Any keys in the first flattened object that are not in defaultColumnsOrderKeys
+// and not in the default hidden keys become additional (optional) columns.
+const additionalColumns = computed(() => {
+  const dataArr = flattenedData.value
+  if (!dataArr.length) return []
+  const firstItem = dataArr[0]
+  const keys = Object.keys(firstItem)
+  const hidden = defaultHiddenKeys[props.className] || []
+  const filteredKeys = keys.filter((key) => {
+    if (defaultColumnsOrderKeys.includes(key)) return false
+    if (hidden.includes(key)) return false
+    const value = firstItem[key]
+    if (value !== null && typeof value === 'object' && !Array.isArray(value)) return false
+    return true
   })
-  
-  
-  // State for sorting
-  const sortField = ref('release_date')
-  const sortOrder = ref('desc')
-  
-  // State for filters
-  const filters = ref({
-    manufacturer: '',
-    processorType: '',
-  })
-  // Computed property for the starting record index
-  const startRecord = computed(() => {
-    return (pagination.value.currentPage - 1) * pagination.value.pageSize + 1
-  })
-  
-  // Computed property for the ending record index
-  const endRecord = computed(() => {
-    return Math.min(
-      pagination.value.currentPage * pagination.value.pageSize,
-      pagination.value.totalRecords
-    )
-  })
-  
-  // State for selected columns
-  const allColumns = [
-    { label: 'Manufacturer', value: 'manufacturer_name' },
-    { label: 'Processor Type', value: 'processor_type' },
-    { label: 'Processor Family', value: 'processor_family' },
-    { label: 'Microarchitecture', value: 'microarchitecture' },
-    { label: 'Model', value: 'model' },
-    { label: 'Release Date', value: 'release_date' },
-    { label: 'Clock (MHz)', value: 'clock' },
-    { label: 'TDP (W)', value: 'tdp' },
-    { label: 'Die Size (mm^2)', value: 'die_sizes', hiddenBydefault: true },
-    { label: 'Transistors (million)', value: 'total_transistor_count', hiddenBydefault: true },
-    { label: 'Lithography (nm)', value: 'lithography', hiddenBydefault: true },
-    { label: 'FP64 Operations (GFLOPS)', value: 'fp64_ops', hiddenBydefault: true },
-    { label: 'FP32 Operations (GFLOPS)', value: 'fp32_ops', hiddenBydefault: true },
-    { label: 'FP16 Operations (GFLOPS)', value: 'fp16_ops', hiddenBydefault: true },
-    { label: 'Details', value: 'details' },
-  ]
-  
-  const selectedColumns = ref(allColumns.filter((column) => !column.hiddenBydefault).map((column) => column.value))
-  
-  // Computed property for displayed columns
-  const displayedColumns = computed(() =>
-    allColumns.filter((column) => selectedColumns.value.includes(column.value))
+  return filteredKeys.map(key => ({
+    label: formatColumnLabel(key),
+    value: key,
+  }))
+})
+
+// --- Combine Columns ---
+// The full list of columns is the default ones (in the fixed order) followed by any additional columns.
+const allColumns = computed(() => {
+  return [...defaultColumnsOrder, ...additionalColumns.value]
+})
+
+// --- Manage Selected Columns ---
+// By default, only the default columns are selected.
+const selectedColumns = ref(defaultColumnsOrder.map(col => col.value))
+watch(allColumns, () => {
+  // Do not auto-select additional columns; keep default selection.
+})
+// The columns to display are those in allColumns that are selected.
+const displayedColumns = computed(() =>
+  allColumns.value.filter(col => selectedColumns.value.includes(col.value))
+)
+
+// --- Search, Sorting, and Pagination ---
+const searchQuery = ref('')
+const sortField = ref('')
+const sortOrder = ref('asc')
+
+// Filter the flattened data based on the search query (searching across displayed columns)
+const filteredData = computed(() => {
+  if (!searchQuery.value) return flattenedData.value
+  return flattenedData.value.filter(item =>
+    displayedColumns.value.some(col => {
+      const cellValue = item[col.value]
+      if (cellValue === null || cellValue === undefined) return false
+      return cellValue.toString().toLowerCase().includes(searchQuery.value.toLowerCase())
+    })
   )
-  
-  // Computed property for displayed SoCs
-  const displayedSocs = ref([])
-  
-  // Helper function to get field value for sorting
-  const getFieldValue = (soc, field) => {
-    if (field === 'manufacturer_name' || field === 'soc_name' || field === 'release_date') {
-      return soc[field] || ''
-    } else if (
-      [
-        'processor_type',
-        'processor_family',
-        'microarchitecture',
-        'model',
-        'clock',
-        'tdp',
-      ].includes(field)
-    ) {
-      // For processor fields, get the first processor's field value
-      if (soc.processors && soc.processors.length > 0) {
-        const processor = soc.processors[0]
-        const processorField =
-          field === 'processor_family' ? 'family' : field
-        return processor[processorField] || ''
-      }
-      return ''
-    }
-    return ''
-  }
-  const stringSortFields = [
-    'manufacturer_name',
-    'processor_type',
-    'processor_family',
-    'microarchitecture',
-    'model'
-  ]
-  
-  // Function to apply filters, sorting, and pagination
-  const applyFiltersAndSorting = () => {
-    let filteredSocs = socs.value
-  
-    // Apply filters
-    if (filters.value.manufacturer) {
-      filteredSocs = filteredSocs.filter((soc) =>
-        soc.manufacturer_name?.toLowerCase().includes(filters.value.manufacturer.toLowerCase()) ||
-        soc.soc_name?.toLowerCase().includes(filters.value.manufacturer.toLowerCase())
-      )
-    }
-  
-    // Apply sorting (case-insensitive)
-    if (sortField.value) {
-      filteredSocs.sort((a, b) => {
-        const aValue = getFieldValue(a, sortField.value)
-        const bValue = getFieldValue(b, sortField.value)
-  
-        // Handle null or empty values to always appear last
-        const aIsEmpty = aValue == null || aValue === ''
-        const bIsEmpty = bValue == null || bValue === ''
-  
-        if (aIsEmpty && !bIsEmpty) return 1
-        if (!aIsEmpty && bIsEmpty) return -1
-  
-        // Determine sorting method based on column type
-        const useStringSort = stringSortFields.includes(sortField.value)
-        const aParsed = useStringSort ? aValue.toString().toLowerCase() : parseFloat(aValue)
-        const bParsed = useStringSort ? bValue.toString().toLowerCase() : parseFloat(bValue)
-  
-        // Primary sort based on parsed values
-        if (aParsed < bParsed) return sortOrder.value === 'asc' ? -1 : 1
-        if (aParsed > bParsed) return sortOrder.value === 'asc' ? 1 : -1
-  
-        // Secondary sort by unique identifier to ensure stability
-        return a.soc_id < b.soc_id ? -1 : 1
-      })
-    }
-  
-    // Update total records and pages
-    pagination.value.pageSize = Number(pagination.value.pageSize)
-    pagination.value.totalRecords = filteredSocs.length
-    pagination.value.totalPages = Math.ceil(
-      pagination.value.totalRecords / pagination.value.pageSize
-    )
-  
-    // Ensure current page is within total pages
-    if (pagination.value.currentPage > pagination.value.totalPages) {
-      pagination.value.currentPage = pagination.value.totalPages || 1
-    }
-  
-    // Apply pagination
-    const start = (pagination.value.currentPage - 1) * pagination.value.pageSize
-    const end = start + pagination.value.pageSize
-    displayedSocs.value = filteredSocs.slice(start, end)
-  }
-  
-  
-  
-  watch(socs, () => {
-    applyFiltersAndSorting()
-  }, {
-    immediate: true
-  })
-  
-  // Watchers
-  watch(
-    [filters, sortField, sortOrder, pagination],
-    () => {
-      applyFiltersAndSorting()
-    },
-    { deep: true }
-  )
-  
-  // Pagination functions
-  const nextPage = () => {
-    if (pagination.value.currentPage < pagination.value.totalPages) {
-      pagination.value.currentPage++
-    }
-  }
-  
-  const prevPage = () => {
-    if (pagination.value.currentPage > 1) {
-      pagination.value.currentPage--
-    }
-  }
-  
-  // Sorting function
-  const sortBy = (field) => {
-    if (sortField.value === field) {
-      sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
-    } else {
-      sortField.value = field
-      sortOrder.value = 'asc'
-    }
-  }
-  
-  // Helper function to format date
-  const formatDate = (date) => {
-    if (!date) return ''
-    return new Date(date).toLocaleDateString('en-US', {
-      timeZone: 'UTC',
-      year: 'numeric',
+})
+
+// Sort the filtered data.
+// If no sort field is selected, sort by release_date (year) descending,
+// treating rows without a release_date as having a very low year value.
+const sortedData = computed(() => {
+  let dataToSort = [...filteredData.value]
+  if (!sortField.value) {
+    return dataToSort.sort((a, b) => {
+      const aYear = a.release_date ? new Date(a.release_date).getFullYear() : -Infinity
+      const bYear = b.release_date ? new Date(b.release_date).getFullYear() : -Infinity
+      return bYear - aYear
     })
   }
-  
-  function slugify(str) {
-    if (!str) return ''
-  
-    return str
-      .toLowerCase()
-      .replace(/[^\w- ]+/g, '') // Allow hyphens by excluding them from the pattern
-      .replace(/ +/g, '-')      // Replace spaces with hyphens
-  }
-  </script>
-  
-  <style scoped>
-  /* Add any custom styles here */
-  .table-auto th {
-    background-color: #f9fafb;
-  }
-  
-  .table-auto th:hover {
-    background-color: #f1f5f9;
-  }
-  
-  .hide-arrow[type="number"]::-webkit-inner-spin-button,
-  .hide-arrow[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
+  return dataToSort.sort((a, b) => {
+    const aVal = a[sortField.value] || ''
+    const bVal = b[sortField.value] || ''
+    if (aVal < bVal) return sortOrder.value === 'asc' ? -1 : 1
+    if (aVal > bVal) return sortOrder.value === 'asc' ? 1 : -1
+    return 0
+  })
+})
 
-  .tooltip {
-    @apply invisible absolute;
-  }
+// Pagination state and computed slice of data.
+const pagination = ref({
+  currentPage: 1,
+  pageSize: 50,
+  totalRecords: 0,
+  totalPages: 0,
+})
+const displayedData = computed(() => {
+  pagination.value.totalRecords = sortedData.value.length
+  pagination.value.totalPages = Math.ceil(sortedData.value.length / pagination.value.pageSize)
+  const start = (pagination.value.currentPage - 1) * pagination.value.pageSize
+  const end = start + pagination.value.pageSize
+  return sortedData.value.slice(start, end)
+})
+const startRecord = computed(() => (pagination.value.currentPage - 1) * pagination.value.pageSize + 1)
+const endRecord = computed(() =>
+  Math.min(pagination.value.currentPage * pagination.value.pageSize, pagination.value.totalRecords)
+)
 
-  .has-tooltip:hover .tooltip {
-    @apply visible z-50;
+const nextPage = () => {
+  if (pagination.value.currentPage < pagination.value.totalPages) {
+    pagination.value.currentPage++
   }
-  </style>
+}
+const prevPage = () => {
+  if (pagination.value.currentPage > 1) {
+    pagination.value.currentPage--
+  }
+}
+
+// Sorting handler: clicking a header toggles sort order.
+const sortBy = (field) => {
+  if (sortField.value === field) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortField.value = field
+    sortOrder.value = 'asc'
+  }
+}
+</script>
+
+<style scoped>
+.table-auto th {
+  background-color: #f9fafb;
+}
+
+.table-auto th:hover {
+  background-color: #f1f5f9;
+}
+
+.hide-arrow[type="number"]::-webkit-inner-spin-button,
+.hide-arrow[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.tooltip {
+  @apply invisible absolute;
+}
+
+.has-tooltip:hover .tooltip {
+  @apply visible z-50;
+}
+</style>

@@ -2,7 +2,6 @@
   <Navbar />
 
   <div class="min-h-screen max-w-7xl mx-auto py-2 px-4 justify-start md:justify-between items-center">
-
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-8">
       <div class="flex items-center gap-4 mb-4 sm:mb-0">
         <h1 class="text-4xl font-bold text-[#A32035]">GPU</h1>
@@ -12,7 +11,7 @@
         </NuxtLink>
       </div>
 
-      <NuxtLink to="/gpu/form"
+      <button @click="submitForm" v-if="isLoggedIn"
         class="px-6 py-2.5 bg-[#A32035] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#8a1b2d] hover:shadow-lg text-center inline-flex items-center justify-center">
         <span class="mr-2"> Save </span>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -20,41 +19,36 @@
             d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 9l-5 5-5-5M12 12.8V2.5"
             clip-rule="evenodd" />
         </svg>
-      </NuxtLink>
+      </button>
     </div>
 
     <div class="mt-8 -ml-4 mb-16">
-        <GpuForm :gpuData="gpuData" />
+      <GpuForm ref="gpuFormRef" :gpuData="gpuData" />
     </div>
-
   </div>
 
   <Footer />
 </template>
 
-<script setup lang="js">
+<script setup>
 import { ref } from 'vue'
 import Footer from '../components/Footer.vue'
 import GpuForm from '../components/Forms/GpuForm.vue'
 
-const gpuData = ref({
-  processors: [{
-    general_info: {
-      name: '',
-      variant: ''
-    }
-  }],
-  manufacturer_name: '',
-  release_date: null,
-  process_node: null,
-  core_count: null,
-  total_transistor_count: null,
-  package_size: null,
-  die_sizes: null,
-  number_of_die: null,
-  voltage_range_low: null,
-  voltage_range_high: null,
-  platform: null,
-  transistor_density: null
-})
+const PASSWORD = ref('processorDB-2024');
+const storedPassword = ref(null);
+const isLoggedIn = ref(false);
+
+onMounted(() => {
+  storedPassword.value = sessionStorage.getItem('protectedPassword');
+  isLoggedIn.value = storedPassword.value === PASSWORD.value;
+});
+
+const gpuFormRef = ref(null)
+
+const submitForm = () => {
+  if (gpuFormRef.value) {
+    gpuFormRef.value.submitData()
+  }
+}
 </script>

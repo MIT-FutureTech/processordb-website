@@ -51,8 +51,9 @@
 import { ref } from 'vue';
 
 const links = ref([
+  { text: 'Login', to: '/login', icon: 'md-login' },
   { text: 'Manufacturers', to: '/manufacturers/list', icon: 'md-precisionmanufacturing' },
-  { text: 'SoCs', to: '/soc/list', icon: 'gi-circuitry' },
+  // { text: 'SoCs', to: '/soc/list', icon: 'gi-circuitry' },
   { text: 'CPUs', to: '/cpu/list', icon: 'bi-cpu' },
   { text: 'GPUs', to: '/gpu/list', icon: 'bi-gpu-card' },
   // { text: 'FPGAs', to: '/fpga/list', icon: 'gi-logic-gate-xor' },
