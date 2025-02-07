@@ -5,7 +5,8 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-8">
       <h1 class="text-4xl font-bold text-[#A32035] mb-4 sm:mb-0">CPUs</h1>
-      <NuxtLink v-show="isLoggedIn"
+      <NuxtLink
+        v-show="isLoggedIn"
         to="/CPU/form"
         class="px-6 py-2.5 bg-[#A32035] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#8a1b2d] hover:shadow-lg text-center inline-flex items-center justify-center"
       >
@@ -39,9 +40,9 @@
 <script setup lang="js">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useQuery } from '@tanstack/vue-query';
 
-const router = useRouter();
-
+// Login logic
 const PASSWORD = ref('processorDB-2024');
 const storedPassword = ref(null);
 const isLoggedIn = ref(false);
@@ -51,22 +52,35 @@ onMounted(() => {
   isLoggedIn.value = storedPassword.value === PASSWORD.value;
 });
 
+// ----------------------------------
+// Fetch CPUs Data via Vue Query (5 minutes cache)
+// ----------------------------------
+const { data: cpusData } = useQuery({
+  queryKey: ['cpus'],
+  queryFn: async () => {
+    const res = await fetch('https://processordb.mit.edu/backend/api/cpus');
+    if (!res.ok) {
+      throw new Error('Error fetching CPUs');
+    }
+    return res.json();
+  },
+  staleTime: 300000, // 5 minutes in milliseconds
+});
 
-// -------------------------
-// Fetch data for the Table
-// -------------------------
-const { data: cpusData } = await useFetch('/api/cpus');
-
-// Use a computed property to ensure we always have an array
+// Computed property for tableData (ensures an array is returned)
 const tableData = computed(() => cpusData.value || []);
 
-// --------------------------------------
-// Fetch and Transform data for the Graph
-// --------------------------------------
-const { data: socData } = await useFetch('/api/socs', {
-  key: 'socs',
-  cache: true,
-  transform: (response) => {
+// ---------------------------------------------------------
+// Fetch and Transform SOCs Data for the Graph via Vue Query (5 minutes cache)
+// ---------------------------------------------------------
+const { data: socData } = useQuery({
+  queryKey: ['socs'],
+  queryFn: async () => {
+    const res = await fetch('https://processordb.mit.edu/backend/api/socs');
+    if (!res.ok) {
+      throw new Error('Error fetching SOCs');
+    }
+    const response = await res.json();
     if (!response?.data) return [];
     return response.data
       .filter(soc => soc.processors?.some(proc => proc.processor_type === "CPU"))
@@ -76,22 +90,21 @@ const { data: socData } = await useFetch('/api/socs', {
         code_name: soc.code_name || (soc.processors && soc.processors[0]?.code_name),
       }));
   },
-  server: true,
-  lazy: false,
+  staleTime: 300000, // 5 minutes in milliseconds
 });
 
-// ---------------------------------------------
+// -----------------------------------------------------
 // UI Filter State for the Graph Data (if needed)
-// ---------------------------------------------
+// -----------------------------------------------------
 const manufacturerNameFilter = ref('');
 const processorTypeFilter = ref('');
 const familyFilter = ref('');
 const codeNameFilter = ref('');
 const microarchitectureFilter = ref('');
 
-// ---------------------------------------------
+// -----------------------------------------------------
 // Compute Graph Data using the transformed socData
-// ---------------------------------------------
+// -----------------------------------------------------
 const graphData = computed(() => {
   if (!socData.value) return [];
   return socData.value.filter((item) => {
