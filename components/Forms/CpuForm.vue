@@ -13,122 +13,75 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mt-8">
       <div>
         <label class="block text-sm font-medium text-gray-700 pl-2">Manufacturer</label>
-        <input
-          v-model="form.manufacturer"
-          type="text"
-          :disabled="readOnly"
-          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-        />
+        <input v-model="form.manufacturer" type="text" :disabled="readOnly"
+          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 pl-2">Family</label>
-        <input
-          v-model="form.family"
-          type="text"
-          :disabled="readOnly"
-          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-        />
+        <input v-model="form.family" type="text" :disabled="readOnly"
+          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 pl-2">Code Name</label>
-        <input
-          v-model="form.codeName"
-          type="text"
-          :disabled="readOnly"
-          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-        />
+        <input v-model="form.codeName" type="text" :disabled="readOnly"
+          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 pl-2">Microarchitecture</label>
-        <input
-          v-model="form.microarchitecture"
-          type="text"
-          :disabled="readOnly"
-          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-        />
+        <input v-model="form.microarchitecture" type="text" :disabled="readOnly"
+          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 pl-2">Model</label>
-        <input
-          v-model="form.model"
-          type="text"
-          :disabled="readOnly"
-          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-        />
+        <input v-model="form.model" type="text" :disabled="readOnly"
+          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 pl-2">Year</label>
-        <input
-          v-model="form.year"
-          type="number"
-          :disabled="readOnly"
-          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-        />
+        <input v-model="form.year" type="number" :disabled="readOnly"
+          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 pl-2">Clock</label>
         <div class="input-container">
-          <input
-            v-model="form.clock"
-            type="number"
-            :disabled="readOnly"
-            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-          />
+          <input v-model="form.clock" type="number" :disabled="readOnly"
+            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
           <span class="unit-label">MHz</span>
         </div>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 pl-2">Max Clock</label>
         <div class="input-container">
-          <input
-            v-model="form.maxClock"
-            type="number"
-            :disabled="readOnly"
-            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-          />
+          <input v-model="form.maxClock" type="number" :disabled="readOnly"
+            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
           <span class="unit-label">MHz</span>
         </div>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 pl-2">Threads/Core</label>
-        <input
-          v-model="form.threadsPerCore"
-          type="number"
-          :disabled="readOnly"
-          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-        />
+        <input v-model="form.threadsPerCore" type="number" :disabled="readOnly"
+          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 pl-2">Lithography</label>
         <div class="input-container">
-          <input
-            v-model="form.lithography"
-            type="number"
-            :disabled="readOnly"
-            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-          />
+          <input v-model="form.lithography" type="number" :disabled="readOnly"
+            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
           <span class="unit-label">nm</span>
         </div>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 pl-2">TDP</label>
         <div class="input-container">
-          <input
-            v-model="form.tdp"
-            type="number"
-            :disabled="readOnly"
-            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-          />
+          <input v-model="form.tdp" type="number" :disabled="readOnly"
+            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
           <span class="unit-label">W</span>
         </div>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 pl-2">Platform</label>
-        <select
-          v-model="form.platform"
-          :disabled="readOnly"
-          class="mt-1 pl-2 block w-full h-10 border-1 border-gray-200 rounded-md drop-shadow focus:ring-[#A32035] focus:border-[#A32035] sm:text-sm"
-        >
+        <select v-model="form.platform" :disabled="readOnly"
+          class="mt-1 pl-2 block w-full h-10 border-1 border-gray-200 rounded-md drop-shadow focus:ring-[#A32035] focus:border-[#A32035] sm:text-sm">
           <option>Server</option>
           <!-- Add other platforms as needed -->
         </select>
@@ -139,10 +92,8 @@
     <div>
       <div class="flex justify-between items-center mb-4 mt-8">
         <h3 class="text-lg font-medium">Cores</h3>
-        <NuxtLink
-          to="/soc/form"
-          class="px-6 py-2.5 bg-[#A32035] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#8a1b2d] hover:shadow-lg text-center inline-flex items-center justify-center"
-        >
+        <NuxtLink to="/soc/form"
+          class="px-6 py-2.5 bg-[#A32035] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#8a1b2d] hover:shadow-lg text-center inline-flex items-center justify-center">
           <span class="mr-2"> Add CPU core </span>
         </NuxtLink>
       </div>
@@ -180,10 +131,8 @@
       <div class="flex items-center gap-2 mt-8">
         <h3 class="text-lg font-medium font-semibold">Cache</h3>
         <button @click="toggleCache" class="p-1 hover:bg-gray-100 rounded-full" type="button">
-          <v-icon
-            name="bi-chevron-compact-up"
-            :style="{ transform: isCacheExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }"
-          />
+          <v-icon name="bi-chevron-compact-up"
+            :style="{ transform: isCacheExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }" />
         </button>
       </div>
       <Transition name="collapse">
@@ -193,12 +142,8 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">L3 Cache</label>
               <div class="input-container">
-                <input
-                  v-model="form.l3Cache"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.l3Cache" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">KB</span>
               </div>
             </div>
@@ -206,12 +151,8 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">L3 Cache Latency</label>
               <div class="input-container">
-                <input
-                  v-model="form.l3CacheLatency"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.l3CacheLatency" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">ns</span>
               </div>
             </div>
@@ -219,12 +160,8 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">L2 Cache</label>
               <div class="input-container">
-                <input
-                  v-model="form.l2Cache"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.l2Cache" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">KB</span>
               </div>
             </div>
@@ -232,12 +169,8 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">L2 Cache Latency</label>
               <div class="input-container">
-                <input
-                  v-model="form.l2CacheLatency"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.l2CacheLatency" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">ns</span>
               </div>
             </div>
@@ -245,12 +178,8 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">L1 Data Cache</label>
               <div class="input-container">
-                <input
-                  v-model="form.l1DataCache"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.l1DataCache" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">KB</span>
               </div>
             </div>
@@ -258,12 +187,8 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">L1 Instruction Cache</label>
               <div class="input-container">
-                <input
-                  v-model="form.l1InstructionCache"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.l1InstructionCache" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">KB</span>
               </div>
             </div>
@@ -271,12 +196,8 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">L1 Cache Latency</label>
               <div class="input-container">
-                <input
-                  v-model="form.l1CacheLatency"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.l1CacheLatency" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">ns</span>
               </div>
             </div>
@@ -284,12 +205,8 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">L4 Cache</label>
               <div class="input-container">
-                <input
-                  v-model="form.l4Cache"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.l4Cache" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">KB</span>
               </div>
             </div>
@@ -304,10 +221,8 @@
       <div class="flex items-center gap-2 mt-8">
         <h3 class="text-lg font-medium font-semibold">Memory</h3>
         <button @click="toggleMemory" class="p-1 hover:bg-gray-100 rounded-full" type="button">
-          <v-icon
-            name="bi-chevron-compact-up"
-            :style="{ transform: isMemoryExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }"
-          />
+          <v-icon name="bi-chevron-compact-up"
+            :style="{ transform: isMemoryExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }" />
         </button>
       </div>
       <Transition name="collapse">
@@ -316,46 +231,31 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">Bus Speed</label>
               <div class="input-container">
-                <input
-                  v-model="form.busSpeed"
-                  type="text"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.busSpeed" type="text" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">MT/s</span>
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">Max Memory Size</label>
               <div class="input-container">
-                <input
-                  v-model="form.maxMemorySize"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.maxMemorySize" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">GB</span>
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">DRAM Latency</label>
               <div class="input-container">
-                <input
-                  v-model="form.dramLatency"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.dramLatency" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">ns</span>
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">Memory Type</label>
-              <select
-                v-model="form.memoryType"
-                :disabled="readOnly"
-                class="mt-1 pl-2 block w-full h-10 border-1 border-gray-200 rounded-md drop-shadow focus:ring-[#A32035] focus:border-[#A32035] sm:text-sm"
-              >
+              <select v-model="form.memoryType" :disabled="readOnly"
+                class="mt-1 pl-2 block w-full h-10 border-1 border-gray-200 rounded-md drop-shadow focus:ring-[#A32035] focus:border-[#A32035] sm:text-sm">
                 <option>DDR4</option>
                 <option>DDR5</option>
                 <option>LPDDR4</option>
@@ -365,23 +265,15 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">Max Memory Bandwidth</label>
               <div class="input-container">
-                <input
-                  v-model="form.maxMemoryBandwidth"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.maxMemoryBandwidth" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">GB/s</span>
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">Max Number of Memory Channels</label>
-              <input
-                v-model="form.maxMemoryChannels"
-                type="number"
-                :disabled="readOnly"
-                class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-              />
+              <input v-model="form.maxMemoryChannels" type="number" :disabled="readOnly"
+                class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
             </div>
           </div>
         </div>
@@ -394,10 +286,8 @@
       <div class="flex items-center gap-2 mt-8">
         <h3 class="text-lg font-medium font-semibold">Technical Details</h3>
         <button @click="toggleTechnicalDetails" class="p-1 hover:bg-gray-100 rounded-full" type="button">
-          <v-icon
-            name="bi-chevron-compact-up"
-            :style="{ transform: isTechnicalDetailsExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }"
-          />
+          <v-icon name="bi-chevron-compact-up"
+            :style="{ transform: isTechnicalDetailsExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }" />
         </button>
       </div>
       <Transition name="collapse">
@@ -405,154 +295,98 @@
           <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">Instruction Set Width</label>
-              <input
-                v-model="form.instructionSetWidth"
-                type="number"
-                :disabled="readOnly"
-                class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-              />
+              <input v-model="form.instructionSetWidth" type="number" :disabled="readOnly"
+                class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">Transistors</label>
               <div class="input-container">
-                <input
-                  v-model="form.transistors"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.transistors" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">millions</span>
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">Die Size</label>
               <div class="input-container">
-                <input
-                  v-model="form.dieSize"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.dieSize" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">mm²</span>
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">Transistors Density</label>
               <div class="input-container">
-                <input
-                  v-model="form.transistorsDensity"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.transistorsDensity" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">millions/mm²</span>
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">Package Size</label>
               <div class="input-container">
-                <input
-                  v-model="form.packageSize"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.packageSize" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">mm²</span>
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">MIPS</label>
               <div class="input-container">
-                <input
-                  v-model="form.mips"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.mips" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">MHz</span>
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">Voltage (low)</label>
               <div class="input-container">
-                <input
-                  v-model="form.voltageLow"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.voltageLow" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">V</span>
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">Voltage (average)</label>
               <div class="input-container">
-                <input
-                  v-model="form.voltageAverage"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.voltageAverage" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">V</span>
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">Voltage (high)</label>
               <div class="input-container">
-                <input
-                  v-model="form.voltageHigh"
-                  type="number"
-                  :disabled="readOnly"
-                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-                />
+                <input v-model="form.voltageHigh" type="number" :disabled="readOnly"
+                  class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
                 <span class="unit-label">V</span>
               </div>
             </div>
             <!-- New Performance Fields -->
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">FP64 Ops</label>
-              <input
-                v-model="form.fp64Ops"
-                type="number"
-                :disabled="readOnly"
-                class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-              />
+              <input v-model="form.fp64Ops" type="number" :disabled="readOnly"
+                class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">FP32 Ops</label>
-              <input
-                v-model="form.fp32Ops"
-                type="number"
-                :disabled="readOnly"
-                class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-              />
+              <input v-model="form.fp32Ops" type="number" :disabled="readOnly"
+                class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">FP16 Ops</label>
-              <input
-                v-model="form.fp16Ops"
-                type="number"
-                :disabled="readOnly"
-                class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-              />
+              <input v-model="form.fp16Ops" type="number" :disabled="readOnly"
+                class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">FP32 Theoretical MFLOPS</label>
-              <input
-                v-model="form.fp32TheoreticalMflops"
-                type="number"
-                :disabled="readOnly"
-                class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-              />
+              <input v-model="form.fp32TheoreticalMflops" type="number" :disabled="readOnly"
+                class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 pl-2">FP32 Measured GFLOPS</label>
-              <input
-                v-model="form.fp32MeasuredGflops"
-                type="number"
-                :disabled="readOnly"
-                class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-              />
+              <input v-model="form.fp32MeasuredGflops" type="number" :disabled="readOnly"
+                class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
             </div>
           </div>
         </div>
@@ -568,96 +402,108 @@
       <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mt-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 pl-2">eDRAM</label>
-          <input
-            v-model="form.edram"
-            type="number"
-            :disabled="readOnly"
-            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-          />
+          <input v-model="form.edram" type="number" :disabled="readOnly"
+            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 pl-2">Graphics</label>
-          <input
-            v-model="form.graphics"
-            type="text"
-            :disabled="readOnly"
-            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-          />
+          <input v-model="form.graphics" type="text" :disabled="readOnly"
+            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 pl-2">Graphics Max Dynamic Frequency</label>
           <div class="input-container">
-            <input
-              v-model="form.graphicsMaxDynamicFrequency"
-              type="number"
-              :disabled="readOnly"
-              class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-            />
+            <input v-model="form.graphicsMaxDynamicFrequency" type="number" :disabled="readOnly"
+              class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
             <span class="unit-label">MHz</span>
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 pl-2">Graphics Base Frequency</label>
           <div class="input-container">
-            <input
-              v-model="form.graphicsBaseFrequency"
-              type="number"
-              :disabled="readOnly"
-              class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-            />
+            <input v-model="form.graphicsBaseFrequency" type="number" :disabled="readOnly"
+              class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
             <span class="unit-label">MHz</span>
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 pl-2">Graphics Memory Size</label>
           <div class="input-container">
-            <input
-              v-model="form.graphicsMemorySize"
-              type="number"
-              :disabled="readOnly"
-              class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-            />
+            <input v-model="form.graphicsMemorySize" type="number" :disabled="readOnly"
+              class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
             <span class="unit-label">MB</span>
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 pl-2">Turbo Boost Max Technology 3 Frequency</label>
           <div class="input-container">
-            <input
-              v-model="form.turboBoostMaxTechnology3Frequency"
-              type="number"
-              :disabled="readOnly"
-              class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-            />
+            <input v-model="form.turboBoostMaxTechnology3Frequency" type="number" :disabled="readOnly"
+              class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
             <span class="unit-label">MHz</span>
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 pl-2">Turbo Frequency 1 Core</label>
           <div class="input-container">
-            <input
-              v-model="form.turboFrequency1core"
-              type="number"
-              :disabled="readOnly"
-              class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-            />
+            <input v-model="form.turboFrequency1core" type="number" :disabled="readOnly"
+              class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
             <span class="unit-label">MHz</span>
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 pl-2">Turbo Frequency 2 Core</label>
           <div class="input-container">
-            <input
-              v-model="form.turboFrequency2core"
-              type="number"
-              :disabled="readOnly"
-              class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-            />
+            <input v-model="form.turboFrequency2core" type="number" :disabled="readOnly"
+              class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
             <span class="unit-label">MHz</span>
           </div>
         </div>
       </div>
     </div>
+    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8" />
+
+    <!-- History -->
+    <div v-if="!readOnly">
+      <div class="flex items-center gap-2 mt-8">
+        <h3 class="text-lg font-medium font-semibold">History</h3>
+        <button @click="toggleHistory" class="p-1 hover:bg-gray-100 rounded-full" type="button">
+        <v-icon name="bi-chevron-compact-up"
+          :style="{ transform: isHistoryExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }" />
+      </button>
+      </div>
+
+      <hr class="border-t border-white opacity-80 my-4 mt-8" />
+
+      <div v-if="isHistoryExpanded">
+        <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-black bg-opacity-80">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">Field Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">Old Value</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">New Value</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">Reference</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">Changed by</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">Comment</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">Date</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="(history, index) in cpuData.versionHistory" :key="history.version_id">
+                <td class="px-6 py-4 whitespace-nowrap">{{ formatFieldName(history.field_name) }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ history.old_value || '' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ history.new_value || '' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ history.reference || '' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ history.changed_by || 'Unknown' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ history.comment || '' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ formatDate(history.changed_at) || '' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -683,11 +529,25 @@ const props = defineProps({
   }
 })
 
-console.log(props.cpuData)
 
 // Reactive states for messages
 const successMessage = ref('')
 const errorMessage = ref('')
+
+function formatFieldName(fieldName) {
+  return fieldName
+    .replace(/_/g, ' ') 
+    .replace(/\b\w/g, char => char.toUpperCase());
+}
+
+function formatDate(timestamp) {
+  const date = new Date(timestamp);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
 
 // Initialize all fields in the form object.
 const form = ref({
@@ -911,6 +771,7 @@ const submitData = async () => {
 const isCacheExpanded = ref(true)
 const isMemoryExpanded = ref(true)
 const isTechnicalDetailsExpanded = ref(true)
+const isHistoryExpanded = ref(true)
 
 const redirectPage = (data) => {
   const cpuId = props.editMode ? props.cpuData.cpu.cpu_id : data.cpu.cpu_id;
@@ -931,6 +792,10 @@ const toggleMemory = () => {
 
 const toggleTechnicalDetails = () => {
   isTechnicalDetailsExpanded.value = !isTechnicalDetailsExpanded.value
+}
+
+const toggleHistory = () => {
+  isHistoryExpanded.value = !isHistoryExpanded.value
 }
 
 // Expose the submitData function so that a parent component can call it.

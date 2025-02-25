@@ -580,6 +580,50 @@
         </div>
       </Transition>
     </div>
+
+    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8" />
+
+    <!-- History Section -->
+    <div v-if="editMode">
+      <div class="flex items-center gap-2 mt-8">
+        <h3 class="text-lg font-medium font-semibold">History</h3>
+        <button @click="toggleHistory" class="p-1 hover:bg-gray-100 rounded-full" type="button">
+        <v-icon name="bi-chevron-compact-up"
+          :style="{ transform: isHistoryExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }" />
+      </button>
+      </div>
+
+      <hr class="border-t border-white opacity-80 my-4 mt-8" />
+
+      <div v-if="isHistoryExpanded">
+        <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-black bg-opacity-80">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">Field Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">Old Value</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">New Value</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">Reference</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">Changed by</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">Comment</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">Date</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="(history, index) in gpuData.versionHistory" :key="history.version_id">
+                <td class="px-6 py-4 whitespace-nowrap">{{ formatFieldName(history.field_name) }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ history.old_value || '' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ history.new_value || '' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ history.reference || '' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ history.changed_by || 'Unknown' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ history.comment || '' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ formatDate(history.changed_at) || '' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -611,6 +655,13 @@ const isClockExpanded = ref(true)
 const isMemoryExpanded = ref(true)
 const isComputeExpanded = ref(true)
 const isGraphicAPIExpanded = ref(true)
+const isHistoryExpanded = ref(true)
+
+function formatFieldName(fieldName) {
+  return fieldName
+    .replace(/_/g, ' ') 
+    .replace(/\b\w/g, char => char.toUpperCase());
+}
 
 const form = ref({
   // General Information
@@ -741,6 +792,20 @@ const toggleCompute = () => {
 }
 const toggleGraphicAPI = () => {
   isGraphicAPIExpanded.value = !isGraphicAPIExpanded.value
+}
+
+const toggleHistory = () => {
+  isHistoryExpanded.value = !isHistoryExpanded.value
+}
+
+
+function formatDate(timestamp) {
+  const date = new Date(timestamp);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
 }
 
 const preparePostRequestBody = () => {
