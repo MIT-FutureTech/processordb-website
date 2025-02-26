@@ -34,14 +34,12 @@
 import { ref } from 'vue'
 import Footer from '../components/Footer.vue'
 import GpuForm from '../components/Forms/GpuForm.vue'
+import { isLogged } from '../lib/isLogged';
 
-const PASSWORD = ref('processorDB-2024');
-const storedPassword = ref(null);
 const isLoggedIn = ref(false);
 
 onMounted(() => {
-  storedPassword.value = sessionStorage.getItem('protectedPassword');
-  isLoggedIn.value = storedPassword.value === PASSWORD.value;
+  isLoggedIn.value = isLogged();
 });
 
 const gpuFormRef = ref(null)

@@ -40,17 +40,12 @@
 <script setup lang="js">
 import { ref, computed, onMounted } from 'vue';
 import { useQuery } from '@tanstack/vue-query';
+import { isLogged } from '../lib/isLogged';
 
-// -------------------------
-// Login Logic
-// -------------------------
-const PASSWORD = ref('processorDB-2024');
-const storedPassword = ref(null);
 const isLoggedIn = ref(false);
 
 onMounted(() => {
-  storedPassword.value = sessionStorage.getItem('protectedPassword');
-  isLoggedIn.value = storedPassword.value === PASSWORD.value;
+  isLoggedIn.value = isLogged();
 });
 
 // -------------------------

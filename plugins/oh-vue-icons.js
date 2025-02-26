@@ -4,7 +4,7 @@ import {
   HiHome, MdPrecisionmanufacturing,
   BiGpuCard, GiChart, MdAttachmoney,
   BiCpu, GiCircuitry, GiLogicGateXor, BiChevronCompactUp,
-  CoArrowCircleLeft, MdLogin
+  CoArrowCircleLeft, MdLogin, MdLogout
 } from "oh-vue-icons/icons";
 
 addIcons(
@@ -12,7 +12,7 @@ addIcons(
   HiDatabase, HiHome, MdPrecisionmanufacturing,
   BiGpuCard, GiChart, MdAttachmoney, BiCpu,
   GiCircuitry, GiLogicGateXor, BiChevronCompactUp,
-  CoArrowCircleLeft, MdLogin
+  CoArrowCircleLeft, MdLogin, MdLogout
 );
 
 export default defineNuxtPlugin((nuxtApp) => {
