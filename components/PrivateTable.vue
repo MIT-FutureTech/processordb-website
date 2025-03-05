@@ -62,6 +62,19 @@
         </div>
       </div>
 
+      <!-- Exoprt Data -->
+      <div>
+        <button @click="exportData"
+          class="outline-none bg-white hover:bg-gray-100 border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs">
+          Export Data
+          <svg class="mr-2 h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+        </button>
+      </div>
+
     </div>
 
     <!-- Table Container with Horizontal Scroll -->
@@ -232,6 +245,53 @@ const additionalColumns = computed(() => {
     value: key,
   }))
 })
+
+const exportData = () => {
+  if (!flattenedData.value?.length) {
+    console.error('No data to export');
+    return;
+  }
+
+  // Filter and prepare columns
+  const originalColumns = Object.keys(flattenedData.value[0]);
+  const filteredColumns = originalColumns.filter(key => 
+    !['SoC', 'processor_type', 'createdAt', 'updatedAt'].includes(key)
+  );
+
+  // Create CSV content with proper formatting
+  const csvRows = [];
+  
+  // Add uppercase header row
+  csvRows.push(
+    filteredColumns
+      .map(column => `"${column.toUpperCase().replace(/"/g, '""')}"`)
+      .join(',')
+  );
+
+  // Add data rows using original column names
+  for (const item of flattenedData.value) {
+    const row = filteredColumns.map(key => {
+      const value = item[key] ?? '';
+      const escaped = String(value).replace(/"/g, '""');
+      return `"${escaped}"`;
+    });
+    csvRows.push(row.join(','));
+  }
+
+  // Create and download file
+  const csvString = csvRows.join('\n');
+  const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', `${props.className || 'export'}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  
+  // Cleanup
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
 
 // --- Combine Columns ---
 // The full list of columns is the default ones (in the fixed order) followed by any additional columns.
