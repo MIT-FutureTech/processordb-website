@@ -50,7 +50,7 @@ async function submitForm() {
       body: JSON.stringify({ username: name.value, email: email.value, password: password.value })
     })
 
-    if (response.status === 201) {
+    if (response.ok) {
       successMessage.value = 'Registration successful!'
       setTimeout(() => {
         window.location.reload();

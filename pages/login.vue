@@ -71,7 +71,7 @@ async function login() {
 
     setItemWithExpiry('encryptedJWTPDB', token)
     setItemWithExpiry('PDB_U_NAME', username)
-    setItemWithExpiry('PDB_U_ROLE', role[0])
+    setItemWithExpiry('PDB_U_ROLE', role.at(-1))
 
     logged.value = true
 

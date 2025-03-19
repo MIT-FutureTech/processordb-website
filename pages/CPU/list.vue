@@ -39,7 +39,6 @@
 
 <script setup lang="js">
 import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import { useQuery } from '@tanstack/vue-query';
 import { isLogged } from '../lib/isLogged';
 

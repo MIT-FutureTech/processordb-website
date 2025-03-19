@@ -26,7 +26,7 @@
             </svg>
           </button>
           <input type="number" v-model.number="pagination.currentPage" :min="1" :max="pagination.totalPages"
-            class="max-w-12 text-center outline-none bg-white border-[#A32035] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs hide-arrow" />
+            class="max-w-12 text-center outline-none bg-white border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs hide-arrow" />
           <button @click="nextPage" :disabled="pagination.currentPage === pagination.totalPages"
             class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-gray-700 text-xs has-tooltip">
             <span class="tooltip rounded shadow-lg p-2 bg-white text-[#A32035] -mt-12 -ml-6">
@@ -62,19 +62,18 @@
         </div>
       </div>
 
-      <!-- Exoprt Data -->
-      <div>
-        <button @click="exportData"
+      <!-- Single Export Data Button (ZIP with CSV, XLSX & PDF) -->
+      <div class="flex gap-2">
+        <button @click="exportAllAsZip"
           class="outline-none bg-white hover:bg-gray-100 border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs">
           Export Data
-          <svg class="mr-2 h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor" stroke-width="2">
+          <svg class="mr-2 h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round"
               d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
         </button>
       </div>
-
     </div>
 
     <!-- Table Container with Horizontal Scroll -->
@@ -127,6 +126,10 @@
 
 <script setup lang="js">
 import { ref, computed, watch } from 'vue'
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
+import { jsPDF } from 'jspdf'
+import JSZip from 'jszip'
 import {
   Table,
   TableBody,
@@ -147,28 +150,23 @@ import {
 import { NuxtLink } from '#components'
 
 // --- Props ---
-// - data: an array of objects (either CPU or GPU objects)
-// - className: a string ("cpu" or "gpu") indicating the type of data
 const props = defineProps({
   data: { type: Array, required: true },
   className: { type: String, required: true },
 })
 
 // --- Helper: Format Year ---
-// Returns only the year from a date.
 const formatYear = (date) => {
   if (!date) return ''
   return new Date(date).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric' })
 }
 
 // --- Helper: Unique ID ---
-// For CPUs, use cpu_id; for GPUs, use gpu_id.
 const uniqueId = (row) => {
   return props.className === 'cpu' ? row.cpu_id : row.gpu_id
 }
 
 // --- Helper: Format Column Label ---
-// Capitalizes keys (e.g. "cpu_id" becomes "Cpu Id")
 function formatColumnLabel(key) {
   return key
     .split('_')
@@ -177,8 +175,6 @@ function formatColumnLabel(key) {
 }
 
 // --- Flatten Data ---
-// For CPU objects, extract manufacturer and release_date from SoC and add processor_type.
-// For GPU objects, add processor_type and ensure a model field is available.
 const flattenedData = computed(() => {
   if (props.className === 'cpu') {
     return props.data.map((item) => ({
@@ -204,7 +200,6 @@ const flattenedData = computed(() => {
 })
 
 // --- Default Columns (Visible by Default) ---
-// These columns appear by default and in this fixed order.
 const defaultColumnsOrder = [
   { label: 'Manufacturer', value: 'manufacturer' },
   { label: 'Processor Type', value: 'processor_type' },
@@ -218,15 +213,12 @@ const defaultColumnsOrder = [
 const defaultColumnsOrderKeys = defaultColumnsOrder.map(col => col.value)
 
 // --- Default Hidden Keys ---
-// In addition to removing cpu_id/gpu_id, hide other system attributes.
 const defaultHiddenKeys = {
   cpu: ['cpu_id', 'createdAt', 'updatedAt', 'soc_id', 'SoC', 'notes'],
   gpu: ['gpu_id', 'createdAt', 'updatedAt', 'soc_id', 'SoC', 'cores', 'notes', 'l0_cache', 'l1_cache', 'l2_cache', 'l3_cache', 'fp16', 'fp32', 'fp64', 'pixel_shader', 'vertex_shader', 'shader_units', 'texture_mapping_units', 'render_output_units', 'compute_units', 'ray_tracing_units', 'system_shared_memory'],
 }
 
 // --- Additional Columns ---
-// Any keys in the first flattened object that are not in defaultColumnsOrderKeys
-// and not in the default hidden keys become additional (optional) columns.
 const additionalColumns = computed(() => {
   const dataArr = flattenedData.value
   if (!dataArr.length) return []
@@ -246,29 +238,24 @@ const additionalColumns = computed(() => {
   }))
 })
 
-const exportData = () => {
+// === File Generation Functions ===
+
+// Generate CSV Blob
+const generateCSV = () => {
   if (!flattenedData.value?.length) {
     console.error('No data to export');
-    return;
+    return null;
   }
-
-  // Filter and prepare columns
   const originalColumns = Object.keys(flattenedData.value[0]);
-  const filteredColumns = originalColumns.filter(key => 
+  const filteredColumns = originalColumns.filter(key =>
     !['SoC', 'processor_type', 'createdAt', 'updatedAt'].includes(key)
   );
-
-  // Create CSV content with proper formatting
   const csvRows = [];
-  
-  // Add uppercase header row
   csvRows.push(
     filteredColumns
       .map(column => `"${column.toUpperCase().replace(/"/g, '""')}"`)
       .join(',')
   );
-
-  // Add data rows using original column names
   for (const item of flattenedData.value) {
     const row = filteredColumns.map(key => {
       const value = item[key] ?? '';
@@ -277,35 +264,158 @@ const exportData = () => {
     });
     csvRows.push(row.join(','));
   }
-
-  // Create and download file
   const csvString = csvRows.join('\n');
-  const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', `${props.className || 'export'}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  
-  // Cleanup
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  return new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+};
+
+// Generate XLSX Blob
+const generateXLSX = () => {
+  const dataArr = flattenedData.value;
+  if (!dataArr?.length) {
+    console.error('No data to export');
+    return null;
+  }
+  const filteredColumns = Object.keys(dataArr[0]).filter(
+    key => !['SoC', 'processor_type', 'createdAt', 'updatedAt'].includes(key)
+  );
+  const minimalData = dataArr.map(item => {
+    const newItem = {};
+    filteredColumns.forEach(col => {
+      newItem[col] = item[col] ?? '';
+    });
+    return newItem;
+  });
+  const worksheet = XLSX.utils.json_to_sheet(minimalData, { header: filteredColumns });
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+  workbook.Props = {
+    Title: `${props.className} Data - ProcessorDB - MIT FutureTech`,
+    Subject: `${props.className.toUpperCase()} Hardware Specifications`,
+    Author: 'Neil Thompson, Jonathan Koomey, Sylvia Downing, Kenneth Flamm, Emanuele Del Sozzo, Zachary Schmidt, Rebecca Wenjing Lyu, João Lucas Zarbielli',
+    CreatedDate: new Date()
+  };
+  workbook.Custprops = {
+    License: 'CC-BY-4.0',
+    Source: `https://processordb.mit.edu/${props.className}/list`
+  };
+  const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
+  function s2ab(s) {
+    const buf = new ArrayBuffer(s.length);
+    const view = new Uint8Array(buf);
+    for (let i = 0; i < s.length; i++) {
+      view[i] = s.charCodeAt(i) & 0xff;
+    }
+    return buf;
+  }
+  return new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+};
+
+// Generate PDF Blob (async because of image loading)
+const generatePDFReadme = async () => {
+  const doc = new jsPDF();
+
+  // --- Header Text ---
+  doc.setFont("Helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text("README", 70, 20);
+  doc.setFont("Helvetica", "normal");
+  doc.setFontSize(12);
+  const year = new Date().getFullYear();
+  const readmeText = [
+    "Authors: Neil Thompson, Jonathan Koomey, Sylvia Downing,",
+    "         Kenneth Flamm, Emanuele Del Sozzo, Zachary Schmidt,",
+    "         Rebecca Wenjing Lyu, João Lucas Zarbielli",
+    "License: CC-BY-4.0",
+    "How to cite: Please mention the research as follows:",
+    `          'Data provided by ProcessorDB - MIT FutureTech, ${year}, under CC-BY-4.0 license.'`,
+    "",
+    "For more information, please visit:",
+    "https://processordb.mit.edu"
+  ];
+  let yPos = 40;
+  readmeText.forEach((line) => {
+    doc.text(line, 10, yPos);
+    yPos += 7;
+  });
+
+  // --- Helper: Load image and convert to Base64 ---
+  const getBase64FromUrl = url => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        const dataURL = canvas.toDataURL("image/png");
+        resolve(dataURL);
+      };
+      img.onerror = error => reject(error);
+      img.src = url;
+    });
+  };
+
+  // --- Load and Add the Two Logos Below the Text ---
+  try {
+    const futuretechLogo = await getBase64FromUrl('/futuretech.png');
+    const koomeyLogo = await getBase64FromUrl('/koomeyanalyticslogo.png');
+    const processordbLogo = await getBase64FromUrl('/cpu.png');
+
+    const logoY = yPos + 10;
+
+    doc.addImage(futuretechLogo, 'PNG', 10, logoY, 50, 20);
+    doc.addImage(koomeyLogo, 'PNG', 70, logoY, 50, 20);
+    doc.addImage(processordbLogo, 'PNG', 130, logoY, 30, 20);
+
+  } catch (error) {
+    console.error("Error loading additional logos:", error);
+  }
+
+  doc.setFont("Helvetica", "bold");
+  doc.setFontSize(12);
+  const newYPos = yPos + 35;
+  doc.text("Processor DB", 132, newYPos);
+
+  // Return the PDF as a Blob
+  return doc.output('blob');
+};
+
+// --- Export All as ZIP ---
+const exportAllAsZip = async () => {
+  const zip = new JSZip();
+
+  const csvBlob = generateCSV();
+  const xlsxBlob = generateXLSX();
+  const pdfBlob = await generatePDFReadme();
+
+  if (csvBlob) {
+    zip.file(`${props.className.toUpperCase()} Data - ProcessorDB - MIT FutureTech.csv`, csvBlob);
+  }
+  if (xlsxBlob) {
+    zip.file(`${props.className.toUpperCase()} Data - ProcessorDB - MIT FutureTech.xlsx`, xlsxBlob);
+  }
+  if (pdfBlob) {
+    zip.file("README.pdf", pdfBlob);
+  }
+
+  const zipBlob = await zip.generateAsync({ type: "blob" });
+  saveAs(zipBlob, `${props.className || 'export'}-data.zip`);
 };
 
 // --- Combine Columns ---
-// The full list of columns is the default ones (in the fixed order) followed by any additional columns.
 const allColumns = computed(() => {
   return [...defaultColumnsOrder, ...additionalColumns.value]
 })
 
 // --- Manage Selected Columns ---
-// By default, only the default columns are selected.
 const selectedColumns = ref(defaultColumnsOrder.map(col => col.value))
 watch(allColumns, () => {
-  // Do not auto-select additional columns; keep default selection.
+  // Keep default selection when columns update
 })
-// The columns to display are those in allColumns that are selected.
+
+// --- Columns to Display ---
 const displayedColumns = computed(() =>
   allColumns.value.filter(col => selectedColumns.value.includes(col.value))
 )
@@ -314,8 +424,6 @@ const displayedColumns = computed(() =>
 const searchQuery = ref('')
 const sortField = ref('')
 const sortOrder = ref('asc')
-
-// Filter the flattened data based on the search query (searching across displayed columns)
 const filteredData = computed(() => {
   if (!searchQuery.value) return flattenedData.value
   return flattenedData.value.filter(item =>
@@ -326,10 +434,6 @@ const filteredData = computed(() => {
     })
   )
 })
-
-// Sort the filtered data.
-// If no sort field is selected, sort by release_date (year) descending,
-// treating rows without a release_date as having a very low year value.
 const sortedData = computed(() => {
   let dataToSort = [...filteredData.value]
   if (!sortField.value) {
@@ -347,8 +451,6 @@ const sortedData = computed(() => {
     return 0
   })
 })
-
-// Pagination state and computed slice of data.
 const pagination = ref({
   currentPage: 1,
   pageSize: 50,
@@ -366,7 +468,6 @@ const startRecord = computed(() => (pagination.value.currentPage - 1) * paginati
 const endRecord = computed(() =>
   Math.min(pagination.value.currentPage * pagination.value.pageSize, pagination.value.totalRecords)
 )
-
 const nextPage = () => {
   if (pagination.value.currentPage < pagination.value.totalPages) {
     pagination.value.currentPage++
@@ -377,8 +478,6 @@ const prevPage = () => {
     pagination.value.currentPage--
   }
 }
-
-// Sorting handler: clicking a header toggles sort order.
 const sortBy = (field) => {
   if (sortField.value === field) {
     sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
@@ -393,22 +492,20 @@ const sortBy = (field) => {
 .table-auto th {
   background-color: #f9fafb;
 }
-
 .table-auto th:hover {
   background-color: #f1f5f9;
 }
-
 .hide-arrow[type="number"]::-webkit-inner-spin-button,
 .hide-arrow[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-
 .tooltip {
-  @apply invisible absolute;
+  visibility: hidden;
+  position: absolute;
 }
-
 .has-tooltip:hover .tooltip {
-  @apply visible z-50;
+  visibility: visible;
+  z-index: 50;
 }
 </style>

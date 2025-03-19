@@ -36,6 +36,16 @@ University of California, Berkeley.</p>
         description: `<p class="mt-2">Sylvia was a Senior Principal Engineer and AI Architect at Intel and retired in 2023.  In her 34 years there, she specialized in inventing, standardizing and bringing new technologies to market.  Her expertise includes SoC architecture, process technology, IP design and architecture, system design and software development.  Her patents apply to signal integrity, display technologies, power savings, speech recognition and accessible computing.  Sylvia is currently focused on sustainable computation for edge applications.</p>`
     },
     {
+        name: 'Kenneth Flamm',
+        affiliation: 'MIT Futuretech',
+        image: '/kenneth_flamm.jpg',
+        description: `
+            <p class="mt-2">Kenneth Flamm is Professor Emeritus (formerly Dean Rusk Chair) in the LBJ School of Public Affairs, University of Texas at Austin. He is an applied micro economist and expert on the economics of the semiconductor, computer and telecommunications industries. Dr. Flamm was principal deputy assistant secretary of defense for economic security and special assistant for dual-use technology policy to the deputy secretary of defense, from 1993 to 1995, receiving the Department of Defense's Distinguished Public Service Medal from the secretary of defense. Dr. Flamm has served as senior fellow in foreign policy studies at the Brookings Institution and as an economics professor at the Instituto Tecnológico Autónomo de México, the University of Massachusetts at Amherst, and George Washington University.</p>
+            <p class="mt-2">Dr. Flamm holds a PhD in Economics from MIT and a BA (with Distinction) in Economics(Honors) from Stanford. He was elected in 2016 to membership in the Conference on Research in Income and Wealth. He previously was appointed chair or vice-chair of two National Research Council panels and served as a member of its Science, Technology and Economic Policy Board. He has been a member of six other National Academies panels, and chair of the NATO Science Committee's Science and Technology Policy and Organization panel. He served on the Federal Networking Council Advisory Committee, on the OECD's Expert Working Party on High Performance Computers and Communications, on various federal advisory committees and as a consultant to government agencies, international organizations,and private corporations.</p>
+            <p class="mt-2">Dr. Flamm has authored numerous articles and books on the economics of global competition in high technology industries. His current research agenda focuses on public policies affecting competition, adoption, and use in broadband, the economics of competition and innovation in the semiconductor, computer, and telecommunications industries, and more generally, data-driven public policy—the application of modern data science tools to analysis of significant policy issues using near real-time datasets. In 2021, he led a team of LBJ School graduate students to a second place finish in the Microsoft-ODI Education Open Data Challenge, an international competition organized on the XPRIZE online platform.</p>
+        `
+    },
+    {
         name: 'Emanuele Del Sozzo',
         affiliation: 'MIT Futuretech',
         image: '/del_sozzo-hs.jpg',

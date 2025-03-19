@@ -15,8 +15,11 @@
     "@tanstack/vue-query": "^5.66.0",
     "autoprefixer": "^10.4.20",
     "clsx": "^2.1.1",
+    "file-saver": "^2.0.5",
     "highcharts": "^11.4.8",
     "highcharts-vue": "^2.0.1",
+    "jspdf": "^3.0.1",
+    "jszip": "^3.10.1",
     "lucide-vue-next": "^0.453.0",
     "nuxt": "^3.12.2",
     "nuxt-plotly": "1.0.12",
@@ -29,7 +32,8 @@
     "tailwindcss": "^3.4.17",
     "vue": "^3.4.29",
     "vue-router": "^4.3.3",
-    "vue-sidebar-menu": "^5.4.2"
+    "vue-sidebar-menu": "^5.4.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@nuxtjs/tailwindcss": "^6.12.2",

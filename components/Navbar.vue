@@ -25,12 +25,14 @@
               class="dropdown-menu invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute top-full left-0 min-w-[150px] bg-white bg-opacity-95 rounded-md transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
               <ul class="py-2">
                 <li v-for="link in links" :key="link.text" class="group">
-                  <NuxtLink :to="link.to" class="flex items-center py-3 text-black hover:bg-gray-200 justify-start">
-                    <span class="mr-3 text-black ml-4" :class="{ 'text-[#A32035]': $route.path === link.to }">
-                      <v-icon :name=link.icon />
-                    </span>
-                    <span class="mr-4" :class="{ 'text-[#A32035]': $route.path === link.to }">{{ link.text }}</span>
-                  </NuxtLink>
+                  <div v-if="link.text !== 'Dashboard' || isLoggedIn">
+                    <NuxtLink :to="link.to" class="flex items-center py-3 text-black hover:bg-gray-200 justify-start">
+                      <span class="mr-3 text-black ml-4" :class="{ 'text-[#A32035]': $route.path === link.to }">
+                        <v-icon :name=link.icon />
+                      </span>
+                      <span class="mr-4" :class="{ 'text-[#A32035]': $route.path === link.to }">{{ link.text }}</span>
+                    </NuxtLink>
+                  </div>
                 </li>
               </ul>
             </div>
@@ -49,6 +51,13 @@
 
 <script setup lang="js">
 import { ref } from 'vue';
+import { isLogged } from '../lib/isLogged';
+
+const isLoggedIn = ref(false);
+
+onMounted(() => {
+  isLoggedIn.value = isLogged();
+});
 
 const links = ref([
   { text: 'Login', to: '/login', icon: 'md-login' },
@@ -56,6 +65,7 @@ const links = ref([
   // { text: 'SoCs', to: '/soc/list', icon: 'gi-circuitry' },
   { text: 'CPUs', to: '/cpu/list', icon: 'bi-cpu' },
   { text: 'GPUs', to: '/gpu/list', icon: 'bi-gpu-card' },
+  { text: 'Dashboard', to: '/admin/dashboard', icon: 'md-dashboardcustomize-outlined' },
   // { text: 'FPGAs', to: '/fpga/list', icon: 'gi-logic-gate-xor' },
   // { text: 'Economics', to: '/economics', icon: 'md-attachmoney' },
   // { text: 'Performances', to: '/performances', icon: 'gi-chart' },
