@@ -58,7 +58,7 @@ onMounted(() => {
   }
 });
 
-fetch('http://localhost:3001/api/users/')
+fetch(`${useRuntimeConfig().public.backendUrl}/users/`)
   .then(response => {
     if (!response.ok) {
       throw new Error('Error fetching Users data');

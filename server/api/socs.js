@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
         }
 
         // If no cached data, fetch from backend
-        const backendUrl = `${useRuntimeConfig().public.backendUrl}` || 'http://localhost:3001'
+        const backendUrl = `${useRuntimeConfig().public.backendUrl}`
         const response = await fetch(`${backendUrl}/socs`)
         
         if (!response.ok) {

@@ -1,4 +1,4 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
+// nuxt.config.js
 export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ["@nuxtjs/tailwindcss", "nuxt-plotly", "shadcn-nuxt"],
@@ -6,8 +6,8 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      siteUrl: `${process.env.SITE_URL}`,
-      backendUrl: `${process.env.BACKEND_URL}`
+      siteUrl: process.env.SITE_URL,
+      backendUrl: process.env.BACKEND_URL
     }
   },
 
@@ -20,16 +20,28 @@ export default defineNuxtConfig({
       include: ["plotly.js-dist-min"]
     },
     build: {
+      target: 'es2015',         // Define o alvo do código gerado
+      minify: 'esbuild',        // Utiliza esbuild para minificação
+      sourcemap: false,         // Desabilita sourcemaps em produção
       rollupOptions: {
         output: {
-          manualChunks(id: any) {
+          manualChunks(id) {
             if (id.includes("node_modules")) {
-              return id.toString().split("node_modules/")[1].split("/")[0].toString();
+              // Cria um chunk exclusivo para dependências do Vue
+              if (id.includes("vue")) {
+                return "vue";
+              }
+              // Cria um chunk exclusivo para o Plotly
+              if (id.includes("plotly")) {
+                return "plotly";
+              }
+              // Agrupa o restante em um chunk "vendor"
+              return "vendor";
             }
-          },
-        },
-      },
-    },
+          }
+        }
+      }
+    }
   },
 
   plugins: [
@@ -84,4 +96,4 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: "2024-10-15"
-})
+});

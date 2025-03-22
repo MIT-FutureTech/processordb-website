@@ -283,7 +283,7 @@ function closeModal() {
 async function saveEdits() {
   try {
     // Make the PUT request to update username & role
-    const response = await fetch('http://localhost:3001/api/users', {
+    const response = await fetch(`${useRuntimeConfig().public.backendUrl}/users`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
