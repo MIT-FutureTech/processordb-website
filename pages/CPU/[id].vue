@@ -52,7 +52,7 @@ onMounted(() => {
 const { data: cpuData } = useQuery({
   queryKey: ['cpu', route.params.id],
   queryFn: async () => {
-    const res = await fetch(`http://localhost:3001/api/cpus/${route.params.id}`);
+    const res = await fetch(`${useRuntimeConfig().public.backendUrl}/cpus/${route.params.id}`);
     if (!res.ok) {
       throw new Error('Error fetching CPU data');
     }

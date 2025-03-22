@@ -23,7 +23,7 @@ import { useQuery } from '@tanstack/vue-query'
 const { data } = useQuery({
   queryKey: ['socs'],
   queryFn: async () => {
-    const res = await fetch('/api/socs')
+    const res = await fetch(`${useRuntimeConfig().public.backendUrl}/socs`)
     if (!res.ok) {
       throw new Error('Error fetching SOCs')
     }

@@ -743,8 +743,8 @@ const submitData = async () => {
   try {
     const response = await fetch(
       props.editMode
-        ? `http://localhost:3001/api/cpus/${props.cpuData.cpu.cpu_id}`
-        : 'http://localhost:3001/api/cpus',
+        ? `${useRuntimeConfig().public.backendUrl}/cpus/${props.cpuData.cpu.cpu_id}`
+        : `${useRuntimeConfig().public.backendUrl}/cpus`,
       {
         method: props.editMode ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },

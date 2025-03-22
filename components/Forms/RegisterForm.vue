@@ -42,7 +42,7 @@ const errorMessage = ref('');
 
 async function submitForm() {
   try {
-    let response = await fetch('http://localhost:3001/api/auth/register', {
+    let response = await fetch(`${useRuntimeConfig().public.backendUrl}/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

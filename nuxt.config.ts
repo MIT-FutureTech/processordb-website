@@ -6,7 +6,8 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      siteUrl: process.env.SITE_URL || 'http://localhost:3000'
+      siteUrl: `${process.env.SITE_URL}`,
+      backendUrl: `${process.env.BACKEND_URL}`
     }
   },
 
@@ -33,7 +34,7 @@ export default defineNuxtConfig({
 
   plugins: [
     { src: '~/plugins/highcharts.client.js', mode: 'client' },
-    { src: '~/plugins/oh-vue-icons.js', mode: 'client' }
+    { src: '~/plugins/oh-vue-icons.js', mode: 'client' },
   ],
 
   routeRules: {

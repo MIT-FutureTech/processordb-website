@@ -865,8 +865,8 @@ const submitData = async () => {
   try {
     const response = await fetch(
       props.editMode
-        ? `http://localhost:3001/api/gpus/${props.gpuData.gpu.gpu_id}`
-        : 'http://localhost:3001/api/gpus',
+        ? `${useRuntimeConfig().public.backendUrl}/gpus/${props.gpuData.gpu.gpu_id}`
+        : `${useRuntimeConfig().public.backendUrl}/gpus`,
       {
         method: props.editMode ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -54,7 +54,7 @@ onMounted(() => {
 const { data: gpusData } = useQuery({
   queryKey: ['gpus'],
   queryFn: async () => {
-    const res = await fetch('/api/gpus');
+    const res = await fetch(`${useRuntimeConfig().public.backendUrl}/gpus`);
     if (!res.ok) {
       throw new Error('Error fetching GPUs');
     }
@@ -72,7 +72,7 @@ const tableData = computed(() => gpusData.value || []);
 const { data: socData } = useQuery({
   queryKey: ['socs'],
   queryFn: async () => {
-    const res = await fetch('/api/socs');
+    const res = await fetch(`${useRuntimeConfig().public.backendUrl}/socs`);
     if (!res.ok) {
       throw new Error('Error fetching SOCs');
     }

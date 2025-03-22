@@ -54,7 +54,7 @@ onMounted(() => {
 const { data: cpusData } = useQuery({
   queryKey: ['cpus'],
   queryFn: async () => {
-    const res = await fetch('https://processordb.mit.edu/backend/api/cpus');
+    const res = await fetch(`${process.env.BACKEND_URL}/cpus`);
     if (!res.ok) {
       throw new Error('Error fetching CPUs');
     }
@@ -72,7 +72,7 @@ const tableData = computed(() => cpusData.value || []);
 const { data: socData } = useQuery({
   queryKey: ['socs'],
   queryFn: async () => {
-    const res = await fetch('https://processordb.mit.edu/backend/api/socs');
+    const res = await fetch(`${useRuntimeConfig().public.backendUrl}/socs`);
     if (!res.ok) {
       throw new Error('Error fetching SOCs');
     }

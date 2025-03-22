@@ -47,7 +47,7 @@ onMounted(() => {
 
 const gpuFormRef = ref(null)
 const route = useRoute()
-const { data: gpuData } = await useFetch(`http://localhost:3001/api/gpus/${route.params.id}`)
+const { data: gpuData } = await useFetch(`${useRuntimeConfig().public.backendUrl}/gpus/${route.params.id}`)
 
 const submitForm = () => {
   if (gpuFormRef.value) {

@@ -14,8 +14,8 @@ export default defineEventHandler(async (event) => {
         }
 
         // If no cached data, fetch from backend
-        const backendUrl = 'http://localhost:3001' || 'https://processordb.mit.edu/backend'
-        const response = await fetch(`${backendUrl}/api/cpus`)
+        const backendUrl = `${useRuntimeConfig().public.backendUrl}` || 'http://localhost:3001'  
+        const response = await fetch(`${backendUrl}/cpus`)
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`)

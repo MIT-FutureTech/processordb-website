@@ -39,7 +39,7 @@ const familyFilter = ref('')
 const codeNameFilter = ref('')
 const microarchitectureFilter = ref('')
 
-const { data } = await useFetch('/api/socs', {
+const { data } = await useFetch(`${process.env.BACKEND_URL}/socs`, {
   key: 'socs',
   cache: true,
   transform: (response) => {
