@@ -128,7 +128,6 @@
 import { ref, computed, watch } from 'vue'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
-import { jsPDF } from 'jspdf'
 import JSZip from 'jszip'
 import {
   Table,
@@ -269,7 +268,7 @@ const generateCSV = () => {
 };
 
 // Generate XLSX Blob
-const generateXLSX = () => {
+const generateXLSX = async () => {
   const dataArr = flattenedData.value;
   if (!dataArr?.length) {
     console.error('No data to export');
@@ -312,6 +311,7 @@ const generateXLSX = () => {
 
 // Generate PDF Blob (async because of image loading)
 const generatePDFReadme = async () => {
+  const { jsPDF } = await import('jspdf');
   const doc = new jsPDF();
 
   // --- Header Text ---

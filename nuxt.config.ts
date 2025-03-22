@@ -20,22 +20,35 @@ export default defineNuxtConfig({
       include: ["plotly.js-dist-min"]
     },
     build: {
-      target: 'es2015',         // Define o alvo do código gerado
-      minify: 'esbuild',        // Utiliza esbuild para minificação
-      sourcemap: false,         // Desabilita sourcemaps em produção
+      target: 'es2015',
+      minify: 'esbuild',
+      sourcemap: false,
+
       rollupOptions: {
+        onwarn(warning, warn) {
+          if (warning.code === 'EMPTY_BUNDLE') {
+            return;
+          }
+          warn(warning);
+        },
         output: {
           manualChunks(id) {
             if (id.includes("node_modules")) {
-              // Cria um chunk exclusivo para dependências do Vue
               if (id.includes("vue")) {
                 return "vue";
               }
-              // Cria um chunk exclusivo para o Plotly
               if (id.includes("plotly")) {
                 return "plotly";
               }
-              // Agrupa o restante em um chunk "vendor"
+              if (id.includes("highcharts")) {
+                return "highcharts";
+              }
+              if (id.includes("jspdf")) {
+                return "jspdf";
+              }
+              if (id.includes("xlsx")) {
+                return "xlsx";
+              }
               return "vendor";
             }
           }

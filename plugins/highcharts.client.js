@@ -1,11 +1,9 @@
 import { defineNuxtPlugin } from '#app';
-import Highcharts from 'highcharts';
-import HighchartsVue from 'highcharts-vue';
 
-export default defineNuxtPlugin({
-   name: 'highcharts-vue',
-   parallel: true,
-   setup (nuxtApp) {
-       nuxtApp.vueApp.use(HighchartsVue);
-   }
+export default defineNuxtPlugin(async (nuxtApp) => { 
+    const [{ default: Highcharts }, { default: HighchartsVue }] = await Promise.all([ import('highcharts'), import('highcharts-vue') ]);
+    const { default: Exporting } = await import('highcharts/modules/exporting');
+    Exporting(Highcharts);
+
+    nuxtApp.vueApp.use(HighchartsVue);
 });
