@@ -66,7 +66,7 @@ const links = ref([
   { text: 'CPUs', to: '/cpu/list', icon: 'bi-cpu' },
   { text: 'GPUs', to: '/gpu/list', icon: 'bi-gpu-card' },
   { text: 'Dashboard', to: '/admin/dashboard', icon: 'md-dashboardcustomize-outlined' },
-  // { text: 'FPGAs', to: '/fpga/list', icon: 'gi-logic-gate-xor' },
+  { text: 'FPGAs', to: '/fpga/list', icon: 'gi-logic-gate-xor' },
   // { text: 'Economics', to: '/economics', icon: 'md-attachmoney' },
   // { text: 'Performances', to: '/performances', icon: 'gi-chart' },
 ]);

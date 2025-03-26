@@ -1,4 +1,3 @@
-// nuxt.config.js
 export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ["@nuxtjs/tailwindcss", "nuxt-plotly", "shadcn-nuxt"],
@@ -25,12 +24,6 @@ export default defineNuxtConfig({
       sourcemap: false,
 
       rollupOptions: {
-        onwarn(warning, warn) {
-          if (warning.code === 'EMPTY_BUNDLE') {
-            return;
-          }
-          warn(warning);
-        },
         output: {
           manualChunks(id) {
             if (id.includes("node_modules")) {
@@ -105,7 +98,6 @@ export default defineNuxtConfig({
 
   nitro: {
     compressPublicAssets: true,
-    minify: true
   },
 
   compatibilityDate: "2024-10-15"

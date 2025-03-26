@@ -67,8 +67,8 @@
         <button @click="exportAllAsZip"
           class="outline-none bg-white hover:bg-gray-100 border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs">
           Export Data
-          <svg class="mr-2 h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none"
-            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg class="mr-2 h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round"
               d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
@@ -162,7 +162,18 @@ const formatYear = (date) => {
 
 // --- Helper: Unique ID ---
 const uniqueId = (row) => {
-  return props.className === 'cpu' ? row.cpu_id : row.gpu_id
+  const socClass = props.className;
+
+  switch (socClass) {
+    case 'cpu':
+      return row.cpu_id;
+    case 'gpu':
+      return row.gpu_id;
+    case 'fpgas':
+      return row.fpga_id;
+    default:
+      return '';
+  }
 }
 
 // --- Helper: Format Column Label ---
@@ -194,12 +205,24 @@ const flattenedData = computed(() => {
       clock: item.base_clock || item.boost_clock || null,
       tdp: item.tdp || null,
     }))
+  } else {
+    return props.data.map((item) => ({
+      ...item,
+      release_date: item.SoC?.release_date || '',
+      die_sizes: item.SoC?.die_sizes || '',
+      number_of_die: item.SoC?.number_of_die || '',
+      package_size: item.SoC?.package_size || '',
+      platform: item.SoC?.platform || '',
+      total_transistors_count: item.SoC?.total_transistors_count || '',
+      transistor_density: item.SoC?.transistor_density || '',
+      voltage_range_high: item.SoC?.voltage_range_high || '',
+      voltage_range_low: item.SoC?.voltage_range_low || '',
+    }))
   }
-  return props.data
 })
 
 // --- Default Columns (Visible by Default) ---
-const defaultColumnsOrder = [
+const defaultColumnsOrder = props.className !== 'fpgas' ? [
   { label: 'Manufacturer', value: 'manufacturer' },
   { label: 'Processor Type', value: 'processor_type' },
   { label: 'Processor Family', value: 'family' },
@@ -208,6 +231,14 @@ const defaultColumnsOrder = [
   { label: 'Release Date', value: 'release_date' },
   { label: 'Clock (MHz)', value: 'clock' },
   { label: 'TDP (W)', value: 'tdp' },
+] : [
+  { label: 'Model', value: 'model' },
+  { label: 'Release Date', value: 'release_date' },
+  { label: 'CLBS', value: 'clbs' },
+  { label: 'FFS', value: 'ffs' },
+  { label: 'LUTs', value: 'luts' },
+  { label: 'Process Node (nm)', value: 'process_node' },
+  { label: 'Family Notes', value: 'family_notes' }
 ]
 const defaultColumnsOrderKeys = defaultColumnsOrder.map(col => col.value)
 
@@ -221,9 +252,11 @@ const defaultHiddenKeys = {
 const additionalColumns = computed(() => {
   const dataArr = flattenedData.value
   if (!dataArr.length) return []
+
   const firstItem = dataArr[0]
   const keys = Object.keys(firstItem)
   const hidden = defaultHiddenKeys[props.className] || []
+
   const filteredKeys = keys.filter((key) => {
     if (defaultColumnsOrderKeys.includes(key)) return false
     if (hidden.includes(key)) return false
@@ -434,6 +467,7 @@ const filteredData = computed(() => {
     })
   )
 })
+
 const sortedData = computed(() => {
   let dataToSort = [...filteredData.value]
   if (!sortField.value) {
@@ -451,12 +485,14 @@ const sortedData = computed(() => {
     return 0
   })
 })
+
 const pagination = ref({
   currentPage: 1,
   pageSize: 50,
   totalRecords: 0,
   totalPages: 0,
 })
+
 const displayedData = computed(() => {
   pagination.value.totalRecords = sortedData.value.length
   pagination.value.totalPages = Math.ceil(sortedData.value.length / pagination.value.pageSize)
@@ -464,10 +500,12 @@ const displayedData = computed(() => {
   const end = start + pagination.value.pageSize
   return sortedData.value.slice(start, end)
 })
+
 const startRecord = computed(() => (pagination.value.currentPage - 1) * pagination.value.pageSize + 1)
 const endRecord = computed(() =>
   Math.min(pagination.value.currentPage * pagination.value.pageSize, pagination.value.totalRecords)
 )
+
 const nextPage = () => {
   if (pagination.value.currentPage < pagination.value.totalPages) {
     pagination.value.currentPage++
@@ -478,6 +516,7 @@ const prevPage = () => {
     pagination.value.currentPage--
   }
 }
+
 const sortBy = (field) => {
   if (sortField.value === field) {
     sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
@@ -492,18 +531,22 @@ const sortBy = (field) => {
 .table-auto th {
   background-color: #f9fafb;
 }
+
 .table-auto th:hover {
   background-color: #f1f5f9;
 }
+
 .hide-arrow[type="number"]::-webkit-inner-spin-button,
 .hide-arrow[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
 .tooltip {
   visibility: hidden;
   position: absolute;
 }
+
 .has-tooltip:hover .tooltip {
   visibility: visible;
   z-index: 50;
