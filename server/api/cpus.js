@@ -1,7 +1,7 @@
 import { defineEventHandler, createError } from 'h3'
 import { useStorage } from '#imports'
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async () => {
     try {
         // Initialize storage for caching
         const storage = useStorage()
@@ -14,6 +14,7 @@ export default defineEventHandler(async (event) => {
         }
 
         // If no cached data, fetch from backend
+        // eslint-disable-next-line no-undef
         const backendUrl = `${useRuntimeConfig().public.backendUrl}`
         const response = await fetch(`${backendUrl}/cpus`)
 

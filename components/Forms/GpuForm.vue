@@ -1,15 +1,23 @@
 <template>
   <div class="min-h-screen max-w-7xl mx-auto py-2 px-4">
     <!-- Área de Mensagens -->
-    <div v-if="successMessage" class="mb-4 p-2 bg-green-200 text-green-800 rounded">
+    <div
+      v-if="successMessage"
+      class="mb-4 p-2 bg-green-200 text-green-800 rounded"
+    >
       {{ successMessage }}
     </div>
-    <div v-if="errorMessage" class="mb-4 p-2 bg-red-200 text-red-800 rounded">
+    <div
+      v-if="errorMessage"
+      class="mb-4 p-2 bg-red-200 text-red-800 rounded"
+    >
       {{ errorMessage }}
     </div>
 
     <!-- General Information -->
-    <h3 class="text-xl font-medium font-semibold">General Information</h3>
+    <h3 class="text-xl font-medium font-semibold">
+      General Information
+    </h3>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mt-4">
       <!-- Manufacturer -->
       <div>
@@ -19,7 +27,7 @@
           type="text"
           :disabled="readOnly"
           class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
-        />
+        >
       </div>
       <!-- Name -->
       <div>
@@ -29,7 +37,7 @@
           type="text"
           :disabled="readOnly"
           class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-        />
+        >
       </div>
       <!-- Variant -->
       <div>
@@ -39,7 +47,7 @@
           type="text"
           :disabled="readOnly"
           class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-        />
+        >
       </div>
       <!-- Release Date -->
       <div>
@@ -49,7 +57,7 @@
           type="date"
           :disabled="readOnly"
           class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-        />
+        >
       </div>
       <!-- Process Node -->
       <div>
@@ -60,7 +68,7 @@
             type="number"
             :disabled="readOnly"
             class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-          />
+          >
           <span class="unit-label">nm</span>
         </div>
       </div>
@@ -72,7 +80,7 @@
           type="number"
           :disabled="readOnly"
           class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-        />
+        >
       </div>
       <!-- Total Transistor Count -->
       <div>
@@ -82,7 +90,7 @@
           type="number"
           :disabled="readOnly"
           class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-        />
+        >
       </div>
       <!-- Package Size -->
       <div>
@@ -93,7 +101,7 @@
             type="number"
             :disabled="readOnly"
             class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-          />
+          >
           <span class="unit-label">mm²</span>
         </div>
       </div>
@@ -106,7 +114,7 @@
             type="number"
             :disabled="readOnly"
             class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-          />
+          >
           <span class="unit-label">mm²</span>
         </div>
       </div>
@@ -118,7 +126,7 @@
           type="number"
           :disabled="readOnly"
           class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-        />
+        >
       </div>
       <!-- Transistor Density -->
       <div>
@@ -128,7 +136,7 @@
           type="number"
           :disabled="readOnly"
           class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-        />
+        >
       </div>
       <!-- Voltage (Low) -->
       <div>
@@ -139,7 +147,7 @@
             type="number"
             :disabled="readOnly"
             class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-          />
+          >
           <span class="unit-label">V</span>
         </div>
       </div>
@@ -152,7 +160,7 @@
             type="number"
             :disabled="readOnly"
             class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-          />
+          >
           <span class="unit-label">V</span>
         </div>
       </div>
@@ -174,7 +182,9 @@
     <!-- Cores Section -->
     <div>
       <div class="flex justify-between items-center mb-4 mt-8">
-        <h3 class="text-lg font-medium">Cores</h3>
+        <h3 class="text-lg font-medium">
+          Cores
+        </h3>
         <NuxtLink
           to="/gpu/core/form"
           class="px-6 py-2.5 bg-[#A32035] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#8a1b2d] hover:shadow-lg inline-flex items-center justify-center"
@@ -186,22 +196,43 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-black bg-opacity-80">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-white">Number of Cores</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-white">Core Name</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-white">Base Frequency (GHz)</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-white">Max Turbo Frequency (GHz)</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-white"></th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-white">
+                Number of Cores
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-white">
+                Core Name
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-white">
+                Base Frequency (GHz)
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-white">
+                Max Turbo Frequency (GHz)
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-white" />
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <!-- Example row; you can implement dynamic rendering as needed -->
             <tr>
-              <td class="px-6 py-4 whitespace-nowrap">2</td>
-              <td class="px-6 py-4 whitespace-nowrap">Performance-cores</td>
-              <td class="px-6 py-4 whitespace-nowrap">1.7</td>
-              <td class="px-6 py-4 whitespace-nowrap">4.8</td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                2
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                Performance-cores
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                1.7
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                4.8
+              </td>
               <td class="px-6 py-4 whitespace-nowrap text-right">
-                <button class="text-[#A32035] hover:underline" :disabled="readOnly">Edit</button>
+                <button
+                  class="text-[#A32035] hover:underline"
+                  :disabled="readOnly"
+                >
+                  Edit
+                </button>
               </td>
             </tr>
           </tbody>
@@ -209,13 +240,19 @@
       </div>
     </div>
 
-    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8" />
+    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8">
 
     <!-- Processors Section -->
     <div>
       <div class="flex items-center gap-2 mt-8">
-        <h3 class="text-lg font-medium font-semibold">Processors</h3>
-        <button @click="toggleProcessors" class="p-1 hover:bg-[#F5E9EB] rounded-full" type="button">
+        <h3 class="text-lg font-medium font-semibold">
+          Processors
+        </h3>
+        <button
+          @click="toggleProcessors"
+          class="p-1 hover:bg-[#F5E9EB] rounded-full"
+          type="button"
+        >
           <v-icon
             name="bi-chevron-compact-up"
             :style="{ transform: isProcessorsExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }"
@@ -223,7 +260,10 @@
         </button>
       </div>
       <Transition name="collapse">
-        <div v-if="isProcessorsExpanded" class="mt-4">
+        <div
+          v-if="isProcessorsExpanded"
+          class="mt-4"
+        >
           <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
             <!-- TDP -->
             <div>
@@ -234,7 +274,7 @@
                   type="number"
                   :disabled="readOnly"
                   class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-                />
+                >
                 <span class="unit-label">W</span>
               </div>
             </div>
@@ -246,20 +286,26 @@
                 type="number"
                 :disabled="readOnly"
                 class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-              />
+              >
             </div>
           </div>
         </div>
       </Transition>
     </div>
 
-    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8" />
+    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8">
 
     <!-- Architecture Information Section -->
     <div>
       <div class="flex items-center gap-2 mt-8">
-        <h3 class="text-lg font-medium font-semibold">Architecture Information</h3>
-        <button @click="toggleArchitecture" class="p-1 hover:bg-[#F5E9EB] rounded-full" type="button">
+        <h3 class="text-lg font-medium font-semibold">
+          Architecture Information
+        </h3>
+        <button
+          @click="toggleArchitecture"
+          class="p-1 hover:bg-[#F5E9EB] rounded-full"
+          type="button"
+        >
           <v-icon
             name="bi-chevron-compact-up"
             :style="{ transform: isArchitectureExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }"
@@ -267,7 +313,10 @@
         </button>
       </div>
       <Transition name="collapse">
-        <div v-if="isArchitectureExpanded" class="mt-4">
+        <div
+          v-if="isArchitectureExpanded"
+          class="mt-4"
+        >
           <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
             <!-- Architecture -->
             <div>
@@ -277,7 +326,7 @@
                 type="text"
                 :disabled="readOnly"
                 class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-              />
+              >
             </div>
             <!-- Generation -->
             <div>
@@ -287,7 +336,7 @@
                 type="text"
                 :disabled="readOnly"
                 class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-              />
+              >
             </div>
             <!-- Process Size -->
             <div>
@@ -298,7 +347,7 @@
                   type="number"
                   :disabled="readOnly"
                   class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-                />
+                >
                 <span class="unit-label">nm</span>
               </div>
             </div>
@@ -307,13 +356,19 @@
       </Transition>
     </div>
 
-    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8" />
+    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8">
 
     <!-- Clock Information Section -->
     <div>
       <div class="flex items-center gap-2 mt-8">
-        <h3 class="text-lg font-medium font-semibold">Clock Information</h3>
-        <button @click="toggleClock" class="p-1 hover:bg-[#F5E9EB] rounded-full" type="button">
+        <h3 class="text-lg font-medium font-semibold">
+          Clock Information
+        </h3>
+        <button
+          @click="toggleClock"
+          class="p-1 hover:bg-[#F5E9EB] rounded-full"
+          type="button"
+        >
           <v-icon
             name="bi-chevron-compact-up"
             :style="{ transform: isClockExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }"
@@ -321,7 +376,10 @@
         </button>
       </div>
       <Transition name="collapse">
-        <div v-if="isClockExpanded" class="mt-4">
+        <div
+          v-if="isClockExpanded"
+          class="mt-4"
+        >
           <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
             <!-- Base Clock -->
             <div>
@@ -332,7 +390,7 @@
                   type="number"
                   :disabled="readOnly"
                   class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-                />
+                >
                 <span class="unit-label">MHz</span>
               </div>
             </div>
@@ -345,7 +403,7 @@
                   type="number"
                   :disabled="readOnly"
                   class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-                />
+                >
                 <span class="unit-label">MHz</span>
               </div>
             </div>
@@ -358,7 +416,7 @@
                   type="number"
                   :disabled="readOnly"
                   class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-                />
+                >
                 <span class="unit-label">MHz</span>
               </div>
             </div>
@@ -367,13 +425,19 @@
       </Transition>
     </div>
 
-    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8" />
+    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8">
 
     <!-- Memory Information Section -->
     <div>
       <div class="flex items-center gap-2 mt-8">
-        <h3 class="text-lg font-medium font-semibold">Memory Information</h3>
-        <button @click="toggleMemory" class="p-1 hover:bg-[#F5E9EB] rounded-full" type="button">
+        <h3 class="text-lg font-medium font-semibold">
+          Memory Information
+        </h3>
+        <button
+          @click="toggleMemory"
+          class="p-1 hover:bg-[#F5E9EB] rounded-full"
+          type="button"
+        >
           <v-icon
             name="bi-chevron-compact-up"
             :style="{ transform: isMemoryExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }"
@@ -381,7 +445,10 @@
         </button>
       </div>
       <Transition name="collapse">
-        <div v-if="isMemoryExpanded" class="mt-4">
+        <div
+          v-if="isMemoryExpanded"
+          class="mt-4"
+        >
           <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
             <!-- Memory Size -->
             <div>
@@ -392,7 +459,7 @@
                   type="number"
                   :disabled="readOnly"
                   class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-                />
+                >
                 <span class="unit-label">MB</span>
               </div>
             </div>
@@ -404,7 +471,7 @@
                 type="text"
                 :disabled="readOnly"
                 class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-              />
+              >
             </div>
             <!-- Memory Bus -->
             <div>
@@ -414,7 +481,7 @@
                 type="text"
                 :disabled="readOnly"
                 class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-              />
+              >
             </div>
             <!-- Memory Bandwidth -->
             <div>
@@ -425,7 +492,7 @@
                   type="number"
                   :disabled="readOnly"
                   class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-                />
+                >
                 <span class="unit-label">GB/s</span>
               </div>
             </div>
@@ -434,13 +501,19 @@
       </Transition>
     </div>
 
-    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8" />
+    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8">
 
     <!-- Compute Information Section -->
     <div>
       <div class="flex items-center gap-2 mt-8">
-        <h3 class="text-lg font-medium font-semibold">Compute Information</h3>
-        <button @click="toggleCompute" class="p-1 hover:bg-[#F5E9EB] rounded-full" type="button">
+        <h3 class="text-lg font-medium font-semibold">
+          Compute Information
+        </h3>
+        <button
+          @click="toggleCompute"
+          class="p-1 hover:bg-[#F5E9EB] rounded-full"
+          type="button"
+        >
           <v-icon
             name="bi-chevron-compact-up"
             :style="{ transform: isComputeExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }"
@@ -448,7 +521,10 @@
         </button>
       </div>
       <Transition name="collapse">
-        <div v-if="isComputeExpanded" class="mt-4">
+        <div
+          v-if="isComputeExpanded"
+          class="mt-4"
+        >
           <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
             <!-- Texture Rate -->
             <div>
@@ -459,7 +535,7 @@
                   type="number"
                   :disabled="readOnly"
                   class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-                />
+                >
                 <span class="unit-label">GTexels/s</span>
               </div>
             </div>
@@ -472,7 +548,7 @@
                   type="number"
                   :disabled="readOnly"
                   class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-                />
+                >
                 <span class="unit-label">GFLOPS</span>
               </div>
             </div>
@@ -485,7 +561,7 @@
                   type="number"
                   :disabled="readOnly"
                   class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-                />
+                >
                 <span class="unit-label">GFLOPS</span>
               </div>
             </div>
@@ -498,7 +574,7 @@
                   type="number"
                   :disabled="readOnly"
                   class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-                />
+                >
                 <span class="unit-label">GFLOPS</span>
               </div>
             </div>
@@ -507,13 +583,19 @@
       </Transition>
     </div>
 
-    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8" />
+    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8">
 
     <!-- Graphic API Information Section -->
     <div>
       <div class="flex items-center gap-2 mt-8">
-        <h3 class="text-lg font-medium font-semibold">Graphic API Information</h3>
-        <button @click="toggleGraphicAPI" class="p-1 hover:bg-[#F5E9EB] rounded-full" type="button">
+        <h3 class="text-lg font-medium font-semibold">
+          Graphic API Information
+        </h3>
+        <button
+          @click="toggleGraphicAPI"
+          class="p-1 hover:bg-[#F5E9EB] rounded-full"
+          type="button"
+        >
           <v-icon
             name="bi-chevron-compact-up"
             :style="{ transform: isGraphicAPIExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }"
@@ -521,7 +603,10 @@
         </button>
       </div>
       <Transition name="collapse">
-        <div v-if="isGraphicAPIExpanded" class="mt-4">
+        <div
+          v-if="isGraphicAPIExpanded"
+          class="mt-4"
+        >
           <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
             <!-- Pixel Rate -->
             <div>
@@ -532,7 +617,7 @@
                   type="number"
                   :disabled="readOnly"
                   class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-                />
+                >
                 <span class="unit-label">GPixels/s</span>
               </div>
             </div>
@@ -544,7 +629,7 @@
                 type="text"
                 :disabled="readOnly"
                 class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-              />
+              >
             </div>
             <!-- DirectX -->
             <div>
@@ -554,7 +639,7 @@
                 type="text"
                 :disabled="readOnly"
                 class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-              />
+              >
             </div>
             <!-- OpenGL -->
             <div>
@@ -564,7 +649,7 @@
                 type="text"
                 :disabled="readOnly"
                 class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-              />
+              >
             </div>
             <!-- OpenCL -->
             <div>
@@ -574,50 +659,89 @@
                 type="text"
                 :disabled="readOnly"
                 class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
-              />
+              >
             </div>
           </div>
         </div>
       </Transition>
     </div>
 
-    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8" />
+    <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8">
 
     <!-- History Section -->
     <div v-if="editMode">
       <div class="flex items-center gap-2 mt-8">
-        <h3 class="text-lg font-medium font-semibold">History</h3>
-        <button @click="toggleHistory" class="p-1 hover:bg-gray-100 rounded-full" type="button">
-        <v-icon name="bi-chevron-compact-up"
-          :style="{ transform: isHistoryExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }" />
-      </button>
+        <h3 class="text-lg font-medium font-semibold">
+          History
+        </h3>
+        <button
+          @click="toggleHistory"
+          class="p-1 hover:bg-gray-100 rounded-full"
+          type="button"
+        >
+          <v-icon
+            name="bi-chevron-compact-up"
+            :style="{ transform: isHistoryExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }"
+          />
+        </button>
       </div>
 
-      <hr class="border-t border-white opacity-80 my-4 mt-8" />
+      <hr class="border-t border-white opacity-80 my-4 mt-8">
 
       <div v-if="isHistoryExpanded">
         <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-black bg-opacity-80">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-white">Field Name</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-white">Old Value</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-white">New Value</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-white">Reference</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-white">Changed by</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-white">Comment</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-white">Date</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">
+                  Field Name
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">
+                  Old Value
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">
+                  New Value
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">
+                  Reference
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">
+                  Changed by
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">
+                  Comment
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-white">
+                  Date
+                </th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="(history, index) in gpuData.versionHistory" :key="history.version_id">
-                <td class="px-6 py-4 whitespace-nowrap">{{ formatFieldName(history.field_name) }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">{{ history.old_value || '' }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">{{ history.new_value || '' }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">{{ history.reference || '' }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">{{ history.changed_by || 'Unknown' }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">{{ history.comment || '' }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">{{ formatDate(history.changed_at) || '' }}</td>
+              <tr
+                v-for="(history, ) in gpuData.versionHistory"
+                :key="history.version_id"
+              >
+                <td class="px-6 py-4 whitespace-nowrap">
+                  {{ formatFieldName(history.field_name) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  {{ history.old_value || '' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  {{ history.new_value || '' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  {{ history.reference || '' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  {{ history.changed_by || 'Unknown' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  {{ history.comment || '' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  {{ formatDate(history.changed_at) || '' }}
+                </td>
               </tr>
             </tbody>
           </table>
@@ -629,7 +753,6 @@
 
 <script setup lang="js">
 import { ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 const props = defineProps({
   gpuData: {
@@ -646,7 +769,6 @@ const props = defineProps({
   }
 })
 
-const router = useRouter()
 const successMessage = ref('')
 const errorMessage = ref('')
 const isProcessorsExpanded = ref(true)

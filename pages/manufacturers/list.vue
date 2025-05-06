@@ -1,13 +1,18 @@
 <template>
   <Navbar />
 
-  <div class="min-h-screen max-w-7xl mx-auto py-2 px-4 justify-start md:justify-between items-center">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-8">
-      <h1 class="text-4xl font-bold text-[#A32035] mb-4 sm:mb-0">Manufacturers</h1>
+  <div class="min-h-screen max-w-7xl mx-auto py-2 px-4 justify-start items-start">
+    <div class="mt-8">
+      <h1 class="text-4xl font-bold text-[#A32035] mb-4">Manufacturers</h1>
+      <div class="max-w-prose text-justify font-semibold mb-8">
+        Text
+      </div>
     </div>
 
+    <hr class="border-t border-[#A32035] opacity-80 my-4">
+
     <!-- Table -->
-    <div class="mt-32 bg-white mb-16">
+    <div class="mt-8 bg-white mb-16">
       <div class="overflow-x-auto">
         <ManufacturersTable :manufacturer-counts="manufacturerCounts" />
       </div>
@@ -15,32 +20,33 @@
   </div>
 </template>
 
+
 <script setup lang="js">
 import { ref, computed } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 
-// Replace your useFetch call with useQuery
 const { data } = useQuery({
   queryKey: ['socs'],
   queryFn: async () => {
     const res = await fetch(`${useRuntimeConfig().public.backendUrl}/socs`)
+
     if (!res.ok) {
       throw new Error('Error fetching SOCs')
     }
+
     const response = await res.json()
     if (!response?.data) return { socs: [], manufacturerCounts: {} }
 
-    // Transform the socs data
     const socs = response.data.map(soc => ({
       ...soc,
       manufacturer: soc.manufacturer?.name || soc.manufacturer,
       code_name: soc.code_name || (soc.processors && soc.processors[0]?.code_name)
     }))
 
-    // Count manufacturers per processor type
     const manufacturerCounts = socs.reduce((counts, soc) => {
       // Use soc.manufacturer_name if available; otherwise default to 'Unknown'
       const manufacturer = soc.manufacturer_name || 'Unknown'
+
       const processorType =
         soc.processors && soc.processors[0]?.processor_type
           ? soc.processors[0].processor_type.toLowerCase()

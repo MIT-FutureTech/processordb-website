@@ -1,14 +1,15 @@
 <template>
     <div class="text-gray-800">
-        <Navbar/>
+        <Navbar />
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32 mb-16 mt-16">
             <section>
                 <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">Team</h2>
-                <div v-for="(member, index) in team" :key="index" class="py-16 scroll-mt-16" :id="member.name.replace(' ', '-').toLowerCase()">
-                    <div class="flex flex-col lg:flex-row gap-4" >
+                <div v-for="(member, index) in team" :key="index" class="py-16 scroll-mt-16"
+                    :id="member.name.replace(' ', '-').toLowerCase()">
+                    <div class="flex flex-col lg:flex-row gap-4">
                         <img :src="member.image" class="object-cover object-top w-56 h-56 rounded-lg  shadow-sm"
                             alt="team member">
-                        <div class="flex flex-col justify-left">
+                        <div class="flex flex-col justify-left text-justify">
 
                             <p class="font-medium text-xl text-gray-700">{{ member.name }}</p>
                             <p class="text-sm text-[#A32035] text-nowrap">{{ member.affiliation }}</p>
@@ -19,16 +20,18 @@
                 </div>
             </section>
             <section>
-                <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl" id="steering-committee">Steering committee</h2>
-                <div v-for="(member, index) in steeringCommittee" :key="index" class="py-16 scroll-mt-16" :id="member.name.replace(' ', '-').toLowerCase()">
-                    <div class="flex flex-col lg:flex-row gap-4" >
+                <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl" id="steering-committee">Steering committee
+                </h2>
+                <div v-for="(member, index) in steeringCommittee" :key="index" class="py-16 scroll-mt-16"
+                    :id="member.name.replace(' ', '-').toLowerCase()">
+                    <div class="flex flex-col lg:flex-row gap-4">
                         <img :src="member.image" class="object-cover object-top w-56 h-56 rounded-lg  shadow-sm"
                             alt="team member">
                         <div class="flex flex-col justify-left">
 
                             <p class="font-medium text-xl text-gray-700">{{ member.name }}</p>
                             <p class="text-sm text-[#A32035] text-nowrap">{{ member.affiliation }}</p>
-                            <div class="max-w-prose text-sm " v-html="member.description"></div>
+                            <div class="max-w-prose text-sm text-justify" v-html="member.description"></div>
                         </div>
                     </div>
 

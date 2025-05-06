@@ -4,37 +4,72 @@
     <div class="flex justify-between gap-4 items-center mb-4">
       <div class="flex justify-start gap-4 items-center">
         <!-- Optional slot for extra filters -->
-        <slot name="filters"></slot>
+        <slot name="filters" />
       </div>
       <div class="flex flex-wrap items-center gap-2 text-xs">
         <div class="mr-4">
           Showing {{ startRecord }}-{{ endRecord }} of {{ pagination.totalRecords }} records
         </div>
-        <input type="text" v-model="searchQuery" placeholder="Search"
-          class="mr-2 outline-none bg-white border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs" />
+        <input
+          type="text"
+          v-model="searchQuery"
+          placeholder="Search"
+          class="mr-2 outline-none bg-white border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs"
+        >
 
         <!-- Pagination Controls -->
         <div class="flex items-center">
-          <button @click="prevPage" :disabled="pagination.currentPage === 1"
-            class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-xs has-tooltip">
+          <button
+            @click="prevPage"
+            :disabled="pagination.currentPage === 1"
+            class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-xs has-tooltip"
+          >
             <span class="tooltip rounded shadow-lg p-2 bg-white text-[#A32035] -mt-12 -ml-12">
               Previous page
             </span>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-              stroke="currentColor" class="size-4">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="size-4"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15.75 19.5 8.25 12l7.5-7.5"
+              />
             </svg>
           </button>
-          <input type="number" v-model.number="pagination.currentPage" :min="1" :max="pagination.totalPages"
-            class="max-w-12 text-center outline-none bg-white border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs hide-arrow" />
-          <button @click="nextPage" :disabled="pagination.currentPage === pagination.totalPages"
-            class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-gray-700 text-xs has-tooltip">
+          <input
+            type="number"
+            v-model.number="pagination.currentPage"
+            :min="1"
+            :max="pagination.totalPages"
+            class="max-w-12 text-center outline-none bg-white border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs hide-arrow"
+          >
+          <button
+            @click="nextPage"
+            :disabled="pagination.currentPage === pagination.totalPages"
+            class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-gray-700 text-xs has-tooltip"
+          >
             <span class="tooltip rounded shadow-lg p-2 bg-white text-[#A32035] -mt-12 -ml-6">
               Next page
             </span>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-              stroke="currentColor" class="size-4">
-              <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="size-4"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="m8.25 4.5 7.5 7.5-7.5 7.5"
+              />
             </svg>
           </button>
         </div>
@@ -43,17 +78,30 @@
         <div>
           <DropdownMenu>
             <DropdownMenuTrigger
-              class="outline-none bg-white hover:bg-gray-100 border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs">
+              class="outline-none bg-white hover:bg-gray-100 border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs"
+            >
               Show/Hide Columns
             </DropdownMenuTrigger>
             <DropdownMenuContent class="max-h-96 overflow-y-auto">
               <DropdownMenuLabel>Columns</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem v-for="column in allColumns" :key="column.value" asChild>
-                <label class="flex items-center gap-2 cursor-pointer px-2 py-1" :class="{
-                  'border border-[#A32035] text-[#A32035] px-2 py-1 rounded': selectedColumns.includes(column.value)
-                }">
-                  <input type="checkbox" class="hidden" v-model="selectedColumns" :value="column.value" />
+              <DropdownMenuItem
+                v-for="column in allColumns"
+                :key="column.value"
+                as-child
+              >
+                <label
+                  class="flex items-center gap-2 cursor-pointer px-2 py-1"
+                  :class="{
+                    'border border-[#A32035] text-[#A32035] px-2 py-1 rounded': selectedColumns.includes(column.value)
+                  }"
+                >
+                  <input
+                    type="checkbox"
+                    class="hidden"
+                    v-model="selectedColumns"
+                    :value="column.value"
+                  >
                   <span>{{ column.label }}</span>
                 </label>
               </DropdownMenuItem>
@@ -64,13 +112,24 @@
 
       <!-- Single Export Data Button (ZIP with CSV, XLSX & PDF) -->
       <div class="flex gap-2">
-        <button @click="exportAllAsZip"
-          class="outline-none bg-white hover:bg-gray-100 border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs">
+        <button
+          @click="exportAllAsZip"
+          class="outline-none bg-white hover:bg-gray-100 border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs"
+        >
           Export Data
-          <svg class="mr-2 h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          <svg
+            class="mr-2 h-5 w-5 text-gray-600"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
           </svg>
         </button>
       </div>
@@ -79,12 +138,18 @@
     <!-- Table Container with Horizontal Scroll -->
     <div :class="{ 'overflow-x-auto': displayedColumns.length > defaultColumnsOrder.length }">
       <Table class="table-auto w-full">
-        <TableCaption v-if="displayedData.length === 0">No records found.</TableCaption>
+        <TableCaption v-if="displayedData.length === 0">
+          No records found.
+        </TableCaption>
         <TableHeader>
           <TableRow>
             <!-- Loop through the selectable columns -->
-            <TableHead v-for="column in displayedColumns" :key="column.value"
-              class="cursor-pointer text-[#A32035] opacity-80" @click="sortBy(column.value)">
+            <TableHead
+              v-for="column in displayedColumns"
+              :key="column.value"
+              class="cursor-pointer text-[#A32035] opacity-80"
+              @click="sortBy(column.value)"
+            >
               <div class="flex items-center gap-2">
                 {{ column.label }}
                 <span v-if="sortField === column.value">
@@ -93,15 +158,27 @@
               </div>
             </TableHead>
             <!-- Fixed Details Column -->
-            <TableHead key="details" class="cursor-default text-[#A32035] opacity-80">
-              <div class="flex items-center gap-2">Details</div>
+            <TableHead
+              key="details"
+              class="cursor-default text-[#A32035] opacity-80"
+            >
+              <div class="flex items-center gap-2">
+                Details
+              </div>
             </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-for="row in displayedData" :key="uniqueId(row)" class="hover:bg-[#F1F5F9] even:bg-gray-50">
+          <TableRow
+            v-for="row in displayedData"
+            :key="uniqueId(row)"
+            class="hover:bg-[#F1F5F9] even:bg-gray-50"
+          >
             <!-- Loop through the selectable columns -->
-            <TableCell v-for="column in displayedColumns" :key="column.value">
+            <TableCell
+              v-for="column in displayedColumns"
+              :key="column.value"
+            >
               <span class="text-black">
                 <template v-if="column.value === 'release_date'">
                   {{ formatYear(row[column.value]) }}
@@ -113,7 +190,10 @@
             </TableCell>
             <!-- Fixed Details Column Cell -->
             <TableCell key="details">
-              <NuxtLink class="text-[#A32035] hover:underline" :to="`/${props.className}/${uniqueId(row)}`">
+              <NuxtLink
+                class="text-[#A32035] hover:underline"
+                :to="`/${props.className.replace(/s$/i, '')}/${uniqueId(row)}`"
+              >
                 Details
               </NuxtLink>
             </TableCell>
@@ -160,7 +240,6 @@ const formatYear = (date) => {
   return new Date(date).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric' })
 }
 
-// --- Helper: Unique ID ---
 const uniqueId = (row) => {
   const socClass = props.className;
 
@@ -232,20 +311,24 @@ const defaultColumnsOrder = props.className !== 'fpgas' ? [
   { label: 'Clock (MHz)', value: 'clock' },
   { label: 'TDP (W)', value: 'tdp' },
 ] : [
+  { label: 'Vendor', value: 'vendor' },
   { label: 'Model', value: 'model' },
   { label: 'Release Date', value: 'release_date' },
   { label: 'CLBS', value: 'clbs' },
   { label: 'FFS', value: 'ffs' },
   { label: 'LUTs', value: 'luts' },
   { label: 'Process Node (nm)', value: 'process_node' },
-  { label: 'Family Notes', value: 'family_notes' }
+  { label: 'Block RAMs', value: 'block_rams' }
 ]
 const defaultColumnsOrderKeys = defaultColumnsOrder.map(col => col.value)
 
 // --- Default Hidden Keys ---
 const defaultHiddenKeys = {
   cpu: ['cpu_id', 'createdAt', 'updatedAt', 'soc_id', 'SoC', 'notes'],
-  gpu: ['gpu_id', 'createdAt', 'updatedAt', 'soc_id', 'SoC', 'cores', 'notes', 'l0_cache', 'l1_cache', 'l2_cache', 'l3_cache', 'fp16', 'fp32', 'fp64', 'pixel_shader', 'vertex_shader', 'shader_units', 'texture_mapping_units', 'render_output_units', 'compute_units', 'ray_tracing_units', 'system_shared_memory'],
+  gpu: ['gpu_id', 'createdAt', 'updatedAt', 'soc_id', 'SoC', 'cores', 'notes',
+  'l0_cache', 'l1_cache', 'l2_cache', 'l3_cache', 'fp16', 'fp32', 'fp64',
+  'pixel_shader', 'vertex_shader', 'shader_units', 'texture_mapping_units',
+  'render_output_units', 'compute_units', 'ray_tracing_units', 'system_shared_memory'],
 }
 
 // --- Additional Columns ---
@@ -269,8 +352,6 @@ const additionalColumns = computed(() => {
     value: key,
   }))
 })
-
-// === File Generation Functions ===
 
 // Generate CSV Blob
 const generateCSV = () => {
@@ -376,6 +457,7 @@ const generatePDFReadme = async () => {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = "Anonymous";
+
       img.onload = () => {
         const canvas = document.createElement("canvas");
         canvas.width = img.width;
@@ -385,6 +467,7 @@ const generatePDFReadme = async () => {
         const dataURL = canvas.toDataURL("image/png");
         resolve(dataURL);
       };
+
       img.onerror = error => reject(error);
       img.src = url;
     });
