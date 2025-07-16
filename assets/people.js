@@ -73,6 +73,12 @@ University of California, Berkeley.</p>
         description: `
             <p class="mt-2">João is a Webmaster on FutureTech research project at the MIT’s Computer Science and Artificial Intelligence Lab. He is an Software Engineering undergraduate student from the University of Brasília, Brazil.</p>
             `
+    },
+    {
+        name: 'Tess Fagan',
+        affiliation: 'MIT FutureTech',
+        image: '/tess profile.jpeg',       
+        description: `<p class="mt-2">pending bio</p>`
     }
 ]
 
@@ -182,13 +188,13 @@ he is a member of the National Academy of Engineering.</p>
     },
     {
         name: 'Anna Qingfeng Li',
-        affiliation: 'Meta (pending approval)',
+        affiliation: 'Meta',
         image: '/anna-qingfeng-li.jpeg',        
-        description: ``
-    }
+        description: `<p class="mt-2">pending bio</p>`
+    },
+]
 
-
-].sort((a, b) => {
+.sort((a, b) => {
     const lastNameA = a.name.split(" ").slice(-1)[0];
     const lastNameB = b.name.split(" ").slice(-1)[0];
     return lastNameA.localeCompare(lastNameB);
