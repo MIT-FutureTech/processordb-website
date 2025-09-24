@@ -1,12 +1,12 @@
 import { defineEventHandler, createError } from 'h3'
 import { useStorage } from '#imports'
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
     try {
         // Initialize storage for caching
         const storage = useStorage()
-        const cacheKey = 'cpus-data'
-
+        const cacheKey = 'fpgas-data'
+        
         // Try to get data from cache first
         const cachedData = await storage.getItem(cacheKey)
         if (cachedData) {
@@ -17,29 +17,28 @@ export default defineEventHandler(async () => {
         console.log(`Cache MISS for ${cacheKey}`)
 
         // If no cached data, fetch from backend
-        // eslint-disable-next-line no-undef
         const backendUrl = `${useRuntimeConfig().public.backendUrl}`
-        const response = await fetch(`${backendUrl}/cpus`)
-
+        const response = await fetch(`${backendUrl}/fpgas`)
+        
         if (!response.ok) {
             console.error(`Backend API error: ${response.status} - ${response.statusText}`)
             throw new Error(`Backend API error: ${response.status} - ${response.statusText}`)
         }
-
+        
         const responseData = await response.json()
         
         // Extract just the data array for compatibility with existing components
         const data = responseData.data || responseData
-
+        
         // Cache the data for 1 hour (3600 seconds)
         await storage.setItem(cacheKey, data, { ttl: 3600 })
-
+        
         return data
     } catch (error) {
-        console.error('Error fetching CPUs:', error)
+        console.error('Error fetching FPGAs:', error)
         throw createError({
             statusCode: 500,
-            message: 'Failed to fetch CPUs data'
+            message: 'Failed to fetch FPGAs data'
         })
     }
 })

@@ -175,7 +175,18 @@ const getColorForCategory = (colorCategory) => {
   return 'gray';
 };
 
+// Memoize chart data processing
+const chartDataCache = ref(new Map())
+
 const chartOptions = computed(() => {
+  // Create cache key based on data length, axis selections, and groupBy
+  const cacheKey = `${props.data.length}-${xAxis.value.value}-${yAxis.value.value}-${groupBy.value.value}`
+  
+  // Check if we have cached data
+  if (chartDataCache.value.has(cacheKey)) {
+    return chartDataCache.value.get(cacheKey)
+  }
+
   let groupedData = {};
   let series = [];
 
@@ -213,7 +224,7 @@ const chartOptions = computed(() => {
       opacity: 0.8,
     }));
 
-  return {
+  const chartConfig = {
     chart: {
       type: 'scatter',
       zoomType: 'xy',
@@ -306,5 +317,16 @@ const chartOptions = computed(() => {
     },
     series,
   };
+  
+  // Cache the result
+  chartDataCache.value.set(cacheKey, chartConfig)
+  
+  // Limit cache size to prevent memory leaks
+  if (chartDataCache.value.size > 10) {
+    const firstKey = chartDataCache.value.keys().next().value
+    chartDataCache.value.delete(firstKey)
+  }
+  
+  return chartConfig
 });
 </script>

@@ -9,7 +9,7 @@
     <div class="flex items-center justify-between mt-8 ml-2">
       <div class="flex items-center">
         <h1 class="text-4xl font-bold text-[#A32035]">SOC</h1>
-        <NuxtLink to="/soc/list">
+        <NuxtLink to="/cpu/list">
           <v-icon name="co-arrow-circle-left"
             class="mt-1 ml-2 text-gray-300 opacity-80 w-12 h-12 hover:text-[#8A1B2D] hover:opacity-78" />
         </NuxtLink>

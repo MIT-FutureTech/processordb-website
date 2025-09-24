@@ -105,7 +105,16 @@ async function login() {
   sessionStorage.setItem('PDB_U_PROFILE_IMG', profileImage);
 
   logged.value = true;
-  await navigateTo('/admin/profile');
+  
+  // Add error handling for navigation
+  try {
+    console.log('Navigating to admin profile after successful login');
+    await navigateTo('/admin/profile');
+  } catch (error) {
+    console.error('Navigation error:', error);
+    // Fallback navigation
+    window.location.href = '/admin/profile';
+  }
 }
 
 async function logout() {

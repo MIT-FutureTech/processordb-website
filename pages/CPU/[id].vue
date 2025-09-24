@@ -7,7 +7,7 @@
         <h1 class="text-4xl font-bold text-[#A32035]">
           CPU
         </h1>
-        <NuxtLink to="/cpu/list">
+        <NuxtLink to="/cpu/list" @click="handleBackClick">
           <v-icon
             name="co-arrow-circle-left"
             class="text-gray-300 opacity-80 w-12 h-12 hover:text-[#8A1B2D] hover:opacity-78"
@@ -41,11 +41,15 @@
     <div class="mt-8 -ml-4 mb-16">
       <!-- Pass the CPU data from the query into the form -->
       <CpuForm
+        v-if="cpuData"
         :cpu-data="cpuData"
         :edit-mode="true"
         ref="cpuFormRef"
         :read-only="!isLoggedIn"
       />
+      <div v-else class="flex items-center justify-center h-64">
+        <div class="text-gray-500">Loading CPU data...</div>
+      </div>
     </div>
   </div>
 
@@ -53,8 +57,8 @@
 </template>
 
 <script setup lang="js">
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, onMounted, computed } from 'vue';
+import { useRoute, useRuntimeConfig, useFetch, createError } from '#imports';
 import { useQuery } from '@tanstack/vue-query';
 import Navbar from '@/components/Navbar.vue';
 import Footer from '@/components/Footer.vue';
@@ -70,20 +74,40 @@ onMounted(() => {
   isLoggedIn.value = isLogged();
 });
 
-const { data: cpuData } = useQuery({
-  queryKey: ['cpu', route.params.id],
-  queryFn: async () => {
-    const res = await fetch(`${useRuntimeConfig().public.backendUrl}/cpus/${route.params.id}`);
-    if (!res.ok) {
-      throw new Error('Error fetching CPU data');
-    }
-    return res.json();
-  }
+// Add safety check for route params
+const cpuId = route.params.id;
+if (!cpuId) {
+  console.error('CPU ID is missing from route params');
+  throw createError({ statusCode: 404, statusMessage: 'CPU ID not found' });
+}
+
+const { data: rawCpuData } = await useFetch(`${useRuntimeConfig().public.backendUrl}/cpus/${cpuId}`);
+
+// Transform the data to match what the form expects
+const cpuData = computed(() => {
+  if (!rawCpuData.value) return null;
+  
+  return {
+    cpu: rawCpuData.value.cpu,
+    versionHistory: rawCpuData.value.versionHistory || [],
+    manufacturerName: rawCpuData.value.manufacturerName
+  };
 });
 
+const handleBackClick = () => {
+  console.log('Back button clicked - navigating to /cpu/list');
+};
+
 const submitForm = () => {
+  console.log('Submit form clicked');
+  console.log('CPU Form Ref:', cpuFormRef.value);
+  console.log('CPU Data:', cpuData.value);
+  
   if (cpuFormRef.value) {
+    console.log('Calling submitData method');
     cpuFormRef.value.submitData();
+  } else {
+    console.error('CPU Form Ref is null - form not loaded yet');
   }
 };
 </script>
