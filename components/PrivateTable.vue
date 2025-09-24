@@ -263,49 +263,40 @@ function formatColumnLabel(key) {
     .join(' ')
 }
 
-// --- Flatten Data with Memoization ---
+// --- Flatten Data ---
 const flattenedData = computed(() => {
-  // Use a more efficient approach with less object spreading
   if (props.className === 'cpu') {
-    return props.data.map((item) => {
-      const flattened = { ...item };
-      flattened.manufacturer = item.SoC?.Manufacturer?.name || '';
-      flattened.release_date = item.SoC?.release_date || '';
-      flattened.processor_type = 'CPU';
-      return flattened;
-    });
+    return props.data.map((item) => ({
+      ...item,
+      manufacturer: item.SoC?.Manufacturer?.name || '',
+      release_date: item.SoC?.release_date || '',
+      processor_type: 'CPU'
+    }))
   } else if (props.className === 'gpu') {
-    return props.data.map((item) => {
-      const flattened = { ...item };
-      flattened.manufacturer = item.SoC?.Manufacturer?.name || '';
-      flattened.release_date = item.SoC?.release_date || '';
-      flattened.processor_type = 'GPU';
-      flattened.model = item.model || item.name || '';
-      flattened.family = item.architecture || '';
-      flattened.microarchitecture = item.generation || '';
-      flattened.clock = item.base_clock || item.boost_clock || null;
-      flattened.tdp = item.tdp || null;
-      return flattened;
-    });
+    return props.data.map((item) => ({
+      ...item,
+      manufacturer: item.SoC?.Manufacturer?.name || '',
+      release_date: item.SoC?.release_date || '',
+      processor_type: 'GPU',
+      model: item.model || item.name || '',
+      family: item.architecture || '',
+      microarchitecture: item.generation || '',
+      clock: item.base_clock || item.boost_clock || null,
+      tdp: item.tdp || null,
+    }))
   } else {
-    // Add safety check for data type
-    if (!Array.isArray(props.data)) {
-      console.error('PrivateTable: props.data is not an array:', props.data);
-      return [];
-    }
-    return props.data.map((item) => {
-      const flattened = { ...item };
-      flattened.release_date = item.SoC?.release_date || '';
-      flattened.die_sizes = item.SoC?.die_sizes || '';
-      flattened.number_of_die = item.SoC?.number_of_die || '';
-      flattened.package_size = item.SoC?.package_size || '';
-      flattened.platform = item.SoC?.platform || '';
-      flattened.total_transistors_count = item.SoC?.total_transistors_count || '';
-      flattened.transistor_density = item.SoC?.transistor_density || '';
-      flattened.voltage_range_high = item.SoC?.voltage_range_high || '';
-      flattened.voltage_range_low = item.SoC?.voltage_range_low || '';
-      return flattened;
-    });
+    return props.data.map((item) => ({
+      ...item,
+      release_date: item.SoC?.release_date || '',
+      die_sizes: item.SoC?.die_sizes || '',
+      number_of_die: item.SoC?.number_of_die || '',
+      package_size: item.SoC?.package_size || '',
+      platform: item.SoC?.platform || '',
+      total_transistors_count: item.SoC?.total_transistors_count || '',
+      transistor_density: item.SoC?.transistor_density || '',
+      voltage_range_high: item.SoC?.voltage_range_high || '',
+      voltage_range_low: item.SoC?.voltage_range_low || '',
+    }))
   }
 })
 
@@ -547,38 +538,17 @@ const displayedColumns = computed(() =>
 
 // --- Search, Sorting, and Pagination ---
 const searchQuery = ref('')
-const debouncedSearchQuery = ref('')
-const searchTimeout = ref(null)
 const sortField = ref('')
 const sortOrder = ref('asc')
-
-// Debounce search query to avoid excessive filtering
-watch(searchQuery, (newQuery) => {
-  clearTimeout(searchTimeout.value)
-  searchTimeout.value = setTimeout(() => {
-    debouncedSearchQuery.value = newQuery
-  }, 300) // 300ms debounce
-}, { immediate: true })
-
-// Optimized search with early exit
 const filteredData = computed(() => {
-  if (!debouncedSearchQuery.value) return flattenedData.value
-  
-  const query = debouncedSearchQuery.value.toLowerCase()
-  const columns = displayedColumns.value
-  
-  return flattenedData.value.filter(item => {
-    // Early exit if any column matches
-    for (const col of columns) {
+  if (!searchQuery.value) return flattenedData.value
+  return flattenedData.value.filter(item =>
+    displayedColumns.value.some(col => {
       const cellValue = item[col.value]
-      if (cellValue !== null && cellValue !== undefined) {
-        if (cellValue.toString().toLowerCase().includes(query)) {
-          return true
-        }
-      }
-    }
-    return false
-  })
+      if (cellValue === null || cellValue === undefined) return false
+      return cellValue.toString().toLowerCase().includes(searchQuery.value.toLowerCase())
+    })
+  )
 })
 
 const sortedData = computed(() => {

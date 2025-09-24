@@ -10,25 +10,18 @@ export default defineEventHandler(async (event) => {
         // Try to get data from cache first
         const cachedData = await storage.getItem(cacheKey)
         if (cachedData) {
-            console.log(`Cache HIT for ${cacheKey}`)
             return cachedData
         }
-        
-        console.log(`Cache MISS for ${cacheKey}`)
 
         // If no cached data, fetch from backend
         const backendUrl = `${useRuntimeConfig().public.backendUrl}` 
         const response = await fetch(`${backendUrl}/gpus`)
         
         if (!response.ok) {
-            console.error(`Backend API error: ${response.status} - ${response.statusText}`)
-            throw new Error(`Backend API error: ${response.status} - ${response.statusText}`)
+            throw new Error(`HTTP error! status: ${response.status}`)
         }
         
-        const responseData = await response.json()
-        
-        // Extract just the data array for compatibility with existing components
-        const data = responseData.data || responseData
+        const data = await response.json()
         
         // Cache the data for 1 hour (3600 seconds)
         await storage.setItem(cacheKey, data, { ttl: 3600 })

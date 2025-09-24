@@ -7,7 +7,7 @@
         <h1 class="text-4xl font-bold text-[#A32035]">
           GPU
         </h1>
-        <NuxtLink to="/gpu/list" @click="handleBackClick">
+        <NuxtLink to="/gpu/list">
           <v-icon
             name="co-arrow-circle-left"
             class="text-gray-300 opacity-80 w-12 h-12 hover:text-[#8A1B2D] hover:opacity-78"
@@ -39,15 +39,11 @@
 
     <div class="mt-8 -ml-4 mb-16">
       <GpuForm
-        v-if="gpuData"
         :gpu-data="gpuData"
         :edit-mode="true"
         ref="gpuFormRef"
         :read-only="!isLoggedIn"
       />
-      <div v-else class="flex items-center justify-center h-64">
-        <div class="text-gray-500">Loading GPU data...</div>
-      </div>
     </div>
   </div>
 
@@ -55,8 +51,7 @@
 </template>
 
 <script setup lang="js">
-import { ref, onMounted, computed } from 'vue'
-import { useRoute, useRuntimeConfig, useFetch, createError } from '#imports'
+import { ref, onMounted } from 'vue'
 import Footer from '@/components/Footer.vue'
 import GpuForm from '@/components/Forms/GpuForm.vue'
 import { isLogged } from '../lib/isLogged';
@@ -69,40 +64,11 @@ onMounted(() => {
 
 const gpuFormRef = ref(null)
 const route = useRoute()
-// Add safety check for route params
-const gpuId = route.params.id;
-if (!gpuId) {
-  console.error('GPU ID is missing from route params');
-  throw createError({ statusCode: 404, statusMessage: 'GPU ID not found' });
-}
-
-const { data: rawGpuData } = await useFetch(`${useRuntimeConfig().public.backendUrl}/gpus/${gpuId}`)
-
-// Transform the data to match what the form expects
-const gpuData = computed(() => {
-  if (!rawGpuData.value) return null;
-  
-  return {
-    gpu: rawGpuData.value.gpu,
-    versionHistory: rawGpuData.value.versionHistory || [],
-    manufacturerName: rawGpuData.value.manufacturerName
-  };
-});
-
-const handleBackClick = () => {
-  console.log('Back button clicked - navigating to /gpu/list');
-};
+const { data: gpuData } = await useFetch(`${useRuntimeConfig().public.backendUrl}/gpus/${route.params.id}`)
 
 const submitForm = () => {
-  console.log('Submit form clicked');
-  console.log('GPU Form Ref:', gpuFormRef.value);
-  console.log('GPU Data:', gpuData.value);
-  
   if (gpuFormRef.value) {
-    console.log('Calling submitData method');
     gpuFormRef.value.submitData()
-  } else {
-    console.error('GPU Form Ref is null - form not loaded yet');
   }
 }
 </script>

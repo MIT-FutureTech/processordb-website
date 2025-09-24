@@ -14,13 +14,6 @@ export default defineNuxtConfig({
     exposeConfig: true,
   },
 
-  postcss: {
-    plugins: {
-      tailwindcss: {},
-      autoprefixer: {},
-    },
-  },
-
   vite: {
     optimizeDeps: {
       include: ["plotly.js-dist-min"]

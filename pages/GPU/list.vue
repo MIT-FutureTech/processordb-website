@@ -28,18 +28,9 @@
       </NuxtLink>
     </div>
 
-    <!-- Graph Component with Lazy Loading -->
+    <!-- Graph Component -->
     <div class="my-8">
-      <Suspense>
-        <template #default>
-          <GPUsGraph :data="tableData" />
-        </template>
-        <template #fallback>
-          <div class="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
-            <div class="text-gray-500">Loading graph...</div>
-          </div>
-        </template>
-      </Suspense>
+      <GPUsGraphClient :data="tableData" />
     </div>
 
     <!-- Table Container -->
@@ -59,7 +50,7 @@
 <script setup lang="js">
 import { ref, computed, onMounted } from 'vue';
 import { isLogged } from '../lib/isLogged';
-import GPUsGraph from '~/components/Graphs/GPUsGraph.client.vue';
+import GPUsGraphClient from '~/components/Graphs/GPUsGraph.client.vue';
 
 const isLoggedIn = ref(false);
 
@@ -67,6 +58,6 @@ onMounted(() => {
   isLoggedIn.value = isLogged();
 });
 
-const { data: gpusData } = await useFetch(`/api/gpus`);
+const { data: gpusData } = await useFetch(`${useRuntimeConfig().public.backendUrl}/gpus`);
 const tableData = computed(() => gpusData.value || []);
 </script>

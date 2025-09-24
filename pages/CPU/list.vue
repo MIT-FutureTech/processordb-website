@@ -9,7 +9,7 @@
       </h1>
       <NuxtLink
         v-show="isLoggedIn"
-        to="/cpu/form"
+        to="/CPU/form"
         class="px-6 py-2.5 bg-[#A32035] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#8a1b2d] hover:shadow-lg text-center inline-flex items-center justify-center"
       >
         <span class="mr-2">Add CPU</span>
@@ -28,18 +28,9 @@
       </NuxtLink>
     </div>
 
-    <!-- Graph Component with Lazy Loading -->
+    <!-- Graph Component -->
     <div class="my-8">
-      <Suspense>
-        <template #default>
-          <CPUsGraph :data="tableData" />
-        </template>
-        <template #fallback>
-          <div class="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
-            <div class="text-gray-500">Loading graph...</div>
-          </div>
-        </template>
-      </Suspense>
+      <CPUsGraphClient :data="tableData" />
     </div>
 
     <!-- Table Container -->
@@ -60,7 +51,7 @@
 import { isLogged } from '../lib/isLogged';
 import { ref, computed, onMounted } from 'vue';
 import { useFetch, useRuntimeConfig } from '#imports';
-import CPUsGraph from '~/components/Graphs/CPUsGraph.client.vue';
+import CPUsGraphClient from '~/components/Graphs/CPUsGraph.client.vue';
 
 const isLoggedIn = ref(false);
 
@@ -68,6 +59,6 @@ onMounted(() => {
   isLoggedIn.value = isLogged();
 });
 
-const { data: cpusData } = await useFetch(`/api/cpus`);
+const { data: cpusData } = await useFetch(`${useRuntimeConfig().public.backendUrl}/cpus`);
 const tableData = computed(() => cpusData.value || []);
 </script>

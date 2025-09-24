@@ -28,18 +28,9 @@
       </NuxtLink>
     </div>
 
-    <!-- Graph Component with Lazy Loading -->
+    <!-- Graph Component -->
     <div class="my-8">
-      <Suspense>
-        <template #default>
-          <FPGAsGraph :data="tableData" />
-        </template>
-        <template #fallback>
-          <div class="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
-            <div class="text-gray-500">Loading graph...</div>
-          </div>
-        </template>
-      </Suspense>
+      <FPGAsGraphClient :data="tableData" />
     </div>
 
     <!-- Table Container -->
@@ -59,7 +50,7 @@
 <script setup lang="js">
 import { isLogged } from '../lib/isLogged';
 import { ref, computed, onMounted } from 'vue';
-import FPGAsGraph from '~/components/Graphs/FPGAsGraph.client.vue';
+import FPGAsGraphClient from '~/components/Graphs/FPGAsGraph.client.vue';
 
 // Data refs
 const isLoggedIn = ref(false);
@@ -68,11 +59,6 @@ onMounted(() => {
   isLoggedIn.value = isLogged();
 });
 
-const { data: fpgasData } = await useFetch(`/api/fpgas`);
-const tableData = computed(() => {
-  console.log('FPGA Data:', fpgasData.value);
-  console.log('FPGA Data type:', typeof fpgasData.value);
-  console.log('FPGA Data is array:', Array.isArray(fpgasData.value));
-  return fpgasData.value || [];
-});
+const { data: fpgasData } = await useFetch(`${useRuntimeConfig().public.backendUrl}/fpgas`);
+const tableData = computed(() => fpgasData.value || []);
 </script>

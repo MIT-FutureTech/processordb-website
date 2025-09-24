@@ -41,7 +41,6 @@
     "@nuxt/eslint-config": "^1.2.0",
     "@nuxtjs/tailwindcss": "^6.12.2",
     "@primevue/nuxt-module": "^4.2.3",
-    "@types/node": "^24.5.0",
     "eslint": "^9.24.0",
     "eslint-plugin-tailwindcss": "^3.18.0",
     "eslint-plugin-vue": "^10.0.0",
