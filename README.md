@@ -63,7 +63,16 @@ git pull origin main
 
 npm run build
 
+# Load nvm (required for pm2 to be available)
+source ~/.nvm/nvm.sh
+
+# First deployment only:
 pm2 start ecosystem.config.cjs
+
+# For redeployments (app already running):
+pm2 restart ProcessorDB-website
+# OR for zero-downtime reload:
+pm2 reload ProcessorDB-website
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
