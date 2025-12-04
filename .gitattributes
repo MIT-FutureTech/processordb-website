@@ -1,0 +1,13 @@
+# Ensure shell scripts always use LF line endings
+*.sh text eol=lf
+
+# Ensure bash scripts use LF
+*.bash text eol=lf
+
+# Deployment scripts
+deploy.sh text eol=lf
+scripts/*.sh text eol=lf
+
+# Auto detect text files and normalize line endings
+* text=auto
+
