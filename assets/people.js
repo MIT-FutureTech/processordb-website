@@ -189,7 +189,8 @@ he is a member of the National Academy of Engineering.</p>
         name: 'Anna Qingfeng Li',
         affiliation: 'Meta',
         image: '/anna-qingfeng-li.jpeg',        
-        description: `<p class="mt-2">pending bio</p>`
+        description: `<p class="mt-2">Anna is a graphics and wearables product architect at Meta, in Reality Labs. Previously, she was at Intel for 15+ years working as a product architect on all aspects of media, graphics, GPU architecture, AI/ML. She worked on 6 generations of Intel GPUs and contributed to many notable products such as Hololens 1, the first Intel server graphics card, network servers, and thin and light laptops. She holds a MS & Ph.D. in computer science from USC and a MS and BS in computer engineering from Carnegie Mellon.
+
     },
 ]
 
