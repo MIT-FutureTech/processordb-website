@@ -23,6 +23,10 @@ jobs:
           WEBHOOK_URL="${{ secrets.WEBHOOK_URL }}"
           WEBHOOK_SECRET="${{ secrets.WEBHOOK_SECRET }}"
           
+          # Trim whitespace from secrets (GitHub secrets can have trailing newlines/spaces)
+          WEBHOOK_URL=$(echo "$WEBHOOK_URL" | tr -d '\r\n' | xargs)
+          WEBHOOK_SECRET=$(echo "$WEBHOOK_SECRET" | tr -d '\r\n' | xargs)
+          
           # Validate secrets are configured
           if [ -z "$WEBHOOK_URL" ]; then
             echo "Error: WEBHOOK_URL secret is not configured for $ENVIRONMENT environment"
@@ -36,8 +40,16 @@ jobs:
             exit 1
           fi
           
+          # Validate URL format
+          if [[ ! "$WEBHOOK_URL" =~ ^https?:// ]]; then
+            echo "Error: WEBHOOK_URL must start with http:// or https://"
+            echo "Current value starts with: ${WEBHOOK_URL:0:20}..."
+            echo "Please check the URL format in: Repository Settings → Environments → $ENVIRONMENT → Secrets"
+            exit 1
+          fi
+          
           echo "Triggering deployment webhook for $ENVIRONMENT..."
-          echo "Webhook URL: $WEBHOOK_URL"
+          echo "Webhook URL: ${WEBHOOK_URL:0:30}..." # Show first 30 chars only for security
           
           # Create payload
           PAYLOAD=$(cat <<EOF
@@ -58,6 +70,7 @@ jobs:
             -H "X-Webhook-Secret: $WEBHOOK_SECRET" \
             -d "$PAYLOAD" \
             --fail --show-error \
-            -w "\nHTTP Status: %{http_code}\n"
+            -w "\nHTTP Status: %{http_code}\n" \
+            --max-time 30
           
           echo "Deployment webhook triggered successfully for $ENVIRONMENT"
