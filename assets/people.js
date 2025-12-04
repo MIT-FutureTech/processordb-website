@@ -67,14 +67,6 @@ University of California, Berkeley.</p>
             `
     },
     {
-        name: 'João Zarbiélli',
-        affiliation: 'MIT Futuretech',
-        image: '/joao_zarbielli.png',
-        description: `
-            <p class="mt-2">João is a Webmaster on FutureTech research project at the MIT’s Computer Science and Artificial Intelligence Lab. He is an Software Engineering undergraduate student from the University of Brasília, Brazil.</p>
-            `
-    },
-    {
         name: 'Tess Fagan',
         affiliation: 'MIT FutureTech',
         image: '/tess profile.jpeg',       
@@ -84,7 +76,7 @@ Tess has global executive technical leadership experience, previously responsibl
     {
         name: 'Ben Olsen',
         affiliation: 'MIT FutureTech',
-        image: '/tess profile.jpeg',       
+        image: '/benolsen.png',
         description: `<p class="mt-2">Ben Olsen is Software Developer supporting research at Future Tech CSAIL MIT. He is also a Masters student at Georgia Institute of Technology, studying applied AI and Machine Learning.</p>`
     }
 ]

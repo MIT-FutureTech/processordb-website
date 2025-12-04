@@ -55,7 +55,12 @@
                         class="mr-3 text-black ml-4"
                         :class="{ 'text-[#A32035]': route.path === link.to }"
                       >
-                        <v-icon :name="link.icon" />
+                        <ClientOnly>
+                          <v-icon :name="link.icon" />
+                          <template #fallback>
+                            <span class="w-4 h-4 inline-block" />
+                          </template>
+                        </ClientOnly>
                       </span>
                       <span
                         class="mr-4"
@@ -67,6 +72,12 @@
               </ul>
             </div>
           </div>
+          <NuxtLink
+            to="/about"
+            class="text-white hover:text-[#A32035] flex items-center"
+          >
+            About
+          </NuxtLink>
           <NuxtLink
             to="/team"
             class="text-white hover:text-[#A32035] flex items-center"

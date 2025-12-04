@@ -47,18 +47,6 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32 mb-16">
       <section>
         <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">
-          About
-        </h2>
-        <p class="text-lg text-left leading-loose mt-4 text-justify">
-          We are an interdisciplinary research team dedicated to creating the most comprehensive database of
-          hardware chips, encompassing CPUs, GPUs, FPGAs, and other domain-specific chips from around the
-          globe. Our goal is to track and analyze trends in hardware development comprehensively. We
-          appreciate your feedback, which is vital for maintaining and enhancing the quality of our vibrant
-          and esteemed community!
-        </p>
-      </section>
-      <section>
-        <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">
           <NuxtLink to="/team" class="inline-block hover:opacity-80">
             Team
           </NuxtLink>
@@ -103,17 +91,6 @@
               </div>
             </NuxtLink>
           </div>
-        </div>
-      </section>
-      <section>
-        <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">
-          Collaborators
-        </h2>
-        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-16 mt-8 place-content-center place-items-center">
-          <a href="https://futuretech.mit.edu/" target="_blank" aria-label="MIT Futuretech"><img
-              src="/mitfuturetechlogo.png" class="max-h-[200px]" alt="team member"></a>
-          <a href="https://www.koomey.com/analyticspage.html" target="_blank" aria-label="Koomey Analytics"><img
-              src="/koomeyanalyticslogo.png" class="max-h-[200px]" alt="team member"></a>
         </div>
       </section>
     </main>

@@ -101,11 +101,6 @@
         </div>
       </div>
       <div v-else>
-        <!-- Debug info (remove after fixing) -->
-        <div v-if="isDev" class="mb-4 p-2 bg-yellow-50 text-xs">
-          Debug: pending={{ pending }}, error={{ error }}, tableData.length={{ tableData.length }}, gpusData={{ gpusData ? 'exists' : 'null' }}
-        </div>
-        
         <!-- Empty State -->
         <div v-if="!error && tableData.length === 0" class="flex items-center justify-center h-64 bg-gray-50 rounded-lg border border-gray-200">
           <div class="text-center">

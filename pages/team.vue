@@ -19,7 +19,8 @@
 
                 </div>
             </section>
-            <section>
+            <!-- Steering committee section - hidden for now, can be re-enabled in the future -->
+            <!-- <section>
                 <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl" id="steering-committee">Steering committee
                 </h2>
                 <div v-for="(member, index) in steeringCommittee" :key="index" class="py-16 scroll-mt-16"
@@ -36,7 +37,7 @@
                     </div>
 
                 </div>
-            </section>
+            </section> -->
         </main>
         <footer class="bg-black border-t-[12px] border-t-[#A32035] text-center text-white py-8 px-4 sm:px-6 lg:px-8 ">
             <div class="max-w-7xl mx-auto flex justify-between flex-col gap-8 lg:flex-row flex-wrap">

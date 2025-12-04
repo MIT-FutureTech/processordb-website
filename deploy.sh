@@ -41,7 +41,10 @@ fi
 echo "Pulling latest code from $GIT_BRANCH..."
 git fetch origin
 git checkout "$GIT_BRANCH"
-git pull origin "$GIT_BRANCH"
+# Clean any uncommitted changes and reset to remote branch
+# This ensures we're always deploying what's on the remote dev branch
+git clean -fd
+git reset --hard "origin/$GIT_BRANCH"
 
 # Load nvm
 if [ -s "$HOME/.nvm/nvm.sh" ]; then
@@ -52,7 +55,20 @@ fi
 
 # Install dependencies
 echo "Installing dependencies..."
-npm ci
+# Ensure devDependencies are installed (npm ci installs them by default unless NODE_ENV=production)
+NODE_ENV=development npm ci
+
+# Verify critical dependency is installed
+if [ ! -d "node_modules/@nuxtjs/tailwindcss" ]; then
+    echo "Warning: @nuxtjs/tailwindcss not found, installing it explicitly..."
+    npm install @nuxtjs/tailwindcss --save-dev
+fi
+
+# Prepare Nuxt modules (ensure this runs after all packages are installed)
+echo "Preparing Nuxt modules..."
+npx nuxt prepare || {
+    echo "Warning: nuxt prepare failed, but continuing with build..."
+}
 
 # Build application
 echo "Building application..."
