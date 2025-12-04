@@ -14,8 +14,20 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
+    // Debug: Log all headers to verify what's being received
+    const allHeaders = event.node.req.headers
+    console.log('[Deploy API] Received headers:', Object.keys(allHeaders).filter(h => h.toLowerCase().includes('webhook')))
+    
     // Validate webhook secret
-    const webhookSecret = getHeader(event, 'x-webhook-secret')
+    // Node.js lowercases all header names, so X-Webhook-Secret becomes x-webhook-secret
+    // h3's getHeader should handle this, but we'll also check the raw headers object
+    const webhookSecret = getHeader(event, 'x-webhook-secret') || 
+                          getHeader(event, 'X-Webhook-Secret') ||
+                          allHeaders['x-webhook-secret'] ||
+                          allHeaders['X-Webhook-Secret']
+    
+    console.log('[Deploy API] Webhook secret from header:', webhookSecret ? 'RECEIVED (length: ' + webhookSecret.length + ')' : 'NOT FOUND')
+    
     const expectedSecret = process.env.DEPLOY_WEBHOOK_SECRET
 
     if (!expectedSecret) {
@@ -26,8 +38,14 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    console.log('[Deploy API] Expected secret configured:', expectedSecret ? 'YES (length: ' + expectedSecret.length + ')' : 'NO')
+    console.log('[Deploy API] Received secret:', webhookSecret ? 'YES (length: ' + webhookSecret.length + ')' : 'NO')
+    console.log('[Deploy API] Secrets match:', webhookSecret === expectedSecret)
+
     if (!webhookSecret || webhookSecret !== expectedSecret) {
       console.error('[Deploy API] Invalid webhook secret')
+      console.error('[Deploy API] Received:', webhookSecret || 'undefined')
+      console.error('[Deploy API] Expected:', expectedSecret ? '***configured***' : 'undefined')
       throw createError({
         statusCode: 401,
         message: 'Unauthorized: Invalid webhook secret'
