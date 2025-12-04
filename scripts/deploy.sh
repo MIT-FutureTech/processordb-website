@@ -46,6 +46,12 @@ git checkout "$GIT_BRANCH"
 git clean -fd
 git reset --hard "origin/$GIT_BRANCH"
 
+# Fix line endings in deploy script (in case repo has CRLF)
+# This prevents "$'\r': command not found" errors
+if [ -f "scripts/deploy.sh" ]; then
+    sed -i 's/\r$//' scripts/deploy.sh
+fi
+
 # Load nvm
 if [ -s "$HOME/.nvm/nvm.sh" ]; then
     source "$HOME/.nvm/nvm.sh"
