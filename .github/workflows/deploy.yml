@@ -23,6 +23,22 @@ jobs:
           WEBHOOK_URL="${{ secrets.WEBHOOK_URL }}"
           WEBHOOK_SECRET="${{ secrets.WEBHOOK_SECRET }}"
           
+          # Validate secrets are configured
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "Error: WEBHOOK_URL secret is not configured for $ENVIRONMENT environment"
+            echo "Please configure it in: Repository Settings → Environments → $ENVIRONMENT → Secrets"
+            exit 1
+          fi
+          
+          if [ -z "$WEBHOOK_SECRET" ]; then
+            echo "Error: WEBHOOK_SECRET secret is not configured for $ENVIRONMENT environment"
+            echo "Please configure it in: Repository Settings → Environments → $ENVIRONMENT → Secrets"
+            exit 1
+          fi
+          
+          echo "Triggering deployment webhook for $ENVIRONMENT..."
+          echo "Webhook URL: $WEBHOOK_URL"
+          
           # Create payload
           PAYLOAD=$(cat <<EOF
           {
@@ -41,6 +57,7 @@ jobs:
             -H "X-GitHub-Event: push" \
             -H "X-Webhook-Secret: $WEBHOOK_SECRET" \
             -d "$PAYLOAD" \
-            --fail --show-error
+            --fail --show-error \
+            -w "\nHTTP Status: %{http_code}\n"
           
-          echo "Deployment webhook triggered for $ENVIRONMENT"
+          echo "Deployment webhook triggered successfully for $ENVIRONMENT"
