@@ -24,9 +24,9 @@ export default defineNitroPlugin((nitroApp) => {
     // Get the file path - remove /_nuxt/ prefix
     const filePath = url.replace('/_nuxt/', '')
     
-    // During preview, Nitro runs from .output/ directory
-    // So process.cwd() is already .output/, so we use public/_nuxt/
-    const outputPath = join(process.cwd(), 'public/_nuxt', filePath)
+    // In production, PM2 runs from the project root, not .output/
+    // So we need to go to .output/public/_nuxt/ from the project root
+    const outputPath = join(process.cwd(), '.output/public/_nuxt', filePath)
     
     console.log('[Static Assets Plugin] Looking for file at:', outputPath)
     
