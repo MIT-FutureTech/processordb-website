@@ -18,7 +18,7 @@ if (process.env.BACKEND_URL) {
 
 module.exports = {
   apps : [{
-    name: "ProcessorDB-website",
+    name: "ProcessorDB-website-staging",
     port: "3000",
     exec_mode: "cluster",
     instances: "max",

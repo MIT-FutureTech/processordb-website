@@ -87,7 +87,7 @@ if [ "$ENVIRONMENT" == "staging" ] && [ -f "ecosystem.staging.config.cjs" ]; the
 elif [ "$ENVIRONMENT" == "staging" ] && [ -f "ecosystem.staging.config.js" ]; then
     ECOSYSTEM_FILE="ecosystem.staging.config.js"
 else
-    ECOSYSTEM_FILE="ecosystem.config.js"
+    ECOSYSTEM_FILE="ecosystem.config.cjs"
 fi
 
 # Restart PM2 application
