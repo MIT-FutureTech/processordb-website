@@ -11,6 +11,7 @@ import { computed, type HTMLAttributes } from 'vue'
 const props = defineProps<DropdownMenuSubTriggerProps & { class?: HTMLAttributes['class'] }>()
 
 const delegatedProps = computed(() => {
+  // eslint-disable-next-line no-unused-vars
   const { class: _, ...delegated } = props
 
   return delegated

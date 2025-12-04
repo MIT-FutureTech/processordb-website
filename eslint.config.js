@@ -1,30 +1,76 @@
-import { defineConfig } from "eslint/config";
 import globals from "globals";
 import js from "@eslint/js";
 import pluginVue from "eslint-plugin-vue";
-import tailwind from "eslint-plugin-tailwindcss";
+import tsparser from "@typescript-eslint/parser";
 
-export default defineConfig([
+export default [
+  js.configs.recommended,
+  ...pluginVue.configs["flat/essential"],
   {
-    // Apply to all JS and Vue files.
-    files: ["**/*.{js,mjs,cjs}"],
-    languageOptions: { globals: globals.browser }
+    ignores: [
+      "coverage/**",
+      "node_modules/**",
+      ".nuxt/**",
+      "dist/**",
+      "playwright-report/**",
+      "test-results/**",
+      "30000/**"
+    ]
   },
-  {
-    files: ["**/*.{js,mjs,cjs}"],
-    plugins: { pluginVue },
-    extends: ["js/recommended"]
-  },
-  // Use Vue's "strongly-recommended" ruleset to enforce both error prevention and style guidelines.
-  pluginVue.configs["vue3-strongly-recommended"],
   {
     files: ["**/*.vue"],
-    languageOptions: { globals: globals.browser },
-    plugins: { pluginVue },
+    languageOptions: {
+      parser: pluginVue.parser,
+      parserOptions: {
+        parser: tsparser,
+        ecmaVersion: "latest",
+        sourceType: "module"
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.node
+      }
+    },
     rules: {
       "vue/multi-word-component-names": "off",
+      "no-undef": "off",
+      "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+      "vue/no-unused-vars": ["warn", { "ignorePattern": "^_" }],
+      "no-irregular-whitespace": "off"
+    }
+  },
+  {
+    files: ["**/*.js", "**/*.mjs", "**/*.cjs"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.browser
+      }
+    },
+    rules: {
       "no-undef": "off"
     }
   },
-  tailwind.configs["flat/recommended"],
-]);
+  {
+    files: ["**/server/**/*.js", "**/ecosystem.config.js", "**/tailwind.config.js"],
+    languageOptions: {
+      globals: {
+        ...globals.node
+      }
+    },
+    rules: {
+      "no-undef": "off"
+    }
+  },
+  {
+    files: ["**/.nuxt/**/*.js"],
+    languageOptions: {
+      globals: {
+        ...globals.node
+      }
+    },
+    rules: {
+      "no-undef": "off"
+    }
+  }
+];

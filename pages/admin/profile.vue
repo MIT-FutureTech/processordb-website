@@ -79,7 +79,7 @@
           <h3 class="text-lg font-medium mb-4">
             List of users
           </h3>
-          <UsersTable :user-data="usersData" />
+          <UsersTable :user-data="usersData" @refresh="fetchUsers" />
         </div>
       </div>
     </div>
@@ -96,6 +96,7 @@ import RegisterForm from '@/components/Forms/RegisterForm.vue';
 import UsersTable from '@/components/UsersTable.vue';
 import UpdatePassword from '~/components/Forms/UpdatePassword.vue';
 import UsersPhoto from '@/components/UsersPhoto.vue';
+import { getItemWithExpiry } from '@/lib/encrypter';
 
 const email = ref('');
 const image = ref('');
@@ -148,17 +149,41 @@ onMounted(() => {
   }
 });
 
-fetch(`${useRuntimeConfig().public.backendUrl}/users/`)
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Error fetching Users data');
+const fetchUsers = async () => {
+  try {
+    const backendUrl = useRuntimeConfig().public.backendUrl || 'http://localhost:3001';
+    const cleanUrl = backendUrl.replace(/\/$/, '');
+    const apiBaseUrl = cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
+    
+    // Get JWT token from storage
+    const token = getItemWithExpiry('encryptedJWTPDB');
+    if (!token) {
+      console.error('No authentication token found');
+      usersData.value = [];
+      return;
     }
-    return response.json();
-  })
-  .then(data => {
-    usersData.value = data;
-  })
-  .catch(error => {
-    console.error(error);
-  });
+    
+    const response = await fetch(`${apiBaseUrl}/users/`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error fetching Users data: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    usersData.value = data.data || data || [];
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    usersData.value = [];
+  }
+};
+
+// Fetch users on mount (client-side only to avoid SSR issues)
+onMounted(() => {
+  fetchUsers();
+});
 </script>

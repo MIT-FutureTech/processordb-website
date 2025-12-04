@@ -47,18 +47,19 @@
                 >
                   <div v-if="link.text !== 'Profile' || isLoggedIn">
                     <NuxtLink
+                      v-if="link.to && link.to !== '/admin/null'"
                       :to="link.to"
                       class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
                     >
                       <span
                         class="mr-3 text-black ml-4"
-                        :class="{ 'text-[#A32035]': $route.path === link.to }"
+                        :class="{ 'text-[#A32035]': route.path === link.to }"
                       >
                         <v-icon :name="link.icon" />
                       </span>
                       <span
                         class="mr-4"
-                        :class="{ 'text-[#A32035]': $route.path === link.to }"
+                        :class="{ 'text-[#A32035]': route.path === link.to }"
                       >{{ link.text }}</span>
                     </NuxtLink>
                   </div>
@@ -85,10 +86,12 @@
 </template>
 
 <script setup lang="js">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { isLogged } from '../lib/isLogged';
 
 const isLoggedIn = ref(false);
+const route = useRoute();
 
 onMounted(() => {
   isLoggedIn.value = isLogged();

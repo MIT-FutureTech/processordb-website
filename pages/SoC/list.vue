@@ -45,6 +45,11 @@
 </template>
 
 <script setup lang="js">
+// Make this page client-side only to avoid SSR/build issues
+definePageMeta({
+  ssr: false
+});
+
 import { ref, computed } from 'vue'
 
 const manufacturerNameFilter = ref('')
@@ -65,8 +70,8 @@ const { data } = await useFetch(`${useRuntimeConfig().public.backendUrl}/socs`, 
       code_name: soc.code_name || (soc.processors && soc.processors[0]?.code_name)
     }));
   },
-  server: true,
-  lazy: false
+  server: false,
+  lazy: true
 })
 
 const filterData = computed(() => {

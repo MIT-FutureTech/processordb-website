@@ -22,7 +22,7 @@
 
 <script setup>
 
-const props = defineProps({
+defineProps({
   crumbs: Array
 })
 

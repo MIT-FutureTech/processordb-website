@@ -1,35 +1,109 @@
-import { defineEventHandler, createError } from 'h3'
-import { useStorage } from '#imports'
+import { defineEventHandler, createError, getQuery } from 'h3'
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
+    // Skip only during actual prerender (build-time), not at runtime
+    // process.env.NITRO_PRERENDER can persist at runtime, so only check import.meta.prerender
+    if (import.meta.prerender) {
+        console.log('[CPU API] Skipping during build/prerender')
+        return { data: [], pagination: null }
+    }
+
     try {
-        // Initialize storage for caching
-        const storage = useStorage()
-        const cacheKey = 'cpus-data'
+        // Get query parameters for pagination
+        const query = getQuery(event)
+        const page = parseInt(query.page) || 1
+        const limit = parseInt(query.limit) || 100
 
-        // Try to get data from cache first
-        const cachedData = await storage.getItem(cacheKey)
-        if (cachedData) {
-            return cachedData
+        // Check for cache-busting parameter (useful for tests)
+        const forceRefresh = query.refresh === 'true' || query.nocache === 'true'
+        
+        // Set HTTP cache headers
+        if (forceRefresh) {
+            // Disable caching for force refresh requests
+            event.node.res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+            event.node.res.setHeader('Pragma', 'no-cache')
+            event.node.res.setHeader('Expires', '0')
+            console.log(`[CPU API] Cache bypass requested for page=${page}, limit=${limit}`)
+        } else {
+            // Enable HTTP caching - 30 minutes (1800 seconds)
+            event.node.res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800')
+            event.node.res.setHeader('Vary', 'Accept')
         }
 
         // If no cached data, fetch from backend
-        // eslint-disable-next-line no-undef
-        const backendUrl = `${useRuntimeConfig().public.backendUrl}`
-        const response = await fetch(`${backendUrl}/cpus`)
+        let backendUrl = useRuntimeConfig().public.backendUrl || 'http://localhost:3001'
+        // Remove trailing slash
+        backendUrl = backendUrl.replace(/\/$/, '')
+        // If backendUrl already includes /api, use it as-is; otherwise add /api
+        const apiPrefix = backendUrl.endsWith('/api') ? '' : '/api'
+        const url = `${backendUrl}${apiPrefix}/cpus?page=${page}&pageSize=${limit}`
+        
+        console.log(`[CPU API] Fetching from backend: ${url}`)
+        
+        // Performance timing
+        const fetchStartTime = Date.now()
+        // Add timeout to prevent hanging requests
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+        
+        const response = await fetch(url, {
+            headers: {
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Accept': 'application/json'
+            },
+            signal: controller.signal
+        })
+        
+        console.log(`[CPU API] Backend response status: ${response.status}`)
+        
+        clearTimeout(timeoutId)
+        const fetchTime = Date.now() - fetchStartTime
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`)
+            console.error(`Backend API error: ${response.status} - ${response.statusText}`)
+            throw new Error(`Backend API error: ${response.status} - ${response.statusText}`)
         }
 
-        const data = await response.json()
+        const parseStartTime = Date.now()
+        const responseData = await response.json()
+        const parseTime = Date.now() - parseStartTime
+        
+        // Handle response format:
+        // - Paginated responses: { data: [...], pagination: {...} }
+        // - Non-paginated responses: [...] (array directly)
+        const data = Array.isArray(responseData) ? responseData : (responseData.data || responseData)
+        const pagination = responseData.pagination || null
+        
+        console.log(`[CPU API] Received ${Array.isArray(data) ? data.length : 0} CPUs from backend`)
+        if (pagination) {
+            console.log(`[CPU API] Pagination info: totalCount=${pagination.totalCount}, totalPages=${pagination.totalPages}`)
+        }
 
-        // Cache the data for 1 hour (3600 seconds)
-        await storage.setItem(cacheKey, data, { ttl: 300 })
+        const totalTime = Date.now() - fetchStartTime
+        console.log(`[PERF] CPU fetch timings - Fetch: ${fetchTime}ms, Parse: ${parseTime}ms, Total: ${totalTime}ms`)
 
-        return data
+        // Return data with pagination if available (for backward compatibility, return data directly if no pagination)
+        // HTTP caching is handled by browser/CDN via Cache-Control headers
+        return pagination ? { data, pagination } : data
     } catch (error) {
         console.error('Error fetching CPUs:', error)
+        
+        // Handle timeout errors specifically
+        if (error.name === 'AbortError' || error.message?.includes('aborted') || error.message?.includes('timeout')) {
+            throw createError({
+                statusCode: 504,
+                message: 'Request timeout: Backend API did not respond in time'
+            })
+        }
+        
+        // Handle network errors
+        if (error.message?.includes('fetch') || error.message?.includes('network')) {
+            throw createError({
+                statusCode: 503,
+                message: 'Service unavailable: Unable to reach backend API'
+            })
+        }
+        
         throw createError({
             statusCode: 500,
             message: 'Failed to fetch CPUs data'

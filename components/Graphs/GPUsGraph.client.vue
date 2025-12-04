@@ -14,7 +14,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
               </svg>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side-offset="0" align="start" class="w-full left-0">
+            <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
               <DropdownMenuItem v-for="option in numericOptions" :key="option.value + '-' + option.source"
                 class="cursor-pointer" @click="xAxis = option">
                 {{ option.label }}
@@ -35,7 +35,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
               </svg>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side-offset="0" align="start" class="w-full left-0">
+            <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
               <DropdownMenuItem v-for="option in numericOptions" :key="option.value + '-' + option.source"
                 class="cursor-pointer" @click="yAxis = option">
                 {{ option.label }}
@@ -57,7 +57,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>
           </DropdownMenuTrigger>
-          <DropdownMenuContent side-offset="0" align="start" class="w-full left-0">
+          <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
             <DropdownMenuItem v-for="option in filteredGroupOptions" :key="option.value" class="cursor-pointer"
               @click="groupBy = option">
               {{ option.label }}
@@ -67,19 +67,43 @@
       </div>
     </div>
 
-    <highcharts :options="chartOptions" />
+    <div v-if="chartError" class="flex items-center justify-center h-64 bg-red-50 rounded-lg border border-red-200">
+      <div class="text-center">
+        <p class="text-red-800 font-medium">Error loading chart</p>
+        <p class="text-red-600 text-sm mt-2">{{ chartError }}</p>
+      </div>
+    </div>
+    <ClientOnly v-else>
+      <highcharts v-if="chartOptions" :options="chartOptions" />
+      <div v-else class="flex items-center justify-center h-64 text-gray-500">
+        Loading chart...
+      </div>
+      <template #fallback>
+        <div class="flex items-center justify-center h-64 text-gray-500">
+          Loading chart...
+        </div>
+      </template>
+    </ClientOnly>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { computed, ref, onErrorCaptured } from 'vue';
+// import { useRoute } from 'vue-router';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu/dropdown-menu-index';
+
+// Error handling for chart component
+const chartError = ref(null);
+onErrorCaptured((err) => {
+  console.error('Chart component error:', err);
+  chartError.value = err.message || 'An error occurred while rendering the chart';
+  return false; // Prevent error from propagating
+});
 
 // Props: Expect an array of GPU data points
 const props = defineProps({
@@ -94,6 +118,21 @@ const convertString = (str) => {
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
 };
+
+// Performance optimization: Memoize expensive computations
+// const memoizedData = ref(null);
+// const lastDataHash = ref('');
+
+// Create a hash of the data to detect changes
+// const createDataHash = (data) => {
+//   if (!data || !data.length) return '';
+//   return JSON.stringify(data.map(item => ({
+//     gpu_id: item.gpu_id,
+//     family: item.family,
+//     microarchitecture: item.microarchitecture,
+//     // Only include key fields for hashing
+//   })));
+// };
 
 // Dynamically generate numeric options for X and Y axes.
 // It scans the first data object for number values and excludes IDs and timestamps.
@@ -133,9 +172,9 @@ const groupOptions = [
 
 const filteredGroupOptions = computed(() => groupOptions);
 
-// Initialize xAxis and yAxis using the first available numeric option.
-const xAxis = ref(numericOptions.value[5] || { label: 'X-Axis', value: '', source: '' });
-const yAxis = ref(numericOptions.value[6] || { label: 'Y-Axis', value: '', source: '' });
+// Initialize xAxis and yAxis using the first available numeric option, with fallbacks
+const xAxis = ref(numericOptions.value.find(opt => opt.value === 'release_date') || numericOptions.value[0] || { label: 'X-Axis', value: '', source: '' });
+const yAxis = ref(numericOptions.value.find(opt => opt.value === 'core_count') || numericOptions.value[1] || { label: 'Y-Axis', value: '', source: '' });
 const groupBy = ref(filteredGroupOptions.value[0]);
 
 // Utility: Get the proper value from the data item based on the axis source.
@@ -182,11 +221,26 @@ const getColorForCategory = (colorCategory) => {
 };
 
 const chartOptions = computed(() => {
+  // Handle undefined or empty data
+  if (!props.data || !props.data.length) {
+    return {
+      chart: { type: 'scatter' },
+      title: { text: 'No data available' },
+      series: []
+    }
+  }
+  
+  // Performance optimization: Sample data for large datasets
+  const MAX_POINTS = 1000;
+  const dataToProcess = props.data.length > MAX_POINTS 
+    ? props.data.filter((_, index) => index % Math.ceil(props.data.length / MAX_POINTS) === 0)
+    : props.data;
+
   let groupedData = {};
   let series = [];
 
   // Group the data points according to the selected groupBy field.
-  groupedData = props.data.reduce((acc, item) => {
+  groupedData = dataToProcess.reduce((acc, item) => {
     const xValue = getAxisData(item, xAxis.value);
     const yValue = getAxisData(item, yAxis.value);
     const colorCategory = getAxisData(item, groupBy.value);

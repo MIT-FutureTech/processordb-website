@@ -7,7 +7,7 @@
                 <h1 class="text-4xl font-bold text-[#A32035]">
                     FPGA
                 </h1>
-                <NuxtLink to="/fpga/list">
+                <NuxtLink to="/fpga/list" @click="handleBackClick">
                     <v-icon name="co-arrow-circle-left"
                         class="text-gray-300 opacity-80 w-12 h-12 hover:text-[#8A1B2D] hover:opacity-78" />
                 </NuxtLink>
@@ -25,7 +25,16 @@
         </div>
 
         <div class="mt-8 -ml-4 mb-16">
-            <FpgaForm :fpga-data="fpgaData" :edit-mode="true" ref="fpgaFormRef" :read-only="!isLoggedIn" />
+            <FpgaForm 
+                v-if="fpgaData" 
+                :fpga-data="fpgaData" 
+                :edit-mode="true" 
+                ref="fpgaFormRef" 
+                :read-only="!isLoggedIn" 
+            />
+            <div v-else class="flex items-center justify-center h-64">
+                <div class="text-gray-500">Loading FPGA data...</div>
+            </div>
         </div>
     </div>
 
@@ -33,7 +42,8 @@
 </template>
 
 <script setup lang="js">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useRoute, useFetch, createError } from '#imports'
 import Footer from '@/components/Footer.vue'
 import { isLogged } from '../lib/isLogged';
 import FpgaForm from '~/components/Forms/FpgaForm.vue';
@@ -46,12 +56,51 @@ onMounted(() => {
 
 const fpgaFormRef = ref(null)
 const route = useRoute()
-const { data: fpgaData } = await useFetch(`${useRuntimeConfig().public.backendUrl}/fpgas/${route.params.id}`)
-console.log(fpgaData.value)
+// Add safety check for route params
+const fpgaId = route.params.id;
+if (!fpgaId) {
+  console.error('FPGA ID is missing from route params');
+  throw createError({ statusCode: 404, statusMessage: 'FPGA ID not found' });
+}
+
+const { data: rawFpgaData } = await useFetch(`/api/fpgas/${fpgaId}`, {
+  server: false, // Client-side only to avoid SSR issues
+  default: () => null
+})
+
+// Transform the data to match what the form expects
+const fpgaData = computed(() => {
+  if (!rawFpgaData.value) return null;
+  
+  console.log('Raw FPGA Data:', rawFpgaData.value);
+  
+  // Handle different response structures
+  const data = rawFpgaData.value.data || rawFpgaData.value;
+  
+  return {
+    fpga: data.fpga || data,
+    versionHistory: data.versionHistory || [],
+    manufacturerName: data.manufacturerName || data.SoC?.Manufacturer?.name || null
+  };
+});
+
+console.log('Raw FPGA Data:', rawFpgaData.value)
+console.log('Transformed FPGA Data:', fpgaData.value)
+
+const handleBackClick = () => {
+    console.log('Back button clicked - navigating to /fpga/list');
+};
 
 const submitForm = () => {
+    console.log('Submit form clicked');
+    console.log('FPGA Form Ref:', fpgaFormRef.value);
+    console.log('FPGA Data:', fpgaData.value);
+    
     if (fpgaFormRef.value) {
+        console.log('Calling submitData method');
         fpgaFormRef.value.submitData()
+    } else {
+        console.error('FPGA Form Ref is null - form not loaded yet');
     }
 }
 </script>

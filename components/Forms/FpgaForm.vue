@@ -257,6 +257,7 @@
 
 <script setup lang="js">
 import { ref, watch } from 'vue'
+import { useRuntimeConfig } from '#imports'
 
 const props = defineProps({
   fpgaData: { type: Object, required: true },
@@ -314,52 +315,53 @@ const form = ref({
 watch(
   () => props.fpgaData,
   (data) => {
-    if (!data || !data.fpga_id) return
+    if (!data || !data.fpga || !data.fpga.fpga_id) return
 
+    const fpga = data.fpga;
     form.value = {
-      manufacturer: data.vendor || '',
-      socName: data.SoC?.name || '',
-      releaseDate: data.SoC?.release_date?.split('T')[0] || '',
-      processNode: data.SoC?.process_node || '',
-      generation: data.generation || '',
-      familySubfamily: data.family_subfamily || '',
-      model: data.model || '',
-      clbs: data.clbs || '',
-      slicePerClb: data.slice_per_clb || '',
-      slices: data.slices || '',
-      lutPerSlice: data.lut_per_slice || '',
-      lutPerClb: data.lut_per_clb || '',
-      luts: data.luts || '',
-      lutInputs: data.lut_inputs || '',
-      ffPerSlice: data.ff_per_slice || '',
-      ffPerClb: data.ff_per_clb || '',
-      ffs: data.ffs || '',
-      distributedRam: data.distributed_ram || '',
-      distributedRamNotes: data.distributed_ram_notes || '',
-      blockRams: data.block_rams || '',
-      urams: data.urams || '',
-      multiplierDspBlocks: data.multiplier_dsp_blocks || '',
-      multiplierDspBlockType: data.multiplier_dsp_block_type || '',
-      aiEngines: data.ai_engines || '',
-      nocMasterSlavePorts: data.noc_master_slave_ports || '',
-      nocMasterSlavePortNotes: data.noc_master_slave_port_notes || '',
-      ioBanks: data.io_banks || '',
-      userIoMax: data.user_io_max || '',
+      manufacturer: data.manufacturerName || fpga.vendor || '',
+      socName: fpga.SoC?.name || '',
+      releaseDate: fpga.SoC?.release_date?.split('T')[0] || '',
+      processNode: fpga.SoC?.process_node || '',
+      generation: fpga.generation || '',
+      familySubfamily: fpga.family_subfamily || '',
+      model: fpga.model || '',
+      clbs: fpga.clbs || '',
+      slicePerClb: fpga.slice_per_clb || '',
+      slices: fpga.slices || '',
+      lutPerSlice: fpga.lut_per_slice || '',
+      lutPerClb: fpga.lut_per_clb || '',
+      luts: fpga.luts || '',
+      lutInputs: fpga.lut_inputs || '',
+      ffPerSlice: fpga.ff_per_slice || '',
+      ffPerClb: fpga.ff_per_clb || '',
+      ffs: fpga.ffs || '',
+      distributedRam: fpga.distributed_ram || '',
+      distributedRamNotes: fpga.distributed_ram_notes || '',
+      blockRams: fpga.block_rams || '',
+      urams: fpga.urams || '',
+      multiplierDspBlocks: fpga.multiplier_dsp_blocks || '',
+      multiplierDspBlockType: fpga.multiplier_dsp_block_type || '',
+      aiEngines: fpga.ai_engines || '',
+      nocMasterSlavePorts: fpga.noc_master_slave_ports || '',
+      nocMasterSlavePortNotes: fpga.noc_master_slave_port_notes || '',
+      ioBanks: fpga.io_banks || '',
+      userIoMax: fpga.user_io_max || '',
       userIoDifferentialPairsMax:
-        data.user_io_differential_pairs_max || '',
-      triStateBuses: data.tri_state_buses || '',
-      triStateBuffersPerBus: data.tri_state_buffers_per_bus || '',
-      globalClockBuffers: data.global_clock_buffers || '',
-      clockRegions: data.clock_regions || '',
-      clockBuffersPerRegion: data.clock_buffers_per_region || '',
-      regionalClockBuffers: data.regional_clock_buffers || '',
+        fpga.user_io_differential_pairs_max || '',
+      triStateBuses: fpga.tri_state_buses || '',
+      triStateBuffersPerBus: fpga.tri_state_buffers_per_bus || '',
+      globalClockBuffers: fpga.global_clock_buffers || '',
+      clockRegions: fpga.clock_regions || '',
+      clockBuffersPerRegion: fpga.clock_buffers_per_region || '',
+      regionalClockBuffers: fpga.regional_clock_buffers || '',
       multiGigabitTransceiversMax:
-        data.multi_gigabit_transceivers_max || '',
-      processingSystem: data.processing_system || '',
-      ethernetMacs: data.ethernet_macs || '',
-      vendor: data.vendor || '',
-      createdAt: new Date(data.createdAt).toLocaleString(),
-      updatedAt: new Date(data.updatedAt).toLocaleString()
+        fpga.multi_gigabit_transceivers_max || '',
+      processingSystem: fpga.processing_system || '',
+      ethernetMacs: fpga.ethernet_macs || '',
+      vendor: fpga.vendor || '',
+      createdAt: new Date(fpga.createdAt).toLocaleString(),
+      updatedAt: new Date(fpga.updatedAt).toLocaleString()
     }
   },
   { immediate: true }
@@ -370,45 +372,57 @@ const preparePostRequestBody = () => ({
     soc_id: props.fpgaData.SoC?.soc_id || null,
     name: form.value.socName,
     release_date: form.value.releaseDate || null,
-    process_node: form.value.processNode
+      process_node: form.value.processNode ? parseFloat(form.value.processNode) : null
   },
   manufacturer: {
-    name: form.value.manufacturer
+    name: form.value.manufacturer?.replace(/[<>"'&]/g, (match) => {
+      const escapeMap = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '&': '&amp;' };
+      return escapeMap[match];
+    })
   },
   fpga: {
     fpga_id: props.fpgaData.fpga_id || null,
-    generation: form.value.generation,
-    family_subfamily: form.value.familySubfamily,
-    model: form.value.model,
-    clbs: form.value.clbs,
-    slice_per_clb: form.value.slicePerClb,
-    slices: form.value.slices,
-    lut_per_slice: form.value.lutPerSlice,
-    lut_per_clb: form.value.lutPerClb,
-    luts: form.value.luts,
+    generation: form.value.generation?.replace(/[<>"'&]/g, (match) => {
+      const escapeMap = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '&': '&amp;' };
+      return escapeMap[match];
+    }),
+    family_subfamily: form.value.familySubfamily?.replace(/[<>"'&]/g, (match) => {
+      const escapeMap = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '&': '&amp;' };
+      return escapeMap[match];
+    }),
+    model: form.value.model?.replace(/[<>"'&]/g, (match) => {
+      const escapeMap = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '&': '&amp;' };
+      return escapeMap[match];
+    }),
+    clbs: form.value.clbs ? parseInt(form.value.clbs) : null,
+    slice_per_clb: form.value.slicePerClb ? parseInt(form.value.slicePerClb) : null,
+    slices: form.value.slices ? parseInt(form.value.slices) : null,
+    lut_per_slice: form.value.lutPerSlice ? parseInt(form.value.lutPerSlice) : null,
+    lut_per_clb: form.value.lutPerClb ? parseInt(form.value.lutPerClb) : null,
+    luts: form.value.luts ? parseInt(form.value.luts) : null,
     lut_inputs: form.value.lutInputs,
-    ff_per_slice: form.value.ffPerSlice,
-    ff_per_clb: form.value.ffPerClb,
-    ffs: form.value.ffs,
-    distributed_ram: form.value.distributedRam,
+    ff_per_slice: form.value.ffPerSlice ? parseInt(form.value.ffPerSlice) : null,
+    ff_per_clb: form.value.ffPerClb ? parseInt(form.value.ffPerClb) : null,
+    ffs: form.value.ffs ? parseInt(form.value.ffs) : null,
+    distributed_ram: form.value.distributedRam ? parseInt(form.value.distributedRam) : null,
     distributed_ram_notes: form.value.distributedRamNotes,
-    block_rams: form.value.blockRams,
-    urams: form.value.urams,
-    multiplier_dsp_blocks: form.value.multiplierDspBlocks,
+    block_rams: form.value.blockRams ? parseInt(form.value.blockRams) : null,
+    urams: form.value.urams ? parseInt(form.value.urams) : null,
+    multiplier_dsp_blocks: form.value.multiplierDspBlocks ? parseInt(form.value.multiplierDspBlocks) : null,
     multiplier_dsp_block_type: form.value.multiplierDspBlockType,
-    ai_engines: form.value.aiEngines,
+    ai_engines: form.value.aiEngines ? parseInt(form.value.aiEngines) : null,
     noc_master_slave_ports: form.value.nocMasterSlavePorts,
     noc_master_slave_port_notes: form.value.nocMasterSlavePortNotes,
     io_banks: form.value.ioBanks,
-    user_io_max: form.value.userIoMax,
-    user_io_differential_pairs_max: form.value.userIoDifferentialPairsMax,
-    tri_state_buses: form.value.triStateBuses,
-    tri_state_buffers_per_bus: form.value.triStateBuffersPerBus,
-    global_clock_buffers: form.value.globalClockBuffers,
-    clock_regions: form.value.clockRegions,
-    clock_buffers_per_region: form.value.clockBuffersPerRegion,
-    regional_clock_buffers: form.value.regionalClockBuffers,
-    multi_gigabit_transceivers_max: form.value.multiGigabitTransceiversMax,
+    user_io_max: form.value.userIoMax ? parseInt(form.value.userIoMax) : null,
+    user_io_differential_pairs_max: form.value.userIoDifferentialPairsMax ? parseInt(form.value.userIoDifferentialPairsMax) : null,
+    tri_state_buses: form.value.triStateBuses ? parseInt(form.value.triStateBuses) : null,
+    tri_state_buffers_per_bus: form.value.triStateBuffersPerBus ? parseInt(form.value.triStateBuffersPerBus) : null,
+    global_clock_buffers: form.value.globalClockBuffers ? parseInt(form.value.globalClockBuffers) : null,
+    clock_regions: form.value.clockRegions ? parseInt(form.value.clockRegions) : null,
+    clock_buffers_per_region: form.value.clockBuffersPerRegion ? parseInt(form.value.clockBuffersPerRegion) : null,
+    regional_clock_buffers: form.value.regionalClockBuffers ? parseInt(form.value.regionalClockBuffers) : null,
+    multi_gigabit_transceivers_max: form.value.multiGigabitTransceiversMax ? parseInt(form.value.multiGigabitTransceiversMax) : null,
     processing_system: form.value.processingSystem,
     ethernet_macs: form.value.ethernetMacs,
     vendor: form.value.vendor
@@ -418,6 +432,12 @@ const preparePostRequestBody = () => ({
 const submitData = async () => {
   successMessage.value = ''
   errorMessage.value = ''
+
+  // Basic validation
+  if (!form.value.manufacturer || !form.value.generation || !form.value.model) {
+    errorMessage.value = 'Please fill in all required fields (Manufacturer, Generation, Model)'
+    return
+  }
 
   try {
     const url = props.editMode
@@ -430,10 +450,21 @@ const submitData = async () => {
       body: JSON.stringify(preparePostRequestBody())
     })
 
-    const data = await res.json()
+    let data
+    try {
+      data = await res.json()
+    } catch (jsonError) {
+      console.error('Error parsing JSON response:', jsonError)
+      errorMessage.value = 'Invalid response from server. Please try again.'
+      return
+    }
+    
     if (res.ok) {
       successMessage.value = 'FPGA saved successfully!'
-      setTimeout(() => window.location.href = `/fpga/${data.fpga.fpga_id}`, 2000)
+      // Handle both wrapped and direct response formats
+      const responseData = data.data || data
+      const fpgaId = responseData.fpga?.fpga_id || responseData.fpga_id
+      setTimeout(() => window.location.href = `/fpga/${fpgaId}`, 2000)
     } else {
       errorMessage.value = data.error || 'Submission error.'
     }
@@ -448,14 +479,14 @@ const isMemoryDspExpanded = ref(true)
 const isIoExpanded = ref(true)
 const isClockResourcesExpanded = ref(true)
 const isExternalInterfacesExpanded = ref(true)
-const isVendorExpanded = ref(true)
+// const isVendorExpanded = ref(true)
 
 const toggleLogicResources = () => (isLogicResourcesExpanded.value = !isLogicResourcesExpanded.value)
 const toggleMemoryDsp = () => (isMemoryDspExpanded.value = !isMemoryDspExpanded.value)
 const toggleIo = () => (isIoExpanded.value = !isIoExpanded.value)
 const toggleClockResources = () => (isClockResourcesExpanded.value = !isClockResourcesExpanded.value)
 const toggleExternalInterfaces = () => (isExternalInterfacesExpanded.value = !isExternalInterfacesExpanded.value)
-const toggleVendor = () => (isVendorExpanded.value = !isVendorExpanded.value)
+// const toggleVendor = () => (isVendorExpanded.value = !isVendorExpanded.value)
 
 defineExpose({ submitData })
 </script>

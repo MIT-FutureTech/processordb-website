@@ -718,8 +718,8 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
               <tr
-                v-for="(history, ) in gpuData.versionHistory"
-                :key="history.version_id"
+                v-for="(history, index) in (gpuData.versionHistory || [])"
+                :key="history.version_id || index"
               >
                 <td class="px-6 py-4 whitespace-nowrap">
                   {{ formatFieldName(history.field_name) }}
@@ -753,6 +753,7 @@
 
 <script setup lang="js">
 import { ref, watch } from 'vue'
+import { useRuntimeConfig } from '#imports'
 
 const props = defineProps({
   gpuData: {
@@ -780,6 +781,7 @@ const isGraphicAPIExpanded = ref(true)
 const isHistoryExpanded = ref(true)
 
 function formatFieldName(fieldName) {
+  if (!fieldName) return '';
   return fieldName
     .replace(/_/g, ' ') 
     .replace(/\b\w/g, char => char.toUpperCase());
@@ -937,35 +939,51 @@ const preparePostRequestBody = () => {
       release_date: form.value.releaseDate ? form.value.releaseDate : null,
       platform: form.value.platform,
       process_node: form.value.processNode,
-      tdp: form.value.tdp,
+      tdp: form.value.tdp ? parseFloat(form.value.tdp) : null,
       soc_id: props.gpuData.gpu?.SoC?.soc_id || null,
     },
     manufacturer: {
-      name: form.value.manufacturer,
+      name: form.value.manufacturer?.replace(/[<>"'&]/g, (match) => {
+        const escapeMap = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '&': '&amp;' };
+        return escapeMap[match];
+      }),
       manufacturer_id: props.gpuData.gpu?.SoC?.Manufacturer?.manufacturer_id || null,
     },
     gpu: {
       gpu_id: props.gpuData.gpu?.gpu_id || null,
-      variant: form.value.variant,
-      architecture: form.value.architecture,
-      generation: form.value.generation,
-      core_count: form.value.coreCount,
-      base_clock: form.value.baseClock,
-      boost_clock: form.value.boostClock,
-      memory_clock: form.value.memoryClock,
-      memory_size: form.value.memorySize,
+      model: form.value.name?.replace(/[<>"'&]/g, (match) => {
+        const escapeMap = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '&': '&amp;' };
+        return escapeMap[match];
+      }),
+      variant: form.value.variant?.replace(/[<>"'&]/g, (match) => {
+        const escapeMap = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '&': '&amp;' };
+        return escapeMap[match];
+      }),
+      architecture: form.value.architecture?.replace(/[<>"'&]/g, (match) => {
+        const escapeMap = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '&': '&amp;' };
+        return escapeMap[match];
+      }),
+      generation: form.value.generation?.replace(/[<>"'&]/g, (match) => {
+        const escapeMap = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '&': '&amp;' };
+        return escapeMap[match];
+      }),
+      core_count: form.value.coreCount ? parseInt(form.value.coreCount) : null,
+      base_clock: form.value.baseClock ? parseFloat(form.value.baseClock) : null,
+      boost_clock: form.value.boostClock ? parseFloat(form.value.boostClock) : null,
+      memory_clock: form.value.memoryClock ? parseFloat(form.value.memoryClock) : null,
+      memory_size: form.value.memorySize ? parseInt(form.value.memorySize) : null,
       memory_type: form.value.memoryType,
       memory_bus: form.value.memoryBus,
-      memory_bandwidth: form.value.memoryBandwidth,
-      l0_cache: form.value.l0Cache,
-      l1_cache: form.value.l1Cache,
-      l2_cache: form.value.l2Cache,
-      l3_cache: form.value.l3Cache,
-      pixel_rate: form.value.pixelRate,
-      texture_rate: form.value.textureRate,
-      fp16: form.value.fp16Performance,
-      fp32: form.value.fp32Performance,
-      fp64: form.value.fp64Performance,
+      memory_bandwidth: form.value.memoryBandwidth ? parseFloat(form.value.memoryBandwidth) : null,
+      l0_cache: form.value.l0Cache ? parseInt(form.value.l0Cache) : null,
+      l1_cache: form.value.l1Cache ? parseInt(form.value.l1Cache) : null,
+      l2_cache: form.value.l2Cache ? parseInt(form.value.l2Cache) : null,
+      l3_cache: form.value.l3Cache ? parseInt(form.value.l3Cache) : null,
+      pixel_rate: form.value.pixelRate ? parseFloat(form.value.pixelRate) : null,
+      texture_rate: form.value.textureRate ? parseFloat(form.value.textureRate) : null,
+      fp16: form.value.fp16Performance ? parseFloat(form.value.fp16Performance) : null,
+      fp32: form.value.fp32Performance ? parseFloat(form.value.fp32Performance) : null,
+      fp64: form.value.fp64Performance ? parseFloat(form.value.fp64Performance) : null,
       slot: form.value.slot,
       directx: form.value.directX,
       opengl: form.value.openGL,
@@ -982,12 +1000,19 @@ const preparePostRequestBody = () => {
 const submitData = async () => {
   successMessage.value = ''
   errorMessage.value = ''
+
+  // Basic validation
+  if (!form.value.manufacturer || !form.value.variant || !form.value.name) {
+    errorMessage.value = 'Please fill in all required fields (Manufacturer, Variant, Name)'
+    return
+  }
+
   const postData = preparePostRequestBody()
 
   try {
     const response = await fetch(
       props.editMode
-        ? `${useRuntimeConfig().public.backendUrl}/gpus/${props.gpuData.gpu.gpu_id}`
+        ? `${useRuntimeConfig().public.backendUrl}/gpus/${props.gpuData.gpu?.gpu_id}`
         : `${useRuntimeConfig().public.backendUrl}/gpus`,
       {
         method: props.editMode ? 'PUT' : 'POST',
@@ -996,10 +1021,20 @@ const submitData = async () => {
       }
     )
 
-    const serverData = await response.json()
+    let serverData
+    try {
+      serverData = await response.json()
+    } catch (jsonError) {
+      console.error('Error parsing JSON response:', jsonError)
+      errorMessage.value = 'Invalid response from server. Please try again.'
+      return
+    }
+    
     if (response.ok) {
       successMessage.value = 'GPU saved successfully!'
-      redirectPage(serverData)
+      // Handle both wrapped and direct response formats
+      const responseData = serverData.data || serverData
+      redirectPage(responseData)
     } else {
       errorMessage.value = serverData.error || 'An error occurred during submission.'
     }
@@ -1010,10 +1045,12 @@ const submitData = async () => {
 }
 
 const redirectPage = (data) => {
-  const gpuId = props.editMode ? props.gpuData.gpu.gpu_id : data.gpu.gpu_id
+  const gpuId = props.editMode ? props.gpuData.gpu?.gpu_id : data.gpu?.gpu_id
   const redirectUrl = `/gpu/${gpuId}`
   setTimeout(() => {
-    window.location.href = redirectUrl
+    if (process.client && typeof window !== 'undefined') {
+      window.location.href = redirectUrl
+    }
   }, 2500)
 }
 

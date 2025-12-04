@@ -74,7 +74,7 @@
         </TableRow>
       </TableHeader>
       <TableBody>
-        <TableRow v-for="(soc, index) in displayedSocs" :key="soc.soc_id"
+        <TableRow v-for="soc in displayedSocs" :key="soc.soc_id"
           class="hover:bg-[#F1F5F9] even:bg-gray-50">
           <TableCell v-if="selectedColumns.includes('manufacturer_name')">
             <NuxtLink class="text-[#A32035] hover:underline"
@@ -108,7 +108,7 @@
           </TableCell>
           <TableCell v-if="selectedColumns.includes('model')">
             <div v-for="processor in soc.processors" :key="processor.model">
-              <NuxtLink class="text-[#A32035] hover:underline" :to="`/database/soc/${soc.soc_id}`">
+              <NuxtLink class="text-[#A32035] hover:underline" :to="`/soc/form`">
                 {{ processor.model }}
               </NuxtLink>
             </div>
@@ -153,7 +153,7 @@
             </div>
           </TableCell>
           <TableCell v-if="selectedColumns.includes('details')">
-            <NuxtLink class="text-[#A32035] hover:underline" :to="`/database/soc/${soc.soc_id}`">Details
+            <NuxtLink class="text-[#A32035] hover:underline" :to="`/soc/form`">Details
             </NuxtLink>
           </TableCell>
         </TableRow>
@@ -164,6 +164,7 @@
 </template>
 
 <script setup lang="js">
+import { ref, computed, watch } from 'vue'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -171,7 +172,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from '@/components/ui/dropdown-menu/dropdown-menu-index'
 import {
   Table,
   TableBody,
@@ -180,7 +181,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/components/ui/table/table-index'
 const props = defineProps({
   data: {
     type: Array,
@@ -189,17 +190,17 @@ const props = defineProps({
 })
 
 
-const emit = defineEmits(['filteredData'])
+defineEmits(['filteredData'])
 
 
 // State for SoCs
 const socs = ref(props.data)
 
-// Dropdown state for column selection
-const showColumnDropdown = ref(false)
-const toggleColumnDropdown = () => {
-  showColumnDropdown.value = !showColumnDropdown.value
-}
+// Dropdown state for column selection (commented out as not used)
+// const showColumnDropdown = ref(false)
+// const toggleColumnDropdown = () => {
+//   showColumnDropdown.value = !showColumnDropdown.value
+// }
 
 // State for pagination
 const pagination = ref({
@@ -296,7 +297,7 @@ const stringSortFields = [
 
 // Function to apply filters, sorting, and pagination
 const applyFiltersAndSorting = () => {
-  let filteredSocs = socs.value
+  let filteredSocs = socs.value || []
 
   // Apply filters
   if (filters.value.manufacturer) {
@@ -307,7 +308,7 @@ const applyFiltersAndSorting = () => {
   }
 
   // Apply sorting (case-insensitive)
-  if (sortField.value) {
+  if (sortField.value && filteredSocs) {
     filteredSocs.sort((a, b) => {
       const aValue = getFieldValue(a, sortField.value)
       const bValue = getFieldValue(b, sortField.value)

@@ -201,7 +201,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 // Replace these imports with wherever your UI components come from.
 import {
@@ -211,7 +211,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/components/ui/table/table-index'
 import { getRole } from '@/lib/isLogged'
 
 // Props
@@ -221,6 +221,9 @@ const props = defineProps({
     required: true,
   },
 })
+
+// Emits
+const emit = defineEmits(['refresh'])
 
 const successMessage = ref('')
 const errorMessage = ref('')
@@ -374,7 +377,8 @@ async function saveEdits() {
     }
 
     successMessage.value = 'User updated successfully!';
-    await fetchUsers();
+    // Emit event to parent to refresh user data
+    emit('refresh');
 
   } catch (err) {
     console.error(err);

@@ -14,7 +14,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
               </svg>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side-offset="0" align="start" class="w-full left-0">
+            <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
               <DropdownMenuItem v-for="option in numericOptions" :key="option.value + '-' + option.source"
                 class="cursor-pointer" @click="xAxis = option">
                 {{ option.label }}
@@ -37,7 +37,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
               </svg>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side-offset="0" align="start" class="w-full left-0">
+            <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
               <DropdownMenuItem v-for="option in numericOptions" :key="option.value + '-' + option.source"
                 class="cursor-pointer" @click="yAxis = option">
                 {{ option.label }}
@@ -59,7 +59,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>
           </DropdownMenuTrigger>
-          <DropdownMenuContent side-offset="0" align="start" class="w-full left-0">
+          <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
             <DropdownMenuItem v-for="option in filteredGroupOptions" :key="option.value" class="cursor-pointer"
               @click="groupBy = option">
               {{ option.label }}
@@ -69,18 +69,42 @@
       </div>
     </div>
 
-    <highcharts :options="chartOptions" @chartLoaded="onChartLoaded" />
+    <div v-if="chartError" class="flex items-center justify-center h-64 bg-red-50 rounded-lg border border-red-200">
+      <div class="text-center">
+        <p class="text-red-800 font-medium">Error loading chart</p>
+        <p class="text-red-600 text-sm mt-2">{{ chartError }}</p>
+      </div>
+    </div>
+    <ClientOnly v-else>
+      <highcharts v-if="chartOptions" :options="chartOptions" />
+      <div v-else class="flex items-center justify-center h-64 text-gray-500">
+        Loading chart...
+      </div>
+      <template #fallback>
+        <div class="flex items-center justify-center h-64 text-gray-500">
+          Loading chart...
+        </div>
+      </template>
+    </ClientOnly>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch, onMounted } from 'vue';
+import { computed, ref, onErrorCaptured } from 'vue';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu/dropdown-menu-index';
+
+// Error handling for chart component
+const chartError = ref(null);
+onErrorCaptured((err) => {
+  console.error('Chart component error:', err);
+  chartError.value = err.message || 'An error occurred while rendering the chart';
+  return false; // Prevent error from propagating
+});
 
 // Props: Expect an array of CPU data objects
 const props = defineProps({
@@ -97,10 +121,25 @@ const convertString = (str) => {
     .join(' ');
 };
 
+// Performance optimization: Memoize expensive computations
+// const memoizedData = ref(null);
+// const lastDataHash = ref('');
+
+// Create a hash of the data to detect changes
+// const createDataHash = (data) => {
+//   if (!data || !data.length) return '';
+//   return JSON.stringify(data.map(item => ({
+//     cpu_id: item.cpu_id,
+//     family: item.family,
+//     microarchitecture: item.microarchitecture,
+//     // Only include key fields for hashing
+//   })));
+// };
+
 // Dynamically generate numeric options for X and Y axes.
 // It scans the first CPU data object and its nested SoC object, excluding IDs and timestamps.
 const numericOptions = computed(() => {
-  if (!props.data.length) return [];
+  if (!props.data || !props.data.length) return [];
 
   const sample = props.data[0];
   const options = [];
@@ -134,8 +173,9 @@ const groupOptions = [
 
 const filteredGroupOptions = computed(() => groupOptions);
 
-const xAxis = ref(numericOptions.value[12] || { label: 'X-Axis', value: '', source: '' });
-const yAxis = ref(numericOptions.value[14] || { label: 'Y-Axis', value: '', source: '' });
+// Initialize axes with first available options, with fallbacks
+const xAxis = ref(numericOptions.value.find(opt => opt.value === 'release_date') || numericOptions.value[0] || { label: 'X-Axis', value: '', source: '' });
+const yAxis = ref(numericOptions.value.find(opt => opt.value === 'core_count') || numericOptions.value[1] || { label: 'Y-Axis', value: '', source: '' });
 const groupBy = ref(filteredGroupOptions.value[0]);
 
 // Utility: Get the proper value from a CPU data item based on the axis source.
@@ -175,12 +215,38 @@ const getColorForCategory = (colorCategory) => {
   return 'gray';
 };
 
+// Memoize chart data processing
+const chartDataCache = ref(new Map())
+
 const chartOptions = computed(() => {
+  // Handle undefined or empty data
+  if (!props.data || !props.data.length) {
+    return {
+      chart: { type: 'scatter' },
+      title: { text: 'No data available' },
+      series: []
+    }
+  }
+  
+  // Performance optimization: Sample data for large datasets
+  const MAX_POINTS = 1000;
+  const dataToProcess = props.data.length > MAX_POINTS 
+    ? props.data.filter((_, index) => index % Math.ceil(props.data.length / MAX_POINTS) === 0)
+    : props.data;
+  
+  // Create cache key based on data length, axis selections, and groupBy
+  const cacheKey = `${dataToProcess.length}-${xAxis.value.value}-${yAxis.value.value}-${groupBy.value.value}`
+  
+  // Check if we have cached data
+  if (chartDataCache.value.has(cacheKey)) {
+    return chartDataCache.value.get(cacheKey)
+  }
+
   let groupedData = {};
   let series = [];
 
   // Group the CPU data points by the selected groupBy field.
-  groupedData = props.data.reduce((acc, item) => {
+  groupedData = dataToProcess.reduce((acc, item) => {
     const xValue = getAxisData(item, xAxis.value);
     const yValue = getAxisData(item, yAxis.value);
     const colorCategory = getAxisData(item, groupBy.value);
@@ -213,7 +279,7 @@ const chartOptions = computed(() => {
       opacity: 0.8,
     }));
 
-  return {
+  const chartConfig = {
     chart: {
       type: 'scatter',
       zoomType: 'xy',
@@ -306,5 +372,16 @@ const chartOptions = computed(() => {
     },
     series,
   };
+  
+  // Cache the result
+  chartDataCache.value.set(cacheKey, chartConfig)
+  
+  // Limit cache size to prevent memory leaks
+  if (chartDataCache.value.size > 10) {
+    const firstKey = chartDataCache.value.keys().next().value
+    chartDataCache.value.delete(firstKey)
+  }
+  
+  return chartConfig
 });
 </script>

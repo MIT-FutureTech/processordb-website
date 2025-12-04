@@ -1,24 +1,125 @@
-# Nuxt dev/build outputs
-.output
-.data
+# Nuxt.js build / generate output
 .nuxt
+.output
 .nitro
 .cache
 dist
 
-# Node dependencies
+# Port-specific directories (development servers)
+/30000
+30000/
+[0-9]*/
+
+# Node.js dependencies
 node_modules
+jspm_packages/
 
 # Logs
-logs
 *.log
+*.log*
+logs
+*.pid
+*.pid.lock
+*.seed
 
-# Misc
-.DS_Store
-.fleet
-.idea
-
-# Local env files
+# Environment variables
 .env
 .env.*
 !.env.example
+
+# Coverage reports
+coverage/
+.nyc_output
+*.lcov
+
+# Test artifacts
+test-results/
+playwright-report/
+.playwright-port-lock
+
+# TypeScript
+typings/
+*.tsbuildinfo
+
+# Build artifacts and caches
+.npm
+.eslintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+.parcel-cache
+.fusebox/
+.grunt
+
+# Package manager files
+.yarn-integrity
+*.tgz
+.node_repl_history
+
+# IDE and Editor files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.fleet/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+*~
+.vscode-test
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Temporary files and directories
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Development and diagnostic files
+console-*.js
+*.diagnostic.*
+*.minified.*
+
+# Serverless
+.serverless
+
+# DynamoDB Local
+.dynamodb/
+
+# TernJS
+.tern-port
+
+# Next.js (if used)
+.next
+
+# Gatsby
+.cache/
+
+# Storybook
+.out
+.storybook-out
+
+# Vuepress
+.vuepress/dist
+
+# Lock files (optional - some teams prefer to track these)
+# Uncomment if you want to ignore lock files
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+#otjer
+deployment_old/
+docs/

@@ -8,8 +8,17 @@
       </div>
       <div class="flex flex-wrap items-center gap-2 text-xs">
         <div class="mr-4">
-          Showing {{ startRecord }}-{{ endRecord }} of {{ pagination.totalRecords }} records
+          Showing {{ startRecord }}-{{ endRecord }} of {{ totalCount }} records
         </div>
+        <select 
+          :value="pageSize" 
+          @change="handlePageSizeChange"
+          class="mr-2 outline-none bg-white border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs"
+        >
+          <option value="50">50 per page</option>
+          <option value="100">100 per page</option>
+          <option value="200">200 per page</option>
+        </select>
         <input
           type="text"
           v-model="searchQuery"
@@ -21,8 +30,8 @@
         <div class="flex items-center">
           <button
             @click="prevPage"
-            :disabled="pagination.currentPage === 1"
-            class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-xs has-tooltip"
+            :disabled="!hasPreviousPage || currentPage === 1"
+            class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-xs has-tooltip disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span class="tooltip rounded shadow-lg p-2 bg-white text-[#A32035] -mt-12 -ml-12">
               Previous page
@@ -44,15 +53,16 @@
           </button>
           <input
             type="number"
-            v-model.number="pagination.currentPage"
+            :value="currentPage"
+            @input="handlePageChange"
             :min="1"
-            :max="pagination.totalPages"
+            :max="totalPages"
             class="max-w-12 text-center outline-none bg-white border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2 text-gray-700 text-xs hide-arrow"
           >
           <button
             @click="nextPage"
-            :disabled="pagination.currentPage === pagination.totalPages"
-            class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-gray-700 text-xs has-tooltip"
+            :disabled="!hasNextPage || currentPage === totalPages"
+            class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-gray-700 text-xs has-tooltip disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span class="tooltip rounded shadow-lg p-2 bg-white text-[#A32035] -mt-12 -ml-6">
               Next page
@@ -169,6 +179,27 @@
           </TableRow>
         </TableHeader>
         <TableBody>
+          <!-- Empty State -->
+          <TableRow v-if="displayedData.length === 0">
+            <TableCell :colspan="displayedColumns.length + 1" class="text-center py-12">
+              <div class="flex flex-col items-center justify-center">
+                <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+                <p class="text-gray-600 font-medium mb-1">No data available</p>
+                <p class="text-gray-500 text-sm">
+                  <template v-if="searchQuery">
+                    No results found for "{{ searchQuery }}"
+                  </template>
+                  <template v-else>
+                    No records match the current filters
+                  </template>
+                </p>
+              </div>
+            </TableCell>
+          </TableRow>
+          
+          <!-- Data Rows -->
           <TableRow
             v-for="row in displayedData"
             :key="uniqueId(row)"
@@ -191,11 +222,13 @@
             <!-- Fixed Details Column Cell -->
             <TableCell key="details">
               <NuxtLink
+                v-if="uniqueId(row)"
                 class="text-[#A32035] hover:underline"
                 :to="`/${props.className.replace(/s$/i, '')}/${uniqueId(row)}`"
               >
                 Details
               </NuxtLink>
+              <span v-else class="text-gray-400">N/A</span>
             </TableCell>
           </TableRow>
         </TableBody>
@@ -206,7 +239,7 @@
 
 <script setup lang="js">
 import { ref, computed, watch } from 'vue'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
 import {
@@ -217,7 +250,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/components/ui/table/table-index'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -225,14 +258,24 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from '@/components/ui/dropdown-menu/dropdown-menu-index'
 import { NuxtLink } from '#components'
 
 // --- Props ---
 const props = defineProps({
   data: { type: Array, required: true },
   className: { type: String, required: true },
+  // API pagination props
+  totalCount: { type: Number, default: 0 },
+  currentPage: { type: Number, default: 1 },
+  pageSize: { type: Number, default: 50 },
+  hasPreviousPage: { type: Boolean, default: false },
+  hasNextPage: { type: Boolean, default: false },
+  totalPages: { type: Number, default: 0 },
 })
+
+// --- Emits ---
+const emit = defineEmits(['update:currentPage', 'update:pageSize'])
 
 // --- Helper: Format Year ---
 const formatYear = (date) => {
@@ -245,11 +288,11 @@ const uniqueId = (row) => {
 
   switch (socClass) {
     case 'cpu':
-      return row.cpu_id;
+      return row.cpu_id || '';
     case 'gpu':
-      return row.gpu_id;
+      return row.gpu_id || '';
     case 'fpgas':
-      return row.fpga_id;
+      return row.fpga_id || '';
     default:
       return '';
   }
@@ -263,40 +306,49 @@ function formatColumnLabel(key) {
     .join(' ')
 }
 
-// --- Flatten Data ---
+// --- Flatten Data with Memoization ---
 const flattenedData = computed(() => {
+  // Use a more efficient approach with less object spreading
   if (props.className === 'cpu') {
-    return props.data.map((item) => ({
-      ...item,
-      manufacturer: item.SoC?.Manufacturer?.name || '',
-      release_date: item.SoC?.release_date || '',
-      processor_type: 'CPU'
-    }))
+    return props.data.map((item) => {
+      const flattened = { ...item };
+      flattened.manufacturer = item.SoC?.Manufacturer?.name || '';
+      flattened.release_date = item.SoC?.release_date || '';
+      flattened.processor_type = 'CPU';
+      return flattened;
+    });
   } else if (props.className === 'gpu') {
-    return props.data.map((item) => ({
-      ...item,
-      manufacturer: item.SoC?.Manufacturer?.name || '',
-      release_date: item.SoC?.release_date || '',
-      processor_type: 'GPU',
-      model: item.model || item.name || '',
-      family: item.architecture || '',
-      microarchitecture: item.generation || '',
-      clock: item.base_clock || item.boost_clock || null,
-      tdp: item.tdp || null,
-    }))
+    return props.data.map((item) => {
+      const flattened = { ...item };
+      flattened.manufacturer = item.SoC?.Manufacturer?.name || '';
+      flattened.release_date = item.SoC?.release_date || '';
+      flattened.processor_type = 'GPU';
+      flattened.model = item.model || item.name || '';
+      flattened.family = item.architecture || '';
+      flattened.microarchitecture = item.generation || '';
+      flattened.clock = item.base_clock || item.boost_clock || null;
+      flattened.tdp = item.tdp || null;
+      return flattened;
+    });
   } else {
-    return props.data.map((item) => ({
-      ...item,
-      release_date: item.SoC?.release_date || '',
-      die_sizes: item.SoC?.die_sizes || '',
-      number_of_die: item.SoC?.number_of_die || '',
-      package_size: item.SoC?.package_size || '',
-      platform: item.SoC?.platform || '',
-      total_transistors_count: item.SoC?.total_transistors_count || '',
-      transistor_density: item.SoC?.transistor_density || '',
-      voltage_range_high: item.SoC?.voltage_range_high || '',
-      voltage_range_low: item.SoC?.voltage_range_low || '',
-    }))
+    // Add safety check for data type
+    if (!Array.isArray(props.data)) {
+      console.error('PrivateTable: props.data is not an array:', props.data);
+      return [];
+    }
+    return props.data.map((item) => {
+      const flattened = { ...item };
+      flattened.release_date = item.SoC?.release_date || '';
+      flattened.die_sizes = item.SoC?.die_sizes || '';
+      flattened.number_of_die = item.SoC?.number_of_die || '';
+      flattened.package_size = item.SoC?.package_size || '';
+      flattened.platform = item.SoC?.platform || '';
+      flattened.total_transistors_count = item.SoC?.total_transistors_count || '';
+      flattened.transistor_density = item.SoC?.transistor_density || '';
+      flattened.voltage_range_high = item.SoC?.voltage_range_high || '';
+      flattened.voltage_range_low = item.SoC?.voltage_range_low || '';
+      return flattened;
+    });
   }
 })
 
@@ -398,29 +450,34 @@ const generateXLSX = async () => {
     });
     return newItem;
   });
-  const worksheet = XLSX.utils.json_to_sheet(minimalData, { header: filteredColumns });
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
-  workbook.Props = {
-    Title: `${props.className} Data - ProcessorDB - MIT FutureTech`,
-    Subject: `${props.className.toUpperCase()} Hardware Specifications`,
-    Author: 'Neil Thompson, Jonathan Koomey, Sylvia Downing, Kenneth Flamm, Emanuele Del Sozzo, Zachary Schmidt, Rebecca Wenjing Lyu, João Lucas Zarbielli',
-    CreatedDate: new Date()
-  };
-  workbook.Custprops = {
-    License: 'CC-BY-4.0',
-    Source: `https://processordb.mit.edu/${props.className}/list`
-  };
-  const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-  function s2ab(s) {
-    const buf = new ArrayBuffer(s.length);
-    const view = new Uint8Array(buf);
-    for (let i = 0; i < s.length; i++) {
-      view[i] = s.charCodeAt(i) & 0xff;
-    }
-    return buf;
-  }
-  return new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Data');
+  
+  // Add headers
+  worksheet.addRow(filteredColumns);
+  
+  // Add data rows
+  minimalData.forEach(item => {
+    const row = filteredColumns.map(col => item[col] ?? '');
+    worksheet.addRow(row);
+  });
+  
+  // Set workbook properties
+  workbook.creator = 'MIT FutureTech';
+  workbook.lastModifiedBy = 'MIT FutureTech';
+  workbook.created = new Date();
+  workbook.modified = new Date();
+  workbook.description = 'Data exported from ProcessorDB';
+  workbook.keywords = 'processors, database, export';
+  workbook.category = 'Data Export';
+  workbook.company = 'MIT FutureTech';
+  workbook.manager = 'MIT FutureTech';
+  workbook.title = `${props.className} Data - ProcessorDB - MIT FutureTech`;
+  workbook.subject = `${props.className.toUpperCase()} Hardware Specifications`;
+  workbook.comments = 'This data is provided under CC-BY-4.0 license';
+  
+  const buffer = await workbook.xlsx.writeBuffer();
+  return new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 };
 
 // Generate PDF Blob (async because of image loading)
@@ -538,17 +595,38 @@ const displayedColumns = computed(() =>
 
 // --- Search, Sorting, and Pagination ---
 const searchQuery = ref('')
+const debouncedSearchQuery = ref('')
+const searchTimeout = ref(null)
 const sortField = ref('')
 const sortOrder = ref('asc')
+
+// Debounce search query to avoid excessive filtering
+watch(searchQuery, (newQuery) => {
+  clearTimeout(searchTimeout.value)
+  searchTimeout.value = setTimeout(() => {
+    debouncedSearchQuery.value = newQuery
+  }, 300) // 300ms debounce
+}, { immediate: true })
+
+// Optimized search with early exit
 const filteredData = computed(() => {
-  if (!searchQuery.value) return flattenedData.value
-  return flattenedData.value.filter(item =>
-    displayedColumns.value.some(col => {
+  if (!debouncedSearchQuery.value) return flattenedData.value
+  
+  const query = debouncedSearchQuery.value.toLowerCase()
+  const columns = displayedColumns.value
+  
+  return flattenedData.value.filter(item => {
+    // Early exit if any column matches
+    for (const col of columns) {
       const cellValue = item[col.value]
-      if (cellValue === null || cellValue === undefined) return false
-      return cellValue.toString().toLowerCase().includes(searchQuery.value.toLowerCase())
-    })
-  )
+      if (cellValue !== null && cellValue !== undefined) {
+        if (cellValue.toString().toLowerCase().includes(query)) {
+          return true
+        }
+      }
+    }
+    return false
+  })
 })
 
 const sortedData = computed(() => {
@@ -569,35 +647,44 @@ const sortedData = computed(() => {
   })
 })
 
-const pagination = ref({
-  currentPage: 1,
-  pageSize: 50,
-  totalRecords: 0,
-  totalPages: 0,
+// Display all data (no client-side pagination since we're using API pagination)
+const displayedData = computed(() => sortedData.value)
+
+// Calculate record range based on API pagination
+const startRecord = computed(() => {
+  if (props.totalCount === 0) return 0
+  return (props.currentPage - 1) * props.pageSize + 1
 })
 
-const displayedData = computed(() => {
-  pagination.value.totalRecords = sortedData.value.length
-  pagination.value.totalPages = Math.ceil(sortedData.value.length / pagination.value.pageSize)
-  const start = (pagination.value.currentPage - 1) * pagination.value.pageSize
-  const end = start + pagination.value.pageSize
-  return sortedData.value.slice(start, end)
+const endRecord = computed(() => {
+  if (props.totalCount === 0) return 0
+  return Math.min(props.currentPage * props.pageSize, props.totalCount)
 })
 
-const startRecord = computed(() => (pagination.value.currentPage - 1) * pagination.value.pageSize + 1)
-const endRecord = computed(() =>
-  Math.min(pagination.value.currentPage * pagination.value.pageSize, pagination.value.totalRecords)
-)
-
+// Pagination handlers - emit events to parent
 const nextPage = () => {
-  if (pagination.value.currentPage < pagination.value.totalPages) {
-    pagination.value.currentPage++
+  if (props.hasNextPage && props.currentPage < props.totalPages) {
+    emit('update:currentPage', props.currentPage + 1)
   }
 }
+
 const prevPage = () => {
-  if (pagination.value.currentPage > 1) {
-    pagination.value.currentPage--
+  if (props.hasPreviousPage && props.currentPage > 1) {
+    emit('update:currentPage', props.currentPage - 1)
   }
+}
+
+const handlePageChange = (event) => {
+  const newPage = parseInt(event.target.value) || 1
+  const validPage = Math.max(1, Math.min(newPage, props.totalPages))
+  if (validPage !== props.currentPage) {
+    emit('update:currentPage', validPage)
+  }
+}
+
+const handlePageSizeChange = (event) => {
+  const newPageSize = parseInt(event.target.value) || 50
+  emit('update:pageSize', newPageSize)
 }
 
 const sortBy = (field) => {

@@ -1,0 +1,46 @@
+name: Trigger Deployment
+
+# This workflow triggers a webhook that your instance listens for
+# The instance will then pull the latest code and rebuild
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    
+    # Determine environment based on branch
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    
+    steps:
+      - name: Trigger deployment webhook
+        run: |
+          ENVIRONMENT="${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}"
+          WEBHOOK_URL="${{ secrets.WEBHOOK_URL }}"
+          WEBHOOK_SECRET="${{ secrets.WEBHOOK_SECRET }}"
+          
+          # Create payload
+          PAYLOAD=$(cat <<EOF
+          {
+            "ref": "${{ github.ref }}",
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}",
+            "environment": "$ENVIRONMENT",
+            "repository": "${{ github.repository }}"
+          }
+          EOF
+          )
+          
+          # Send webhook with secret for authentication
+          curl -X POST "$WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -H "X-GitHub-Event: push" \
+            -H "X-Webhook-Secret: $WEBHOOK_SECRET" \
+            -d "$PAYLOAD" \
+            --fail --show-error
+          
+          echo "Deployment webhook triggered for $ENVIRONMENT"

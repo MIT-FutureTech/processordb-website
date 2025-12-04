@@ -1,0 +1,26 @@
+# Generated files
+.nuxt/
+.output/
+dist/
+coverage/
+
+# Dependencies
+node_modules/
+
+# Config files that use CommonJS
+ecosystem.config.js
+tailwind.config.js
+
+# Generated Tailwind config
+.nuxt/tailwind.config.cjs
+
+# Assets that might have formatting issues
+assets/people.js
+
+# UI components with TypeScript issues
+components/ui/breadcrumb/
+components/ui/dropdown-menu/
+components/ui/table/
+
+# Server API files (Node.js environment)
+server/

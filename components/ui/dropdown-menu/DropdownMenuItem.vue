@@ -6,6 +6,7 @@ import { computed, type HTMLAttributes } from 'vue'
 const props = defineProps<DropdownMenuItemProps & { class?: HTMLAttributes['class'], inset?: boolean }>()
 
 const delegatedProps = computed(() => {
+  // eslint-disable-next-line no-unused-vars
   const { class: _, ...delegated } = props
 
   return delegated

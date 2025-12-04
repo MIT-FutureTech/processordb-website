@@ -61,6 +61,8 @@ onMounted(() => {
 });
 
 const gpuFormRef = ref(null)
+// Define gpuData as null for new GPU creation (not editing)
+const gpuData = ref(null)
 
 const submitForm = () => {
   if (gpuFormRef.value) {

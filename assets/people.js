@@ -78,7 +78,14 @@ University of California, Berkeley.</p>
         name: 'Tess Fagan',
         affiliation: 'MIT FutureTech',
         image: '/tess profile.jpeg',       
-        description: `<p class="mt-2">pending bio</p>`
+        description: `<p class="mt-2">Tess Fagan is the Head of Strategy and Operations at MIT FutureTech, a leading research lab housed within both MIT CSAIL and the MIT Sloan School of Management. She brings a decade of leadership experience across strategy, technology, and operations, having previously served in Chief of Staff, Vice President, and Director roles at Iron Mountain, Vista Equity Partners, and the City of Boston. At MIT, she oversees strategy, operations, project management, and engineering for cross-functional collaborations across more than 170 cutting-edge projects focused on AI, computing, and economics, ensuring the lab’s work advances both academic inquiry and real-world progress.
+Tess has global executive technical leadership experience, previously responsible for managing a $84M P&L and a 750-person engineering team across 26 countries. As Head of Technical Partnerships in AI and ML, she established key industry partnerships with over 200 industry leaders across finance, technology, energy, and healthcare. ‍A graduate of Harvard Extension School’s Full Stack Software Engineering program, Tess also holds dual degrees in Economics and Environmental Science from Boston University.</p>`
+    },
+    {
+        name: 'Ben Olsen',
+        affiliation: 'MIT FutureTech',
+        image: '/tess profile.jpeg',       
+        description: `<p class="mt-2">Ben Olsen is Software Developer supporting research at Future Tech CSAIL MIT. He is also a Masters student at Georgia Institute of Technology, studying applied AI and Machine Learning.</p>`
     }
 ]
 
@@ -115,7 +122,7 @@ Computer Science and Engineering in MIT’s Department of
 Electrical Engineering and Computer Science (EECS) and a
 member and former Associate Director of MIT’s Computer
 Science and Artificial Intelligence Laboratory (CSAIL). He
-received a B.S. in computer science and mathematics from Yale
+received a� B.S. in computer science and mathematics from Yale
 University in 1975 and a Ph.D. in computer science from
 Carnegie Mellon University in 1981. He currently serves as the
 MIT Faculty Director of the DAF-MIT AI Accelerator and leads its
@@ -127,7 +134,7 @@ Technologies, and he founded Cilk Arts, Inc., a multicore-
 software start-up acquired by Intel. He was the network
 architect for the Connection Machine CM-5, the world’s most powerful computer in 1993. He
 coauthored the influential textbook Introduction to Algorithms, which has sold over one million
-copies. Leiserson is a Fellow of four professional societies—ACM, AAAS, SIAM, and IEEE—and
+copies. Leiserson is a Fellow of four professional societies—ACM,� AAAS,� SIAM, and� IEEE—and
 he is a member of the National Academy of Engineering.</p>
         `
     },

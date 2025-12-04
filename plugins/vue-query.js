@@ -3,8 +3,13 @@ import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query';
 
 export default defineNuxtPlugin({
   name: 'vue-query',
-  parallel: true,
+  mode: 'client', // Only run on client side to avoid SSR issues
   setup(nuxtApp) {
+    // Ensure we're on the client
+    if (process.server) {
+      return;
+    }
+    
     const queryClient = new QueryClient({
       defaultOptions: {
         queries: {

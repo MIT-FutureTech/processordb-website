@@ -120,14 +120,14 @@
 
 <script setup lang="ts">
 import {
-  Table,
+  // Table,
   TableBody,
   TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/components/ui/table/table-index'
 
 const props = defineProps({
   manufacturerCounts: {
@@ -143,7 +143,7 @@ const manufacturerData = computed(() => {
     cpus: counts.cpu || 0,
     gpus: counts.gpu || 0,
     fpgas: counts.fpga || 0,
-    total: Object.values(counts).reduce((sum, count) => sum + count, 0)
+    total: Object.values(counts).reduce((sum: number, count: any) => sum + (typeof count === 'number' ? count : 0), 0)
   }))
 })
 
@@ -174,7 +174,9 @@ const filteredManufacturers = computed(() => {
     )
     .sort((a, b) => {
       const modifier = sortOrder.value === 'asc' ? 1 : -1
-      return modifier * (a[sortField.value] - b[sortField.value])
+      const aValue = a[sortField.value as keyof typeof a] as number
+      const bValue = b[sortField.value as keyof typeof b] as number
+      return modifier * (aValue - bValue)
     })
 })
 
@@ -210,7 +212,7 @@ const prevPage = () => {
 }
 
 // Sorting method
-const sortBy = (field) => {
+const sortBy = (field: string) => {
   if (sortField.value === field) {
     sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
   } else {
@@ -228,7 +230,7 @@ const displayedColumns = [
   { value: 'total', label: 'Total' }
 ]
 
-const selectedColumns = ref(['manufacturer_name', 'cpus', 'gpus', 'fpgas', 'total'])
+// const selectedColumns = ref(['manufacturer_name', 'cpus', 'gpus', 'fpgas', 'total'])
 </script>
 
 <style scoped>

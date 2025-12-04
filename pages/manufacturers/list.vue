@@ -22,7 +22,7 @@
 
 
 <script setup lang="js">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 
 const { data } = useQuery({

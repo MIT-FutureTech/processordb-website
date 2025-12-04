@@ -37,10 +37,21 @@
     </div>
 
     <div class="mt-8 -ml-4 mb-16">
-      <CpuForm
-        ref="cpuFormRef"
-        :cpu-data="cpuData"
-      />
+      <ClientOnly>
+        <CpuForm
+          v-if="mounted"
+          ref="cpuFormRef"
+          :cpu-data="cpuData"
+        />
+        <template #fallback>
+          <div class="flex items-center justify-center h-64">
+            <div class="flex flex-col items-center space-y-4">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#A32035]"></div>
+              <div class="text-gray-500">Loading form...</div>
+            </div>
+          </div>
+        </template>
+      </ClientOnly>
     </div>
   </div>
 
@@ -54,12 +65,17 @@ import CpuForm from '../components/Forms/CpuForm.vue'
 import { isLogged } from '../lib/isLogged';
 
 const isLoggedIn = ref(false);
+const mounted = ref(false);
 
 onMounted(() => {
   isLoggedIn.value = isLogged();
+  // Set mounted flag after component is mounted to ensure ClientOnly works correctly
+  mounted.value = true;
 });
 
 const cpuFormRef = ref(null)
+// Define cpuData as null for new CPU creation (not editing)
+const cpuData = ref(null)
 
 const submitForm = () => {
   if (cpuFormRef.value) {

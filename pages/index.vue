@@ -213,12 +213,12 @@ const submitting = ref(false)
 const showMessage = ref(false)
 function submitEmail() {
     submitting.value = true
-    $fetch(`${useRuntimeConfig().public.backendUrl}/api/subscribe`, {
+    $fetch('/api/subscribe', {
         method: 'POST',
         body: JSON.stringify({
             email: email.value
         })
-    }).then(res => {
+    }).then(() => {
         showMessage.value = true
         setTimeout(() => {
             showMessage.value = false

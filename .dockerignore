@@ -1,0 +1,58 @@
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Test files
+tests/
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+vitest.config.ts
+coverage/
+
+# Development files
+.env
+.env.*
+!.env.example
+docker-compose.yml
+Dockerfile.dev
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Cache
+.npm
+.eslintcache
+
+# Build artifacts
+.output/
+.nuxt/
+dist/
+
+# Nuxt specific
+.nuxt/
+.output/

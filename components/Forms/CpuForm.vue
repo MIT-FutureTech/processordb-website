@@ -474,7 +474,7 @@
 
       <hr class="border-t border-white opacity-80 my-4 mt-8" />
 
-      <div v-if="isHistoryExpanded">
+      <div v-if="isHistoryExpanded && cpuData && cpuData.versionHistory">
         <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-black bg-opacity-80">
@@ -489,7 +489,7 @@
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="(history, index) in cpuData.versionHistory" :key="history.version_id">
+              <tr v-for="history in (cpuData?.versionHistory || [])" :key="history.version_id">
                 <td class="px-6 py-4 whitespace-nowrap">{{ formatFieldName(history.field_name) }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">{{ history.old_value || '' }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">{{ history.new_value || '' }}</td>
@@ -509,9 +509,10 @@
 
 <script setup lang="js">
 import { ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRuntimeConfig } from '#imports'
+// import { useRouter } from 'vue-router'
 
-const router = useRouter()
+// const router = useRouter()
 
 // Define props for initial cpuData, editMode, and the new readOnly flag
 const props = defineProps({
@@ -535,6 +536,7 @@ const successMessage = ref('')
 const errorMessage = ref('')
 
 function formatFieldName(fieldName) {
+  if (!fieldName) return '';
   return fieldName
     .replace(/_/g, ' ') 
     .replace(/\b\w/g, char => char.toUpperCase());
@@ -612,12 +614,16 @@ const form = ref({
 watch(
   () => props.cpuData,
   (newData) => {
-    if (newData) {
-      const cpuData = newData.cpu || {}
-      const socData = newData.cpu?.SoC || {}
+    // Guard against null/undefined during SSR
+    if (!newData) {
+      return;
+    }
+    
+    const cpuData = newData.cpu || {}
+    const socData = newData.cpu?.SoC || {}
 
-      form.value = {
-        manufacturer: socData.Manufacturer?.name || '',
+    form.value = {
+        manufacturer: newData.manufacturerName || socData.Manufacturer?.name || '',
         family: cpuData.family || '',
         codeName: cpuData.code_name || '',
         microarchitecture: cpuData.microarchitecture || '',
@@ -659,7 +665,6 @@ watch(
         turboFrequency1core: cpuData.turbo_frequency_1core || '',
         turboFrequency2core: cpuData.turbo_frequency_2core || ''
       }
-    }
   },
   { immediate: true }
 )
@@ -671,61 +676,76 @@ const preparePostRequestBody = () => {
       name: form.value.model,
       release_date: form.value.year ? `${form.value.year}-01-02` : null,
       platform: form.value.platform,
-      process_node: form.value.lithography,
-      tdp: form.value.tdp,
-      soc_id: props.cpuData.cpu?.SoC?.soc_id || null,
+      process_node: form.value.lithography ? parseFloat(form.value.lithography) : null,
+      tdp: form.value.tdp ? parseFloat(form.value.tdp) : null,
+      soc_id: props.cpuData?.cpu?.SoC?.soc_id || null,
     },
     manufacturer: {
-      name: form.value.manufacturer,
-      manufacturer_id: props.cpuData.cpu?.SoC?.Manufacturer?.manufacturer_id || null,
+      name: form.value.manufacturer?.replace(/[<>"'&]/g, (match) => {
+        const escapeMap = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '&': '&amp;' };
+        return escapeMap[match];
+      }),
+      manufacturer_id: props.cpuData?.cpu?.SoC?.Manufacturer?.manufacturer_id || null,
     },
     cpu: {
-      cpu_id: props.cpuData.cpu?.cpu_id || null,
-      family: form.value.family,
-      code_name: form.value.codeName,
-      microarchitecture: form.value.microarchitecture,
-      model: form.value.model,
-      clock: form.value.clock,
-      max_clock: form.value.maxClock,
-      tdp: form.value.tdp,
+      cpu_id: props.cpuData?.cpu?.cpu_id || null,
+      family: form.value.family?.replace(/[<>"'&]/g, (match) => {
+        const escapeMap = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '&': '&amp;' };
+        return escapeMap[match];
+      }),
+      code_name: form.value.codeName?.replace(/[<>"'&]/g, (match) => {
+        const escapeMap = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '&': '&amp;' };
+        return escapeMap[match];
+      }),
+      microarchitecture: form.value.microarchitecture?.replace(/[<>"'&]/g, (match) => {
+        const escapeMap = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '&': '&amp;' };
+        return escapeMap[match];
+      }),
+      model: form.value.model?.replace(/[<>"'&]/g, (match) => {
+        const escapeMap = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '&': '&amp;' };
+        return escapeMap[match];
+      }),
+      clock: form.value.clock ? parseFloat(form.value.clock) : null,
+      max_clock: form.value.maxClock ? parseFloat(form.value.maxClock) : null,
+      tdp: form.value.tdp ? parseFloat(form.value.tdp) : null,
       lithography: form.value.lithography,
-      threads_per_core: form.value.threadsPerCore,
-      l1_cache_data: form.value.l1DataCache,
-      l1_cache_instruction: form.value.l1InstructionCache,
-      l1_cache_latency: form.value.l1CacheLatency,
-      l2_cache: form.value.l2Cache,
-      l2_cache_latency: form.value.l2CacheLatency,
-      l3_cache: form.value.l3Cache,
-      l3_cache_latency: form.value.l3CacheLatency,
-      l4_cache: form.value.l4Cache,
-      max_memory_size: form.value.maxMemorySize,
+      threads_per_core: form.value.threadsPerCore ? parseInt(form.value.threadsPerCore) : null,
+      l1_cache_data: form.value.l1DataCache ? parseInt(form.value.l1DataCache) : null,
+      l1_cache_instruction: form.value.l1InstructionCache ? parseInt(form.value.l1InstructionCache) : null,
+      l1_cache_latency: form.value.l1CacheLatency ? parseFloat(form.value.l1CacheLatency) : null,
+      l2_cache: form.value.l2Cache ? parseInt(form.value.l2Cache) : null,
+      l2_cache_latency: form.value.l2CacheLatency ? parseFloat(form.value.l2CacheLatency) : null,
+      l3_cache: form.value.l3Cache ? parseInt(form.value.l3Cache) : null,
+      l3_cache_latency: form.value.l3CacheLatency ? parseFloat(form.value.l3CacheLatency) : null,
+      l4_cache: form.value.l4Cache ? parseInt(form.value.l4Cache) : null,
+      max_memory_size: form.value.maxMemorySize ? parseInt(form.value.maxMemorySize) : null,
       memory_type: form.value.memoryType,
-      max_memory_channels: form.value.maxMemoryChannels,
-      max_memory_bandwidth: form.value.maxMemoryBandwidth,
-      dram_latency: form.value.dramLatency,
-      bus_speed: form.value.busSpeed,
-      instruction_set_width: form.value.instructionSetWidth,
-      fp64_ops: form.value.fp64Ops,
-      fp32_ops: form.value.fp32Ops,
-      fp16_ops: form.value.fp16Ops,
-      mips: form.value.mips,
-      fp32_theoretical_mflops: form.value.fp32TheoreticalMflops,
-      fp32_measured_gflops: form.value.fp32MeasuredGflops,
-      edram: form.value.edram,
+      max_memory_channels: form.value.maxMemoryChannels ? parseInt(form.value.maxMemoryChannels) : null,
+      max_memory_bandwidth: form.value.maxMemoryBandwidth ? parseFloat(form.value.maxMemoryBandwidth) : null,
+      dram_latency: form.value.dramLatency ? parseFloat(form.value.dramLatency) : null,
+      bus_speed: form.value.busSpeed ? parseFloat(form.value.busSpeed) : null,
+      instruction_set_width: form.value.instructionSetWidth ? parseInt(form.value.instructionSetWidth) : null,
+      fp64_ops: form.value.fp64Ops ? parseFloat(form.value.fp64Ops) : null,
+      fp32_ops: form.value.fp32Ops ? parseFloat(form.value.fp32Ops) : null,
+      fp16_ops: form.value.fp16Ops ? parseFloat(form.value.fp16Ops) : null,
+      mips: form.value.mips ? parseFloat(form.value.mips) : null,
+      fp32_theoretical_mflops: form.value.fp32TheoreticalMflops ? parseFloat(form.value.fp32TheoreticalMflops) : null,
+      fp32_measured_gflops: form.value.fp32MeasuredGflops ? parseFloat(form.value.fp32MeasuredGflops) : null,
+      edram: form.value.edram ? parseInt(form.value.edram) : null,
       graphics: form.value.graphics,
-      graphics_max_dynamic_frequency: form.value.graphicsMaxDynamicFrequency,
-      graphics_base_frequency: form.value.graphicsBaseFrequency,
-      graphics_memory_size: form.value.graphicsMemorySize,
-      turbo_boost_max_technology_3_frequency: form.value.turboBoostMaxTechnology3Frequency,
-      turbo_frequency_1core: form.value.turboFrequency1core,
-      turbo_frequency_2core: form.value.turboFrequency2core,
-      transistors: form.value.transistors,
-      die_size: form.value.dieSize,
-      transistors_density: form.value.transistorsDensity,
-      package_size: form.value.packageSize,
-      voltage_low: form.value.voltageLow,
-      voltage_average: form.value.voltageAverage,
-      voltage_high: form.value.voltageHigh
+      graphics_max_dynamic_frequency: form.value.graphicsMaxDynamicFrequency ? parseFloat(form.value.graphicsMaxDynamicFrequency) : null,
+      graphics_base_frequency: form.value.graphicsBaseFrequency ? parseFloat(form.value.graphicsBaseFrequency) : null,
+      graphics_memory_size: form.value.graphicsMemorySize ? parseInt(form.value.graphicsMemorySize) : null,
+      turbo_boost_max_technology_3_frequency: form.value.turboBoostMaxTechnology3Frequency ? parseFloat(form.value.turboBoostMaxTechnology3Frequency) : null,
+      turbo_frequency_1core: form.value.turboFrequency1core ? parseFloat(form.value.turboFrequency1core) : null,
+      turbo_frequency_2core: form.value.turboFrequency2core ? parseFloat(form.value.turboFrequency2core) : null,
+      transistors: form.value.transistors ? parseInt(form.value.transistors) : null,
+      die_size: form.value.dieSize ? parseFloat(form.value.dieSize) : null,
+      transistors_density: form.value.transistorsDensity ? parseFloat(form.value.transistorsDensity) : null,
+      package_size: form.value.packageSize ? parseFloat(form.value.packageSize) : null,
+      voltage_low: form.value.voltageLow ? parseFloat(form.value.voltageLow) : null,
+      voltage_average: form.value.voltageAverage ? parseFloat(form.value.voltageAverage) : null,
+      voltage_high: form.value.voltageHigh ? parseFloat(form.value.voltageHigh) : null
     },
     economics: {
       year: form.value.year
@@ -737,12 +757,18 @@ const submitData = async () => {
   successMessage.value = ''
   errorMessage.value = ''
 
+  // Basic validation
+  if (!form.value.manufacturer || !form.value.family || !form.value.model) {
+    errorMessage.value = 'Please fill in all required fields'
+    return
+  }
+
   const postData = preparePostRequestBody()
 
   console.log('Post Data:', postData)
   try {
     const response = await fetch(
-      props.editMode
+      props.editMode && props.cpuData?.cpu?.cpu_id
         ? `${useRuntimeConfig().public.backendUrl}/cpus/${props.cpuData.cpu.cpu_id}`
         : `${useRuntimeConfig().public.backendUrl}/cpus`,
       {
@@ -752,12 +778,22 @@ const submitData = async () => {
       }
     )
 
-    const serverData = await response.json()
+    let serverData
+    try {
+      serverData = await response.json()
+    } catch (jsonError) {
+      console.error('Error parsing JSON response:', jsonError)
+      errorMessage.value = 'Invalid response from server. Please try again.'
+      return
+    }
+    
     console.log('Response:', serverData)
 
     if (response.ok) {
       successMessage.value = 'CPU saved successfully!'
-      redirectPage(serverData)
+      // Handle both wrapped and direct response formats
+      const responseData = serverData.data || serverData
+      redirectPage(responseData)
     } else {
       errorMessage.value = serverData.error || 'An error occurred during submission.'
     }
@@ -774,7 +810,17 @@ const isTechnicalDetailsExpanded = ref(true)
 const isHistoryExpanded = ref(true)
 
 const redirectPage = (data) => {
-  const cpuId = props.editMode ? props.cpuData.cpu.cpu_id : data.cpu.cpu_id;
+  const cpuId = props.editMode ? props.cpuData?.cpu?.cpu_id : data?.cpu?.cpu_id;
+  
+  // Validate cpuId before redirecting
+  if (!cpuId) {
+    console.error('CPU ID is missing, redirecting to CPU list instead');
+    setTimeout(() => {
+      window.location.href = '/cpu/list';
+    }, 3500);
+    return;
+  }
+  
   const redirectUrl = `/cpu/${cpuId}`;
 
   setTimeout(() => {

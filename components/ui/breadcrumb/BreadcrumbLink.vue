@@ -5,6 +5,7 @@ import { Primitive, type PrimitiveProps } from 'radix-vue'
 
 const props = withDefaults(defineProps<PrimitiveProps & { class?: HTMLAttributes['class'] }>(), {
   as: 'a',
+  asChild: false
 })
 </script>
 

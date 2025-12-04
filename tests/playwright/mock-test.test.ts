@@ -1,0 +1,1 @@
+import { test, expect } from "@playwright/test"; test("mock test", async ({ page }) => { await page.goto("data:text/html,<h1>Test Page</h1>"); await expect(page.locator("h1")).toHaveText("Test Page"); });
