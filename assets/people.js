@@ -114,7 +114,7 @@ Computer Science and Engineering in MIT’s Department of
 Electrical Engineering and Computer Science (EECS) and a
 member and former Associate Director of MIT’s Computer
 Science and Artificial Intelligence Laboratory (CSAIL). He
-received a� B.S. in computer science and mathematics from Yale
+received a B.S. in computer science and mathematics from Yale
 University in 1975 and a Ph.D. in computer science from
 Carnegie Mellon University in 1981. He currently serves as the
 MIT Faculty Director of the DAF-MIT AI Accelerator and leads its
@@ -126,7 +126,7 @@ Technologies, and he founded Cilk Arts, Inc., a multicore-
 software start-up acquired by Intel. He was the network
 architect for the Connection Machine CM-5, the world’s most powerful computer in 1993. He
 coauthored the influential textbook Introduction to Algorithms, which has sold over one million
-copies. Leiserson is a Fellow of four professional societies—ACM,� AAAS,� SIAM, and� IEEE—and
+copies. Leiserson is a Fellow of four professional societies—ACM, AAAS, SIAM, and IEEE—and
 he is a member of the National Academy of Engineering.</p>
         `
     },

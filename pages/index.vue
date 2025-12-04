@@ -21,7 +21,7 @@
             COMING SOON
           </p>
           <p class="uppercase">
-            Launching Late 2024 to Early 2025!
+            Launching Late 2025 to Early 2026!
           </p>
         </div>
         <div class="mt-8 flex flex-col items-center justify-center relative">
@@ -71,8 +71,8 @@
       </section>
       <section>
         <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">
-          <NuxtLink to="/team#steering-committee" class="inline-block hover:opacity-80">
-            Steering committee
+          <NuxtLink to="/steering-committee" class="inline-block hover:opacity-80">
+            Steering Committee
           </NuxtLink>
         </h2>
         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-16 mt-8">

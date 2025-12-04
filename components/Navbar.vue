@@ -85,10 +85,10 @@
             Team
           </NuxtLink>
           <NuxtLink
-            to="/team#steering-committee"
+            to="/steering-committee"
             class="text-white hover:text-[#A32035] flex items-center"
           >
-            Steering committee
+            Steering Committee
           </NuxtLink>
         </div>
       </div>
