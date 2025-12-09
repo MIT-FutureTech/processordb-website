@@ -44,7 +44,7 @@
         </div>
       </div>
     </div>
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32 mb-16">
+    <!-- <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32 mb-16">
       <section>
         <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">
           <NuxtLink to="/team" class="inline-block hover:opacity-80">
@@ -52,7 +52,6 @@
           </NuxtLink>
         </h2>
         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-16 mt-8">
-          <!-- <div class="flex items-center flex-wrap justify-center mt-16 gap-x-64 gap-y-16"> -->
           <div v-for="(member, index) in team" :key="index">
             <NuxtLink :to="`/team#${member.name.replace(' ', '-').toLowerCase()}`"
               class="inline-block hover:opacity-80">
@@ -76,7 +75,6 @@
           </NuxtLink>
         </h2>
         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-16 mt-8">
-          <!-- <div class="flex items-center flex-wrap justify-center mt-16"> -->
           <div v-for="(member, index) in steeringCommittee" :key="index">
             <NuxtLink :to="`/team#${member.name.replace(' ', '-').toLowerCase()}`"
               class="inline-block hover:opacity-80">
@@ -93,7 +91,7 @@
           </div>
         </div>
       </section>
-    </main>
+    </main> -->
     <footer class="bg-black border-t-[12px] border-t-[#A32035] text-center text-white py-8 px-4 sm:px-6 lg:px-8 ">
       <div class="max-w-7xl mx-auto flex justify-between flex-col gap-8 lg:flex-row flex-wrap">
         <div class="text-left">
@@ -171,7 +169,7 @@
 </template>
 
 <script setup>
-import { team, steeringCommittee } from '../assets/people.js'
+// import { team, steeringCommittee } from '../assets/people.js'
 useHead({
     title: 'MIT Processor DB',
     meta: [
