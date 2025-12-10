@@ -114,7 +114,7 @@
                   Futuretech</a>
               </li>
               <li>
-                <a class="hover:underline py-2" href="https://www.koomey.com/" target="_blank"
+                <a class="hover:underline py-2" href="https://www.koomey.com/analyticspage.html" target="_blank"
                   aria-label="Koomey Analytics">Koomey Analytics</a>
               </li>
             </ul>
