@@ -40,24 +40,10 @@
             
             <!-- Load More Data Button -->
             <div v-if="chartData && chartData.length > 0" class="mt-4 flex justify-center">
-              <button
-                v-if="!loadingMoreChartData && allFpgasData.length < totalAvailableRecords"
-                @click="loadMoreChartData"
-                class="px-4 py-2 bg-[#A32035] text-white rounded-lg hover:bg-[#8a1b2d] transition-colors text-sm font-medium"
-              >
-                Load More Data ({{ allFpgasData.length }} / {{ totalAvailableRecords || '?' }} loaded)
-                <span v-if="allFpgasData.length > 1000" class="text-xs block mt-1 opacity-75">
-                  (Chart displays up to 1000 points)
-                </span>
-              </button>
-              <div v-else-if="loadingMoreChartData" class="flex items-center space-x-2 text-gray-600">
-                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-[#A32035]"></div>
-                <span class="text-sm">Loading more data...</span>
-              </div>
-              <div v-else-if="allFpgasData.length >= totalAvailableRecords" class="text-sm text-gray-500">
-                All {{ totalAvailableRecords }} records loaded
-                <span v-if="allFpgasData.length > 1000" class="text-xs block mt-1 opacity-75">
-                  (Chart displays up to 1000 points)
+              <div class="text-sm text-gray-500">
+                {{ allFpgasData.length }} records visualized
+                <span v-if="allFpgasData.length > 10000" class="text-xs block mt-1 opacity-75">
+                  (Using data grouping for optimal performance)
                 </span>
               </div>
             </div>
@@ -160,7 +146,8 @@ const totalAvailableRecords = ref(null);
 const currentChartPage = ref(1); // Track which page we're on (backend caps at 1000 per page)
 const itemsPerPage = 1000; // Backend maximum per page
 
-async function fetchChartData(forceRefresh = false, page = 1) {
+// Phase 3: Use optimized chart-data endpoint (replaces paginated fetching)
+async function fetchChartData(forceRefresh = false) {
   // Ensure we're on the client
   if (process.server) {
     console.log('[FPGA Chart] fetchChartData called on server, skipping');
@@ -168,17 +155,16 @@ async function fetchChartData(forceRefresh = false, page = 1) {
   }
   
   try {
-    console.log('[FPGA Chart] Fetching chart data..., forceRefresh:', forceRefresh, 'page:', page);
+    console.log('[FPGA Chart] Fetching chart data (Phase 3: using chart-data endpoint)..., forceRefresh:', forceRefresh);
     
-    // Add cache-busting parameter on navigation to ensure fresh data
-    const cacheBust = forceRefresh ? `&refresh=true&_t=${Date.now()}` : '';
-    // Backend caps at 1000 items per page, so use max limit
-    const url = `/api/fpgas?page=${page}&limit=${itemsPerPage}${cacheBust}`;
+    // Phase 3: Use optimized chart-data endpoint (single request, all data)
+    const cacheBust = forceRefresh ? `?refresh=true&_t=${Date.now()}` : '';
+    const url = `/api/fpgas/chart-data${cacheBust}`;
     console.log(`[FPGA Chart] Fetch URL: ${url}`);
     
     // Use native fetch with timeout handling
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for large datasets
     
     try {
       const response = await fetch(url, {
@@ -191,35 +177,18 @@ async function fetchChartData(forceRefresh = false, page = 1) {
       }
       
       const responseData = await response.json();
+      const fetchedData = responseData.data || [];
       
-      console.log('[FPGA Chart] Response received:', typeof responseData, 'IsArray:', Array.isArray(responseData));
-      
-      // Handle response format - API may return { data, pagination } or array directly
-      const fetchedData = Array.isArray(responseData) ? responseData : (responseData.data || responseData);
-      const pagination = responseData.pagination || null;
-      
-      // Update total count from pagination if available
-      if (pagination && pagination.totalCount) {
-        totalAvailableRecords.value = pagination.totalCount;
-        console.log('[FPGA Chart] Total records from pagination:', totalAvailableRecords.value);
-      } else if (fetchedData.length < itemsPerPage) {
-        // If we got fewer records than requested and no pagination, we've reached the end
-        if (!totalAvailableRecords.value) {
-          totalAvailableRecords.value = allFpgasData.value.length + fetchedData.length;
-          console.log('[FPGA Chart] Estimated total records:', totalAvailableRecords.value);
-        }
+      // Update total count
+      if (responseData.total !== undefined) {
+        totalAvailableRecords.value = responseData.total;
+        console.log('[FPGA Chart] Total records:', totalAvailableRecords.value);
       }
       
-      // Merge with existing data (avoid duplicates by checking fpga_id)
-      const existingIds = new Set(allFpgasData.value.map(item => item.fpga_id));
-      const newData = fetchedData.filter(item => !existingIds.has(item.fpga_id));
+      // Set chart data (already optimized format from server)
+      allFpgasData.value = fetchedData;
       
-      console.log('[FPGA Chart] Data merge - Existing:', allFpgasData.value.length, 'Fetched:', fetchedData.length, 'New:', newData.length);
-      
-      allFpgasData.value = [...allFpgasData.value, ...newData];
-      currentChartPage.value = page;
-      
-      console.log('[FPGA Chart] allFpgasData.value set to:', allFpgasData.value.length, 'items (page:', page, ')');
+      console.log('[FPGA Chart] Chart data loaded:', allFpgasData.value.length, 'records');
     } catch (fetchErr) {
       clearTimeout(timeoutId);
       if (fetchErr.name === 'AbortError') {
@@ -235,21 +204,11 @@ async function fetchChartData(forceRefresh = false, page = 1) {
   }
 }
 
-// Function to load more chart data using pagination
+// Phase 3: loadMoreChartData is no longer needed (all data loaded at once)
+// Keeping for backward compatibility but it's a no-op
 async function loadMoreChartData() {
-  if (loadingMoreChartData.value) return;
-  
-  loadingMoreChartData.value = true;
-  try {
-    // Fetch next page (backend caps at 1000 per page, so we paginate)
-    const nextPage = currentChartPage.value + 1;
-    console.log('[FPGA Chart] Loading next page:', nextPage);
-    await fetchChartData(false, nextPage);
-  } catch (err) {
-    console.error('[FPGA Chart] Error loading more data:', err);
-  } finally {
-    loadingMoreChartData.value = false;
-  }
+  console.log('[FPGA Chart] loadMoreChartData called but not needed (Phase 3: all data loaded at once)');
+  loadingMoreChartData.value = false;
 }
 
 // Fetch paginated data for table
@@ -373,36 +332,32 @@ async function initializeData(forceRefresh = false) {
   try {
     console.log('[FPGA List] Starting data fetches...');
     
-    // Reset chart data on force refresh
-    if (forceRefresh) {
+    // Reset chart data on force refresh only if explicitly needed
+    // Don't clear chart data if it's already loaded - just refresh it in background
+    if (forceRefresh && allFpgasData.value.length === 0) {
       allFpgasData.value = [];
       currentChartPage.value = 1;
       totalAvailableRecords.value = null;
+    }
+    // Always reset hasInitialized on force refresh to allow re-initialization
+    if (forceRefresh) {
       hasInitialized.value = false;
     }
     
-    // Fetch in parallel for faster page load - table data is critical, chart can load separately
-    const fetchPromises = [];
+    // Table data (critical) - await this to ensure page renders quickly
+    await fetchFpgasData(forceRefresh).catch(err => {
+      console.error('[FPGA List] fetchFpgasData failed:', err);
+      throw err; // Re-throw to fail fast for critical data
+    });
     
-    // Table data (critical)
-    fetchPromises.push(
-      fetchFpgasData(forceRefresh).catch(err => {
-        console.error('[FPGA List] fetchFpgasData failed:', err);
-        throw err; // Re-throw to fail fast for critical data
-      })
-    );
+    // Chart data (non-critical) - start fetching but don't wait for it
+    // This allows the page to render immediately while chart loads in background
+    fetchChartData(forceRefresh, currentChartPage.value).catch(err => {
+      console.error('[FPGA List] fetchChartData failed (non-critical):', err);
+      // Don't throw - chart data is optional and runs in background
+    });
     
-    // Chart data (non-critical, can fail silently)
-    fetchPromises.push(
-      fetchChartData(forceRefresh, currentChartPage.value).catch(err => {
-        console.error('[FPGA List] fetchChartData failed (non-critical):', err);
-        // Don't throw - chart data is optional
-      })
-    );
-    
-    // Wait for all fetches to complete (or fail)
-    await Promise.allSettled(fetchPromises);
-    console.log('[FPGA List] All data fetches completed');
+    console.log('[FPGA List] Table data loaded, chart data loading in background');
     
     hasInitialized.value = true;
   } catch (err) {
@@ -437,40 +392,34 @@ onMounted(async () => {
 onActivated(async () => {
   console.log('[FPGA List] onActivated - checking if refresh needed');
   
-  // Only refresh if we don't have data or if explicitly needed
+  // Only refresh table data if we don't have it - don't clear chart data
   if (!hasInitialized.value || fpgasData.value.length === 0) {
     try {
-      await initializeData(true); // Force refresh
+      // Refresh table data only, don't force refresh chart data (it refreshes periodically)
+      await fetchFpgasData(true);
+      // Start chart data fetch in background if not already loaded
+      if (allFpgasData.value.length === 0) {
+        fetchChartData(false, 1).catch(err => {
+          console.error('[FPGA List] Error fetching chart data in onActivated:', err);
+        });
+      }
+      hasInitialized.value = true;
     } catch (err) {
       console.error('[FPGA List] Error in onActivated:', err);
-      // Error already handled in initializeData
     }
   }
-    if (typeof fetchFpgasData === 'function') {
-      await fetchFpgasData(true); // Force refresh
-    }
-    if (typeof fetchChartData === 'function') {
-      await fetchChartData(true, 1); // Force refresh with page 1
-    }
 });
 
 // Watch route changes to refresh data
 watch(() => route.path, async (newPath, oldPath) => {
   if (newPath === '/fpga/list' && newPath !== oldPath) {
-    console.log('[FPGA List] Route changed to /fpga/list, forcing refresh...');
-    // Reset chart data state on navigation
-    allFpgasData.value = [];
-    currentChartPage.value = 1;
-    totalAvailableRecords.value = null;
-    loadingMoreChartData.value = false;
-    
-    // Force refresh on navigation to bypass cache
+    console.log('[FPGA List] Route changed to /fpga/list, refreshing table data...');
+    // Don't clear chart data on route change - it refreshes periodically
+    // Only refresh table data to bypass cache
     if (typeof fetchFpgasData === 'function') {
-      await fetchFpgasData(true); // Force refresh
+      await fetchFpgasData(true); // Force refresh table data only
     }
-    if (typeof fetchChartData === 'function') {
-      await fetchChartData(true, 1); // Force refresh with page 1
-    }
+    // Chart data refreshes periodically, not on route change
   }
 }, { immediate: false });
 

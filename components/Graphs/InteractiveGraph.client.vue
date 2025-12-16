@@ -15,8 +15,8 @@
               </svg>
             </DropdownMenuTrigger>
             <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
-              <DropdownMenuItem v-for="option in numericOptions" :key="option.value + '-' + option.source"
-                class="cursor-pointer" @click="xAxis = option">
+              <DropdownMenuItem v-for="option in xAxisOptions" :key="option.value" class="cursor-pointer"
+                @click="xAxis = option">
                 {{ option.label }}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -38,8 +38,8 @@
               </svg>
             </DropdownMenuTrigger>
             <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
-              <DropdownMenuItem v-for="option in numericOptions" :key="option.value + '-' + option.source"
-                class="cursor-pointer" @click="yAxis = option">
+              <DropdownMenuItem v-for="option in yAxisOptions" :key="option.value" class="cursor-pointer"
+                @click="yAxis = option">
                 {{ option.label }}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -59,7 +59,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>
           </DropdownMenuTrigger>
-          <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
+          <DropdownMenuContent side-offset="0" align="start" class="w-full left-0">
             <DropdownMenuItem v-for="option in filteredGroupOptions" :key="option.value" class="cursor-pointer"
               @click="groupBy = option">
               {{ option.label }}
@@ -74,6 +74,9 @@
         <p class="text-red-800 font-medium">Error loading chart</p>
         <p class="text-red-600 text-sm mt-2">{{ chartError }}</p>
       </div>
+    </div>
+    <div v-else-if="!props.data || props.data.length === 0" class="flex items-center justify-center h-64 text-gray-500">
+      No data available
     </div>
     <ClientOnly v-else>
       <highcharts v-if="chartOptions" :options="chartOptions" />
@@ -90,7 +93,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onErrorCaptured, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onErrorCaptured, onMounted } from 'vue';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -105,15 +108,7 @@ import {
   detectDenseRegions 
 } from '@/lib/chartUtils';
 
-// Error handling for chart component
-const chartError = ref(null);
-onErrorCaptured((err) => {
-  console.error('Chart component error:', err);
-  chartError.value = err.message || 'An error occurred while rendering the chart';
-  return false; // Prevent error from propagating
-});
-
-// Props: Expect an array of CPU data objects
+// Props: Expect an array of SoC data objects
 const props = defineProps({
   data: {
     type: Array,
@@ -121,136 +116,110 @@ const props = defineProps({
   },
 });
 
-// Utility to convert underscore_case strings into a friendly format.
-const convertString = (str) => {
-  return str.split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
-};
+const chartError = ref(null);
 
-// Performance optimization: Memoize expensive computations
-// const memoizedData = ref(null);
-// const lastDataHash = ref('');
-
-// Create a hash of the data to detect changes
-// const createDataHash = (data) => {
-//   if (!data || !data.length) return '';
-//   return JSON.stringify(data.map(item => ({
-//     cpu_id: item.cpu_id,
-//     family: item.family,
-//     microarchitecture: item.microarchitecture,
-//     // Only include key fields for hashing
-//   })));
-// };
-
-// Dynamically generate numeric options for X and Y axes.
-// It scans the first CPU data object and its nested SoC object, excluding IDs and timestamps.
-const numericOptions = computed(() => {
-  if (!props.data || !props.data.length) return [];
-
-  const sample = props.data[0];
-  const options = [];
-  const cpuExcludes = new Set(['cpu_id', 'soc_id', 'createdAt', 'updatedAt']);
-
-  for (const key in sample) {
-    if (cpuExcludes.has(key)) continue;
-    if (typeof sample[key] === 'number') {
-      options.push({ label: convertString(key), value: key, source: 'cpu' });
-    }
-  }
-
-  if (sample.SoC) {
-    const socExcludes = new Set(['soc_id', 'manufacturer_id', 'createdAt', 'updatedAt']);
-    for (const key in sample.SoC) {
-      if (socExcludes.has(key)) continue;
-      if (typeof sample.SoC[key] === 'number' || key === 'release_date') {
-        options.push({ label: `${convertString(key)}`, value: key, source: 'soc' });
-      }
-    }
-  }
-  return options;
+onErrorCaptured((err) => {
+  chartError.value = err.message || 'An error occurred';
+  return false;
 });
 
-// Static Group By options for CPU data.
+// Define X-Axis options for SoC data
+const xAxisOptions = [
+  { label: 'Release Date', value: 'release_date' },
+  { label: 'Process Node (nm)', value: 'process_node' },
+  { label: 'Die Size (mm²)', value: 'die_sizes' },
+  { label: 'Total Transistor Count', value: 'total_transistor_count' },
+  { label: 'Transistor Density', value: 'transistor_density' },
+  { label: 'Package Size', value: 'package_size' },
+  { label: 'Number of Die', value: 'number_of_die' },
+];
+
+const yAxisOptions = xAxisOptions.filter(option => option.value !== 'release_date');
+
+// Define Group By options
 const groupOptions = [
-  { label: 'Manufacturer', value: 'manufacturer_name', source: 'soc' },
-  { label: 'Family', value: 'family', source: 'cpu' },
-  { label: 'Microarchitecture', value: 'microarchitecture', source: 'cpu' }
+  { label: 'Manufacturer', value: 'manufacturer_name' },
+  { label: 'Processor Type', value: 'processor_type' },
 ];
 
 const filteredGroupOptions = computed(() => groupOptions);
 
-// Initialize axes with first available options, with fallbacks
-const xAxis = ref(numericOptions.value.find(opt => opt.value === 'release_date') || numericOptions.value[0] || { label: 'X-Axis', value: '', source: '' });
-const yAxis = ref(numericOptions.value.find(opt => opt.value === 'core_count') || numericOptions.value[1] || { label: 'Y-Axis', value: '', source: '' });
+const xAxis = ref(xAxisOptions[0]);
+const yAxis = ref(yAxisOptions[0]);
 const groupBy = ref(filteredGroupOptions.value[0]);
 
-// Utility: Get the proper value from a CPU data item based on the axis source.
-// Handles both nested structure (from regular API) and flattened structure (from chart-data endpoint)
+// Utility: Get the appropriate value from an item
 const getAxisData = (item, axis) => {
-  if (axis.source === 'soc') {
-    if (axis.value === 'manufacturer_name') {
-      // Try flattened structure first (chart-data endpoint), then nested structure
-      return item.manufacturer_name ?? item.SoC?.Manufacturer?.name ?? null;
+  if (axis.value === 'manufacturer_name') {
+    return item.manufacturer_name || item.manufacturer?.name || null;
+  }
+  if (axis.value === 'processor_type') {
+    // Get processor types from nested processors array
+    if (item.processors && item.processors.length > 0) {
+      const types = [...new Set(item.processors.map(p => p.processor_type).filter(Boolean))];
+      return types.length > 0 ? types.join(', ') : null;
     }
-    // Try flattened structure first (chart-data endpoint), then nested structure
-    return item[axis.value] ?? item.SoC?.[axis.value] ?? null;
+    return null;
   }
   return item[axis.value] ?? null;
 };
 
-// Seaborn-inspired color schemes for grouping.
+// Seaborn-inspired color schemes for grouping
 const seabornColors = {
-  family: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3'],
-  microarchitecture: ['#4c72b0', '#dd8452', '#55a868', '#c44e52'],
-  manufacturer: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3'],
+  manufacturer: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3', '#937860', '#da8bc3', '#8c8c8c'],
+  processorType: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3'],
 };
 
+// Memoize category colors to avoid recalculating on every call
+const categoryColorMap = ref(new Map());
 
-// Determine the color for a given grouping category.
+// Determine color based on the current group option (optimized with memoization)
 const getColorForCategory = (colorCategory) => {
-  if (groupBy.value.value === 'family') {
-    const categories = [...new Set(props.data.map(item => getAxisData(item, { value: 'family', source: 'cpu' })))];
-    const colorIndex = categories.indexOf(colorCategory) % seabornColors.family.length;
-    return seabornColors.family[colorIndex];
-  } else if (groupBy.value.value === 'microarchitecture') {
-    const categories = [...new Set(props.data.map(item => getAxisData(item, { value: 'microarchitecture', source: 'cpu' })))];
-    const colorIndex = categories.indexOf(colorCategory) % seabornColors.microarchitecture.length;
-    return seabornColors.microarchitecture[colorIndex];
-  } else if (groupBy.value.value === 'manufacturer_name') {
-    const categories = [...new Set(props.data.map(item => getAxisData(item, { value: 'manufacturer_name', source: 'soc' })))];
-    const colorIndex = categories.indexOf(colorCategory) % seabornColors.manufacturer.length;
-    return seabornColors.manufacturer[colorIndex];
+  // Use memoized map if available
+  if (categoryColorMap.value.has(colorCategory)) {
+    return categoryColorMap.value.get(colorCategory);
   }
-  return 'gray';
+  
+  let color = 'gray';
+  if (groupBy.value.value === 'manufacturer_name') {
+    const manufacturers = [...new Set(props.data.map(item => getAxisData(item, groupBy.value)).filter(Boolean))];
+    const colorIndex = manufacturers.indexOf(colorCategory) % seabornColors.manufacturer.length;
+    color = seabornColors.manufacturer[colorIndex];
+  } else if (groupBy.value.value === 'processor_type') {
+    const types = [...new Set(props.data.map(item => getAxisData(item, groupBy.value)).filter(Boolean))];
+    const colorIndex = types.indexOf(colorCategory) % seabornColors.processorType.length;
+    color = seabornColors.processorType[colorIndex];
+  }
+  
+  // Cache the color
+  categoryColorMap.value.set(colorCategory, color);
+  return color;
 };
 
-// Memoize chart data processing
-const chartDataCache = ref(new Map())
-
-// Phase 2: Zoom level tracking for LOD rendering
+// Phase 2: Zoom level tracking
 const currentZoomLevel = ref({ xMin: null, xMax: null, yMin: null, yMax: null });
 const chartInstance = ref(null);
 
 const chartOptions = computed(() => {
-  // Handle undefined or empty data
-  if (!props.data || !props.data.length) {
-    console.log('[CPUsGraph] No data available, returning empty chart config');
-    return {
-      chart: { type: 'scatter' },
-      title: { text: 'No data available' },
-      series: []
-    }
+  if (!props.data || props.data.length === 0) {
+    return null;
   }
-  
-  console.log('[CPUsGraph] Computing chartOptions with', props.data.length, 'data points');
-  
-  // Use all data - Highcharts turbo mode and data grouping handle performance
+
+  // Clear color cache when groupBy changes to force recalculation
+  categoryColorMap.value.clear();
+
   let dataToProcess = props.data;
   const dataSize = props.data.length;
   
+  // For very large datasets without zoom, sample data initially to prevent UI blocking
+  // Highcharts will handle the rest with turbo mode and data grouping
+  if (dataSize > 5000 && currentZoomLevel.value.xMin === null) {
+    // Sample every Nth item for initial render (will show full data on zoom)
+    const sampleRate = Math.ceil(dataSize / 5000); // Target ~5000 points for initial render
+    dataToProcess = props.data.filter((_, index) => index % sampleRate === 0);
+  }
+  
   // Phase 2: Level-of-Detail (LOD) Rendering
-  // Apply adaptive rendering based on data density
   if (dataSize > 1000 && currentZoomLevel.value.xMin !== null) {
     const zoom = currentZoomLevel.value;
     const visibleData = dataToProcess.filter(item => {
@@ -267,7 +236,6 @@ const chartOptions = computed(() => {
       const density = calculateDataDensity(visibleData, xAxis.value, yAxis.value);
       
       if (density > 100) {
-        // Very dense - use binning
         const pointData = visibleData.map(item => ({
           x: xAxis.value.value === 'release_date' ? Date.parse(getAxisData(item, xAxis.value)) : getAxisData(item, xAxis.value),
           y: getAxisData(item, yAxis.value),
@@ -277,7 +245,6 @@ const chartOptions = computed(() => {
         const binned = binData(pointData, 50);
         dataToProcess = binned.map(bin => bin.data || bin);
       } else if (density > 10) {
-        // Medium density - use clustering
         const pointData = visibleData.map(item => ({
           x: xAxis.value.value === 'release_date' ? Date.parse(getAxisData(item, xAxis.value)) : getAxisData(item, xAxis.value),
           y: getAxisData(item, yAxis.value),
@@ -292,18 +259,10 @@ const chartOptions = computed(() => {
     }
   }
   
-  // Create cache key based on data length, axis selections, and groupBy
-  const cacheKey = `${dataSize}-${xAxis.value.value}-${yAxis.value.value}-${groupBy.value.value}`
-  
-  // Check if we have cached data
-  if (chartDataCache.value.has(cacheKey)) {
-    return chartDataCache.value.get(cacheKey)
-  }
-
   let groupedData = {};
-  let series = [];
 
-  // Group the CPU data points by the selected groupBy field.
+  // Group the data points according to the selected groupBy field
+  // Use dataToProcess (which may be filtered/binned/clustered) instead of raw props.data
   groupedData = dataToProcess.reduce((acc, item) => {
     const xValue = getAxisData(item, xAxis.value);
     const yValue = getAxisData(item, yAxis.value);
@@ -315,7 +274,7 @@ const chartOptions = computed(() => {
     const point = {
       x: xFormattedValue,
       y: yValue,
-      name: `${item.family || '-'} ${item.code_name || '-'} ${item.model || '-'}`,
+      name: item.soc_name || item.name || `SoC ${item.soc_id}`,
       color: getColorForCategory(colorCategory),
       data: item,
     };
@@ -327,7 +286,7 @@ const chartOptions = computed(() => {
     return acc;
   }, {});
 
-  series = Object.keys(groupedData)
+  const series = Object.keys(groupedData)
     .sort((a, b) => groupedData[b].length - groupedData[a].length)
     .map(category => ({
       name: category,
@@ -336,32 +295,6 @@ const chartOptions = computed(() => {
       marker: { symbol: 'circle' },
       opacity: dataSize > 5000 ? 0.5 : 0.8,
     }));
-  
-  // Ensure we have at least one series - if all data was filtered out, create a placeholder
-  if (series.length === 0 && dataToProcess.length > 0) {
-    console.warn('[CPUsGraph] No valid data points after filtering, creating placeholder series');
-    // Try to create at least one point from the first valid item
-    const firstItem = dataToProcess.find(item => {
-      const xValue = getAxisData(item, xAxis.value);
-      const yValue = getAxisData(item, yAxis.value);
-      return xValue !== null && yValue !== null;
-    });
-    if (firstItem) {
-      const xValue = getAxisData(firstItem, xAxis.value);
-      const yValue = getAxisData(firstItem, yAxis.value);
-      series = [{
-        name: 'Data',
-        data: [{
-          x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
-          y: yValue,
-          name: `${firstItem.family || '-'} ${firstItem.code_name || '-'} ${firstItem.model || '-'}`,
-          data: firstItem
-        }],
-        marker: { symbol: 'circle' },
-        opacity: 0.8,
-      }];
-    }
-  }
   
   // Phase 2: Add heatmap overlay for very large datasets (>50k points)
   let heatmapSeries = null;
@@ -388,59 +321,17 @@ const chartOptions = computed(() => {
           minColor: '#FFFFFF',
           maxColor: '#0000FF'
         },
-        zIndex: 0, // Render behind scatter points
+        zIndex: 0,
         opacity: 0.4,
         turboThreshold: 0
       };
     }
   }
 
-  const chartConfig = {
+  return {
     chart: {
       type: 'scatter',
       zoomType: 'xy',
-      events: {
-        load: function() {
-          chartInstance.value = this;
-          const xAxis = this.xAxis[0];
-          const yAxis = this.yAxis[0];
-          
-          // Update zoom level on load
-          currentZoomLevel.value = {
-            xMin: xAxis.min,
-            xMax: xAxis.max,
-            yMin: yAxis.min,
-            yMax: yAxis.max
-          };
-          
-          // Track zoom changes
-          xAxis.update({
-            events: {
-              afterSetExtremes: function() {
-                currentZoomLevel.value = {
-                  xMin: this.min,
-                  xMax: this.max,
-                  yMin: yAxis.min,
-                  yMax: yAxis.max
-                };
-              }
-            }
-          });
-          
-          yAxis.update({
-            events: {
-              afterSetExtremes: function() {
-                currentZoomLevel.value = {
-                  xMin: xAxis.min,
-                  xMax: xAxis.max,
-                  yMin: this.min,
-                  yMax: this.max
-                };
-              }
-            }
-          });
-        }
-      }
     },
     credits: false,
     title: false,
@@ -475,30 +366,23 @@ const chartOptions = computed(() => {
       formatter: function () {
         if (this.point && typeof this.point === "object") {
           const data = this.point.data;
-          const soc = data.SoC || {};
-          const manufacturer = soc.Manufacturer || {};
-          const name = `
-            ${manufacturer.name || '-'} 
-            ${data.family || '-'} 
-            ${data.microarchitecture || '-'} 
-            ${data.model || '-'}
-          `.trim().replace(/\s+/g, ' ');
+          const name = data.soc_name || data.name || `SoC ${data.soc_id}`;
+          const manufacturer = data.manufacturer_name || data.manufacturer?.name || '-';
 
           const header = `
             <div class="flex w-full justify-between gap-8">
               <div style="color: ${this.series.color}; white-space: normal;" class="font-bold">${name}</div>
-              <div class="font-bold">${soc.release_date ? new Date(soc.release_date).getFullYear() : '-'}</div>
+              <div class="font-bold">${data.release_date ? new Date(data.release_date).getFullYear() : '-'}</div>
             </div><br>
           `;
 
           const details = `
             <div>
-              <span style="color: gray; font-size: 11px">Clock:</span> ${data.clock || '-'} MHz<br>
-              <span style="color: gray; font-size: 11px">Core Count:</span> ${data.core_count || '-'}<br>
-              <span style="color: gray; font-size: 11px">TDP:</span> ${data.tdp || '-'} W<br>
-              <span style="color: gray; font-size: 11px">L2 Cache:</span> ${data.l2_cache || '-'} KB<br>
-              <span style="color: gray; font-size: 11px">L3 Cache:</span> ${data.l3_cache || '-'} MB<br>
-              <span style="color: gray; font-size: 11px">FP32 Ops:</span> ${data.fp32_ops || '-'}<br>
+              <span style="color: gray; font-size: 11px">Manufacturer:</span> ${manufacturer}<br>
+              <span style="color: gray; font-size: 11px">Process Node:</span> ${data.process_node ? data.process_node + ' nm' : '-'}<br>
+              <span style="color: gray; font-size: 11px">Die Size:</span> ${data.die_sizes ? data.die_sizes + ' mm²' : '-'}<br>
+              <span style="color: gray; font-size: 11px">Transistor Count:</span> ${data.total_transistor_count ? data.total_transistor_count + ' million' : '-'}<br>
+              <span style="color: gray; font-size: 11px">Transistor Density:</span> ${data.transistor_density || '-'}<br>
             </div><br>
           `;
 
@@ -529,16 +413,24 @@ const chartOptions = computed(() => {
           radius: dataSize > 10000 ? 1 : (dataSize > 5000 ? 2 : 4), // Smaller markers for large datasets
           symbol: 'circle',
           enabledThreshold: 20000, // Hide markers if >20k points (use grouping instead)
-          states: { 
-            hover: { 
-              enabled: true, 
+          states: {
+            hover: {
+              enabled: true,
               radius: dataSize > 10000 ? 3 : 4,
-              lineColor: 'rgb(100,100,100)' 
-            } 
+              lineColor: 'rgb(100,100,100)',
+            },
           },
         },
-        states: { hover: { marker: { enabled: false } } },
-        jitter: { x: 0.005 },
+        states: {
+          hover: {
+            marker: {
+              enabled: false,
+            },
+          },
+        },
+        jitter: {
+          x: 0.005,
+        },
         // Adjust opacity for better visibility with large datasets
         opacity: dataSize > 5000 ? 0.5 : 0.8,
       },
@@ -550,17 +442,6 @@ const chartOptions = computed(() => {
     },
     series: heatmapSeries ? [heatmapSeries, ...series] : series,
   };
-  
-  // Cache the result
-  chartDataCache.value.set(cacheKey, chartConfig)
-  
-  // Limit cache size to prevent memory leaks
-  if (chartDataCache.value.size > 10) {
-    const firstKey = chartDataCache.value.keys().next().value
-    chartDataCache.value.delete(firstKey)
-  }
-  
-  console.log('[CPUsGraph] Returning chartConfig with', series.length, 'series, heatmapSeries:', !!heatmapSeries);
-  return chartConfig
 });
 </script>
+

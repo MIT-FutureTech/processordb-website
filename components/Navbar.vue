@@ -52,11 +52,11 @@
                       class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
                     >
                       <span
-                        class="mr-3 text-black ml-4"
+                        class="mr-3 text-black ml-4 flex items-center"
                         :class="{ 'text-[#A32035]': route.path === link.to }"
                       >
                         <ClientOnly>
-                          <v-icon :name="link.icon" />
+                          <v-icon :name="link.icon" class="w-4 h-4" />
                           <template #fallback>
                             <span class="w-4 h-4 inline-block" />
                           </template>
@@ -112,10 +112,10 @@ const links = ref([
   { text: 'Login', to: '/login', icon: 'md-login' },
   { text: 'Profile', to: '/admin/profile', icon: 'fa-user-circle' },
   // { text: 'Manufacturers', to: '/manufacturers/list', icon: 'md-precisionmanufacturing' },
-  // { text: 'SoCs', to: '/soc/list', icon: 'gi-circuitry' },
   { text: 'CPUs', to: '/cpu/list', icon: 'bi-cpu' },
   { text: 'GPUs', to: '/gpu/list', icon: 'bi-gpu-card' },
   { text: 'FPGAs', to: '/fpga/list', icon: 'gi-logic-gate-xor' },
+  { text: 'SoCs', to: '/soc/list', icon: 'gi-circuitry' },
   // { text: 'Economics', to: '/economics', icon: 'md-attachmoney' },
   // { text: 'Performances', to: '/performances', icon: 'gi-chart' },
 ]);

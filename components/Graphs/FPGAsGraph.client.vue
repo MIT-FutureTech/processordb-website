@@ -90,9 +90,16 @@
 </template>
 
 <script setup>
-import { computed, ref, onErrorCaptured } from 'vue';
+import { computed, ref, onErrorCaptured, onMounted } from 'vue';
 // import { useRoute } from 'vue-router';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu/dropdown-menu-index';
+import { 
+  calculateDataDensity, 
+  binData, 
+  clusterData, 
+  createHeatmap,
+  detectDenseRegions 
+} from '@/lib/chartUtils';
 // import { color } from 'highcharts';
 
 // Error handling for chart component
@@ -157,10 +164,16 @@ const xAxis = ref(xAxisOptions[0]);
 const yAxis = ref(yAxisOptions[0]);
 const groupBy = ref(filteredGroupOptions.value[0]);
 
+// Chart instance and zoom tracking
+const chartInstance = ref(null);
+const currentZoomLevel = ref({ xMin: null, xMax: null, yMin: null, yMax: null });
+
 // Utility: Get the appropriate value from an item based on the axis's source
+// Handles both nested structure (from regular API) and flattened structure (from chart-data endpoint)
 const getAxisData = (item, axis) => {
   if (axis.source === 'soc') {
-    return item.SoC?.[axis.value] ?? null;
+    // Try flattened structure first (chart-data endpoint), then nested structure
+    return item[axis.value] ?? item.SoC?.[axis.value] ?? null;
   }
   return item[axis.value] ?? null;
 };
@@ -204,11 +217,9 @@ const chartOptions = computed(() => {
     }
   }
   
-  // Performance optimization: Sample data for large datasets
-  const MAX_POINTS = 1000;
-  const dataToProcess = props.data.length > MAX_POINTS 
-    ? props.data.filter((_, index) => index % Math.ceil(props.data.length / MAX_POINTS) === 0)
-    : props.data;
+  // Use all data - Highcharts turbo mode and data grouping handle performance
+  const dataToProcess = props.data;
+  const dataSize = props.data.length;
 
   let groupedData;
   let series;
@@ -233,7 +244,7 @@ const chartOptions = computed(() => {
 
     groupedData = buckets.reduce((acc, bucket) => {
       const bucketKey = `${bucket.min} - ${bucket.max === Infinity ? '∞' : bucket.max}`;
-      acc[bucketKey] = props.data
+      acc[bucketKey] = dataToProcess
         .map(item => {
           const processNode = getAxisData(item, groupBy.value);
           const xValue = getAxisData(item, xAxis.value);
@@ -258,7 +269,7 @@ const chartOptions = computed(() => {
       name: bucketKey,
       data: groupedData[bucketKey],
       marker: { symbol: 'circle' },
-      opacity: 0.8,
+      opacity: dataSize > 5000 ? 0.5 : 0.8,
       color: seabornColors.processNode(parseFloat(bucketKey)),
       showInLegend: true,
     }));
@@ -290,18 +301,94 @@ const chartOptions = computed(() => {
     series = Object.keys(groupedData)
       .sort((a, b) => groupedData[b].length - groupedData[a].length)
       .map(category => ({
-        name: category,
-        data: groupedData[category],
-        color: getColorForCategory(category),
-        marker: { symbol: 'circle' },
-        opacity: 0.8,
-      }));
+      name: category,
+      data: groupedData[category],
+      color: getColorForCategory(category),
+      marker: { symbol: 'circle' },
+      opacity: dataSize > 5000 ? 0.5 : 0.8,
+    }));
+    
+    // Ensure we have at least one series - if all data was filtered out, create a placeholder
+    if (series.length === 0 && dataToProcess.length > 0) {
+      console.warn('[FPGAsGraph] No valid data points after filtering, creating placeholder series');
+      const firstItem = dataToProcess.find(item => {
+        const xValue = getAxisData(item, xAxis.value);
+        const yValue = getAxisData(item, yAxis.value);
+        return xValue !== null && yValue !== null;
+      });
+      if (firstItem) {
+        const xValue = getAxisData(firstItem, xAxis.value);
+        const yValue = getAxisData(firstItem, yAxis.value);
+        series = [{
+          name: 'Data',
+          data: [{
+            x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
+            y: yValue,
+            name: `${firstItem.generation || '-'} ${firstItem.family_subfamily || '-'} ${firstItem.model || '-'}`,
+            data: firstItem
+          }],
+          marker: { symbol: 'circle' },
+          opacity: 0.8,
+        }];
+      }
+    }
+  }
+
+  // Phase 2: Add heatmap overlay for very large datasets (>50k points)
+  let heatmapSeries = null;
+  if (dataSize > 50000) {
+    const pointData = dataToProcess.map(item => {
+      const xValue = getAxisData(item, xAxis.value);
+      const yValue = getAxisData(item, yAxis.value);
+      if (xValue === null || yValue === null) return null;
+      return {
+        x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
+        y: yValue,
+        data: item
+      };
+    }).filter(p => p !== null && !isNaN(p.x) && !isNaN(p.y));
+    
+    const heatmapData = createHeatmap(pointData, 50);
+    if (heatmapData.length > 0) {
+      heatmapSeries = {
+        type: 'heatmap',
+        name: 'Data Density',
+        data: heatmapData,
+        colorAxis: {
+          min: 0,
+          minColor: '#FFFFFF',
+          maxColor: '#0000FF'
+        },
+        zIndex: 0,
+        opacity: 0.4,
+        turboThreshold: 0
+      };
+    }
   }
 
   return {
     chart: {
       type: 'scatter',
       zoomType: 'xy',
+      events: {
+        load: function() {
+          chartInstance.value = this;
+          const xAxis = this.xAxis[0];
+          const yAxis = this.yAxis[0];
+          currentZoomLevel.value = {
+            xMin: xAxis.min,
+            xMax: xAxis.max,
+            yMin: yAxis.min,
+            yMax: yAxis.max
+          };
+          xAxis.update({ events: { afterSetExtremes: function() {
+            currentZoomLevel.value = { xMin: this.min, xMax: this.max, yMin: yAxis.min, yMax: yAxis.max };
+          }}});
+          yAxis.update({ events: { afterSetExtremes: function() {
+            currentZoomLevel.value = { xMin: xAxis.min, xMax: xAxis.max, yMin: this.min, yMax: this.max };
+          }}});
+        }
+      }
     },
     credits: false,
     title: false,
@@ -392,12 +479,25 @@ const chartOptions = computed(() => {
     },
     plotOptions: {
       scatter: {
+        // Enable turbo mode for optimal performance with large datasets
+        turboThreshold: 0, // Always use optimized rendering
+        
+        // Data grouping - automatically groups nearby points for better performance
+        dataGrouping: {
+          enabled: true,
+          approximation: 'average',
+          groupPixelWidth: 5, // Group points within 5 pixels
+          smoothed: false,
+        },
+        
         marker: {
-          radius: 4,
+          radius: dataSize > 10000 ? 1 : (dataSize > 5000 ? 2 : 4), // Smaller markers for large datasets
           symbol: 'circle',
+          enabledThreshold: 20000, // Hide markers if >20k points (use grouping instead)
           states: {
             hover: {
               enabled: true,
+              radius: dataSize > 10000 ? 3 : 4,
               lineColor: 'rgb(100,100,100)',
             },
           },
@@ -412,6 +512,8 @@ const chartOptions = computed(() => {
         jitter: {
           x: 0.005,
         },
+        // Adjust opacity for better visibility with large datasets
+        opacity: dataSize > 5000 ? 0.5 : 0.8,
       },
     },
     legend: {
@@ -419,7 +521,7 @@ const chartOptions = computed(() => {
       align: 'right',
       verticalAlign: 'top',
     },
-    series,
+    series: heatmapSeries ? [heatmapSeries, ...series] : series,
   };
 });
 </script>

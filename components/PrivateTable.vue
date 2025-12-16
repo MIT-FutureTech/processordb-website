@@ -201,8 +201,8 @@
           
           <!-- Data Rows -->
           <TableRow
-            v-for="row in displayedData"
-            :key="uniqueId(row)"
+            v-for="(row, index) in displayedData"
+            :key="row._rowId || uniqueId(row) || index"
             class="hover:bg-[#F1F5F9] even:bg-gray-50"
           >
             <!-- Loop through the selectable columns -->
@@ -284,9 +284,14 @@ const formatYear = (date) => {
 }
 
 const uniqueId = (row) => {
-  const socClass = props.className;
-
+  const socClass = props.className.toLowerCase();
+  
   switch (socClass) {
+    case 'soc':
+    case 'socs':
+      // For SOC, use soc_id for linking to detail page
+      // Multiple rows may share same soc_id (one per processor), which is fine for detail links
+      return row.soc_id || row.id;
     case 'cpu':
       return row.cpu_id || '';
     case 'gpu':
@@ -330,6 +335,87 @@ const flattenedData = computed(() => {
       flattened.tdp = item.tdp || null;
       return flattened;
     });
+  } else if (props.className === 'soc' || props.className === 'socs') {
+    // Handle SOC data with nested processors array
+    // Add safety check for data type
+    if (!Array.isArray(props.data)) {
+      console.error('PrivateTable: props.data is not an array:', props.data);
+      return [];
+    }
+    
+    const flattenedRows = [];
+    
+    props.data.forEach((soc, socIndex) => {
+      // Extract SOC-level fields
+      const socBase = {
+        soc_id: soc.soc_id,
+        soc_name: soc.soc_name || soc.name,
+        manufacturer: soc.manufacturer_name || soc.manufacturer || '',
+        release_date: soc.release_date || '',
+        process_node: soc.process_node || null,
+        total_transistor_count: soc.total_transistor_count || null,
+        die_sizes: soc.die_sizes || null,
+        release_price: soc.release_price || null,
+        benchmarks: soc.benchmarks || [],
+        economics: soc.economics || []
+      };
+      
+      // Check if SOC has processors
+      const processors = soc.processors || [];
+      
+      if (processors.length > 0) {
+        // Create one row per processor
+        processors.forEach((processor, procIndex) => {
+          // Create unique row ID combining soc_id and processor identifier
+          const processorId = processor.cpu_id || processor.gpu_id || processor.fpga_id || procIndex;
+          flattenedRows.push({
+            ...socBase,
+            // Add unique row identifier for Vue key
+            _rowId: `${soc.soc_id}_${processorId}_${procIndex}`,
+            processor_type: processor.processor_type || 'Unknown',
+            family: processor.family || null,
+            code_name: processor.code_name || null,
+            microarchitecture: processor.microarchitecture || null,
+            model: processor.model || null,
+            clock: processor.clock || null,
+            max_clock: processor.max_clock || null,
+            tdp: processor.tdp || null,
+            lithography: processor.lithography || null,
+            fp64_ops: processor.fp64_ops || null,
+            fp32_ops: processor.fp32_ops || null,
+            fp16_ops: processor.fp16_ops || null,
+            // Include processor IDs for reference
+            cpu_id: processor.cpu_id || null,
+            gpu_id: processor.gpu_id || null,
+            fpga_id: processor.fpga_id || null
+          });
+        });
+      } else {
+        // SOC has no processors - create a single row with SOC data only
+        flattenedRows.push({
+          ...socBase,
+          // Add unique row identifier for Vue key
+          _rowId: `${soc.soc_id}_no_proc_${socIndex}`,
+          processor_type: null,
+          family: null,
+          code_name: null,
+          microarchitecture: null,
+          model: null,
+          clock: null,
+          max_clock: null,
+          tdp: null,
+          lithography: null,
+          fp64_ops: null,
+          fp32_ops: null,
+          fp16_ops: null,
+          cpu_id: null,
+          gpu_id: null,
+          fpga_id: null
+        });
+      }
+    });
+    
+    return flattenedRows;
   } else {
     // Add safety check for data type
     if (!Array.isArray(props.data)) {
@@ -381,6 +467,12 @@ const defaultHiddenKeys = {
   'l0_cache', 'l1_cache', 'l2_cache', 'l3_cache', 'fp16', 'fp32', 'fp64',
   'pixel_shader', 'vertex_shader', 'shader_units', 'texture_mapping_units',
   'render_output_units', 'compute_units', 'ray_tracing_units', 'system_shared_memory'],
+  soc: ['soc_id', 'soc_name', 'createdAt', 'updatedAt', 'benchmarks', 'economics', 
+  'release_price', 'processors', 'cpu_id', 'gpu_id', 'fpga_id', 'notes',
+  'max_clock', 'lithography', 'fp64_ops', 'fp32_ops', 'fp16_ops', 'code_name', '_rowId'],
+  socs: ['soc_id', 'soc_name', 'createdAt', 'updatedAt', 'benchmarks', 'economics', 
+  'release_price', 'processors', 'cpu_id', 'gpu_id', 'fpga_id', 'notes',
+  'max_clock', 'lithography', 'fp64_ops', 'fp32_ops', 'fp16_ops', 'code_name', '_rowId'],
 }
 
 // --- Additional Columns ---

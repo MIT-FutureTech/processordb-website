@@ -56,6 +56,7 @@ export default defineNuxtConfig({
       include: [
         "plotly.js-dist-min",
         "oh-vue-icons",
+        "oh-vue-icons/icons",
         "highcharts",
         "highcharts-vue",
         "exceljs",
@@ -68,7 +69,9 @@ export default defineNuxtConfig({
       esbuildOptions: {
         target: 'es2020', // Match build target
         keepNames: true // Preserve class names to avoid minification issues
-      }
+      },
+      // Force re-optimization of oh-vue-icons to include all icon modules
+      force: process.env.NODE_ENV === 'development' ? ['oh-vue-icons'] : undefined
     },
     build: (() => {
       const isProduction = process.env.NODE_ENV === 'production';
@@ -219,6 +222,7 @@ export default defineNuxtConfig({
 
   plugins: [
     { src: '~/plugins/oh-vue-icons.js', mode: 'client' },
+    { src: '~/plugins/highcharts.client.js', mode: 'client' },
   ],
 
   routeRules: {

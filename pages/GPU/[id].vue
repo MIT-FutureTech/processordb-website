@@ -119,6 +119,7 @@ const gpuData = computed(() => {
   
   return {
     gpu: data.gpu || data,
+    cores: data.cores || [],
     versionHistory: data.versionHistory || [],
     manufacturerName: data.manufacturerName
   };

@@ -121,6 +121,7 @@ const cpuData = computed(() => {
   
   return {
     cpu: data.cpu || data,
+    cores: data.cores || [],
     versionHistory: data.versionHistory || [],
     manufacturerName: data.manufacturerName
   };

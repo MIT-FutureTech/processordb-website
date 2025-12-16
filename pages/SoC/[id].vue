@@ -176,19 +176,21 @@
           <div class="flex justify-between items-center">
             <div class="flex items-center gap-2">
               <h2 class="text-xl font-medium text-gray-700 text-semibold">Processors</h2>
-              <button @click="togglePerformance" class="p-1 hover:bg-gray-100 rounded-full" type="button">
+              <button @click="toggleProcessors" class="p-1 hover:bg-gray-100 rounded-full" type="button">
                 <v-icon name="bi-chevron-compact-up"
-                  :style="{ transform: isPerformanceExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }" />
+                  :style="{ transform: isProcessorsExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }" />
               </button>
             </div>
-            <NuxtLink to="/soc/form"
+            <NuxtLink 
+              v-if="isLoggedIn"
+              to="/cpu/form"
               class="px-6 py-2.5 bg-[#A32035] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#8a1b2d] hover:shadow-lg text-center inline-flex items-center justify-center">
               <span class="mr-2"> Add processor </span>
             </NuxtLink>
           </div>
 
           <Transition name="collapse">
-            <div v-if="isPerformanceExpanded">
+            <div v-if="isProcessorsExpanded">
               <div class="mt-4 mb-8">
                 <table class="w-full mt-4 border border-1 border-gray-200 rounded-lg overflow-hidden">
                   <thead class="bg-black opacity-80">
@@ -201,13 +203,30 @@
                     </tr>
                   </thead>
                   <tbody>
+                    <tr v-if="processors.length === 0" class="border-t border-gray-200">
+                      <td colspan="5" class="px-4 py-2 text-center text-gray-500">No processors found</td>
+                    </tr>
                     <tr v-for="processor in processors" :key="processor.id" class="border-t border-gray-200">
                       <td class="px-4 py-2">{{ processor.type }}</td>
                       <td class="px-4 py-2">{{ processor.name }}</td>
                       <td class="px-4 py-2">{{ processor.quantity }}</td>
                       <td class="px-4 py-2">{{ processor.memory }}</td>
                       <td class="px-4 py-2 text-right">
-                        <button type="button" class="text-sm text-[#A32035] hover:underline">Edit</button>
+                        <NuxtLink 
+                          v-if="processor.type === 'CPU' && processor.id" 
+                          :to="`/cpu/${processor.id}`"
+                          class="text-sm text-[#A32035] hover:underline"
+                        >
+                          View
+                        </NuxtLink>
+                        <NuxtLink 
+                          v-else-if="processor.type === 'GPU' && processor.id" 
+                          :to="`/gpu/${processor.id}`"
+                          class="text-sm text-[#A32035] hover:underline"
+                        >
+                          View
+                        </NuxtLink>
+                        <span v-else class="text-sm text-gray-400">N/A</span>
                       </td>
                     </tr>
                   </tbody>
@@ -229,11 +248,57 @@
                   :style="{ transform: isPerformanceExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }" />
               </button>
             </div>
-            <NuxtLink to="/soc/form"
+            <button 
+              v-if="isLoggedIn"
+              @click="toggleAddBenchmarkForm"
               class="px-6 py-2.5 bg-[#A32035] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#8a1b2d] hover:shadow-lg text-center inline-flex items-center justify-center">
-              <span class="mr-2"> Add benchmark </span>
-            </NuxtLink>
+              <span class="mr-2">{{ showAddBenchmarkForm ? 'Cancel' : 'Add benchmark' }}</span>
+            </button>
           </div>
+
+          <!-- Add Benchmark Form -->
+          <Transition name="collapse">
+            <div v-if="showAddBenchmarkForm" class="mt-4 mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <h3 class="text-lg font-medium mb-4">{{ editingBenchmark ? 'Edit Benchmark' : 'Add Benchmark' }}</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Benchmark Name *</label>
+                  <input v-model="benchmarkForm.benchmark_name" type="text" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Score *</label>
+                  <input v-model="benchmarkForm.score" type="number" step="0.01"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Test Date</label>
+                  <input v-model="benchmarkForm.test_date" type="date"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Test Conditions</label>
+                  <input v-model="benchmarkForm.test_conditions" type="text"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                  <textarea v-model="benchmarkForm.notes" rows="2"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]"></textarea>
+                </div>
+              </div>
+              <div class="mt-4 flex gap-2">
+                <button @click="submitBenchmark" 
+                  class="px-4 py-2 bg-[#A32035] text-white rounded-lg hover:bg-[#8a1b2d]">
+                  {{ editingBenchmark ? 'Update' : 'Add' }}
+                </button>
+                <button @click="cancelBenchmarkForm" 
+                  class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </Transition>
 
           <Transition name="collapse">
             <div v-if="isPerformanceExpanded">
@@ -248,12 +313,30 @@
                     </tr>
                   </thead>
                   <tbody>
+                    <tr v-if="benchmarks.length === 0" class="border-t border-gray-200">
+                      <td colspan="4" class="px-4 py-2 text-center text-gray-500">No benchmarks found</td>
+                    </tr>
                     <tr v-for="benchmark in benchmarks" :key="benchmark.id" class="border-t border-gray-200">
                       <td class="px-4 py-2">{{ benchmark.name }}</td>
                       <td class="px-4 py-2">{{ benchmark.score }}</td>
                       <td class="px-4 py-2">{{ benchmark.year }}</td>
                       <td class="px-4 py-2 text-right">
-                        <button type="button" class="text-sm text-[#A32035] hover:underline">Edit</button>
+                        <button 
+                          v-if="isLoggedIn"
+                          type="button" 
+                          @click="editBenchmark(benchmark)"
+                          class="text-sm text-[#A32035] hover:underline mr-2"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          v-if="isLoggedIn"
+                          type="button" 
+                          @click="deleteBenchmark(benchmark.id)"
+                          class="text-sm text-red-600 hover:underline"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   </tbody>
@@ -276,11 +359,57 @@
                   :style="{ transform: isEconomicsExpanded ? '' : 'rotate(180deg)', transition: 'transform 0.2s' }" />
               </button>
             </div>
-            <NuxtLink to="/soc/form"
+            <button 
+              v-if="isLoggedIn"
+              @click="toggleAddEconomicsForm"
               class="px-6 py-2.5 bg-[#A32035] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#8a1b2d] hover:shadow-lg text-center inline-flex items-center justify-center">
-              <span class="mr-2"> Add economic data </span>
-            </NuxtLink>
+              <span class="mr-2">{{ showAddEconomicsForm ? 'Cancel' : 'Add economic data' }}</span>
+            </button>
           </div>
+
+          <!-- Add Economics Form -->
+          <Transition name="collapse">
+            <div v-if="showAddEconomicsForm" class="mt-4 mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <h3 class="text-lg font-medium mb-4">{{ editingEconomic ? 'Edit Economic Data' : 'Add Economic Data' }}</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Year *</label>
+                  <input v-model="economicsForm.year" type="number" min="1900" max="2100"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Price *</label>
+                  <input v-model="economicsForm.price" type="number" step="0.01" min="0"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Sales (units)</label>
+                  <input v-model="economicsForm.sales_in_units" type="number" min="0"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Revenue</label>
+                  <input v-model="economicsForm.revenue" type="number" step="0.01" min="0"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                  <textarea v-model="economicsForm.notes" rows="2"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]"></textarea>
+                </div>
+              </div>
+              <div class="mt-4 flex gap-2">
+                <button @click="submitEconomic" 
+                  class="px-4 py-2 bg-[#A32035] text-white rounded-lg hover:bg-[#8a1b2d]">
+                  {{ editingEconomic ? 'Update' : 'Add' }}
+                </button>
+                <button @click="cancelEconomicsForm" 
+                  class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </Transition>
 
           <Transition name="collapse">
             <div v-if="isEconomicsExpanded">
@@ -295,12 +424,30 @@
                     </tr>
                   </thead>
                   <tbody>
+                    <tr v-if="economics.length === 0" class="border-t border-gray-200">
+                      <td colspan="4" class="px-4 py-2 text-center text-gray-500">No economic data found</td>
+                    </tr>
                     <tr v-for="economic in economics" :key="economic.id" class="border-t border-gray-200">
                       <td class="px-4 py-2">${{ economic.price }}</td>
                       <td class="px-4 py-2">{{ economic.year }}</td>
                       <td class="px-4 py-2">{{ economic.sales }}</td>
                       <td class="px-4 py-2 text-right">
-                        <button type="button" class="text-sm text-[#A32035] hover:underline">Edit</button>
+                        <button 
+                          v-if="isLoggedIn"
+                          type="button" 
+                          @click="editEconomic(economic)"
+                          class="text-sm text-[#A32035] hover:underline mr-2"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          v-if="isLoggedIn"
+                          type="button" 
+                          @click="deleteEconomic(economic.id)"
+                          class="text-sm text-red-600 hover:underline"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   </tbody>
@@ -323,10 +470,34 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRuntimeConfig, useFetch, navigateTo, createError } from '#imports'
 import { isLogged } from '../lib/isLogged'
 
+const isProcessorsExpanded = ref(true)
 const isPerformanceExpanded = ref(true)
 const isEconomicsExpanded = ref(true)
 const sidebarOffset = ref(0)
 const isLoggedIn = ref(false)
+
+// Form visibility states
+const showAddBenchmarkForm = ref(false)
+const showAddEconomicsForm = ref(false)
+const editingBenchmark = ref(null)
+const editingEconomic = ref(null)
+
+// Form data
+const benchmarkForm = ref({
+  benchmark_name: '',
+  score: '',
+  test_conditions: '',
+  test_date: '',
+  notes: ''
+})
+
+const economicsForm = ref({
+  year: '',
+  price: '',
+  sales_in_units: '',
+  revenue: '',
+  notes: ''
+})
 
 // Get SoC ID from route params
 const route = useRoute()
@@ -378,21 +549,44 @@ const form = ref({
   notes: ''
 })
 
-// Sample data for processors, benchmarks, and economics
-const processors = ref([
-  { id: 1, type: 'CPU', name: 'Intel® Core™ i7 processor 14650', quantity: 1, memory: '4GB' },
-  { id: 2, type: 'GPU', name: 'Intel Iris Xe Graphics G7 96EU', quantity: 1, memory: '2GB' }
-])
+// Processors, benchmarks, and economics from API data
+const processors = computed(() => {
+  if (!socData.value?.soc?.processors) return []
+  const procs = socData.value.soc.processors
+  return Array.isArray(procs) ? procs.map((p, idx) => ({
+    id: p.cpu_id || p.gpu_id || p.fpga_id || idx,
+    type: p.processor_type || 'Unknown',
+    name: p.model || p.name || p.core_info?.model || 'Unknown',
+    quantity: 1,
+    memory: p.memory_info?.max_memory_size ? `${p.memory_info.max_memory_size}GB` : 'N/A'
+  })) : []
+})
 
-const benchmarks = ref([
-  { id: 1, name: 'SpecInt2006', score: '26.6', year: '2006' },
-  { id: 2, name: 'SpecInt2000', score: '1701.9', year: '2000' }
-])
+const benchmarks = computed(() => {
+  if (!socData.value?.soc?.benchmarks) return []
+  const bench = socData.value.soc.benchmarks
+  return Array.isArray(bench) ? bench.map((b, idx) => ({
+    id: b.benchmark_id || idx,
+    name: b.benchmark_name || 'Unknown',
+    score: b.score || 'N/A',
+    year: b.test_date ? new Date(b.test_date).getFullYear().toString() : 'N/A',
+    test_conditions: b.test_conditions || '',
+    notes: b.notes || ''
+  })) : []
+})
 
-const economics = ref([
-  { id: 1, price: '639', year: '2000', sales: '5K units' },
-  { id: 2, price: '609', year: '2001', sales: '4K units' }
-])
+const economics = computed(() => {
+  if (!socData.value?.soc?.economics) return []
+  const econ = socData.value.soc.economics
+  return Array.isArray(econ) ? econ.map((e, idx) => ({
+    id: e.economic_data_id || idx,
+    price: e.price || 'N/A',
+    year: e.year || 'N/A',
+    sales: e.sales_in_units ? `${e.sales_in_units} units` : 'N/A',
+    revenue: e.revenue || null,
+    notes: e.notes || ''
+  })) : []
+})
 
 const handleScroll = () => {
   const footer = document.querySelector('footer')
@@ -551,6 +745,10 @@ onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
 })
 
+const toggleProcessors = () => {
+  isProcessorsExpanded.value = !isProcessorsExpanded.value;
+};
+
 const togglePerformance = () => {
   isPerformanceExpanded.value = !isPerformanceExpanded.value;
 };
@@ -558,6 +756,224 @@ const togglePerformance = () => {
 const toggleEconomics = () => {
   isEconomicsExpanded.value = !isEconomicsExpanded.value;
 };
+
+// Benchmark form functions
+const toggleAddBenchmarkForm = () => {
+  showAddBenchmarkForm.value = !showAddBenchmarkForm.value
+  if (!showAddBenchmarkForm.value) {
+    cancelBenchmarkForm()
+  } else {
+    showAddEconomicsForm.value = false
+    cancelEconomicsForm()
+  }
+}
+
+const cancelBenchmarkForm = () => {
+  editingBenchmark.value = null
+  benchmarkForm.value = {
+    benchmark_name: '',
+    score: '',
+    test_conditions: '',
+    test_date: '',
+    notes: ''
+  }
+  showAddBenchmarkForm.value = false
+}
+
+const editBenchmark = (benchmark) => {
+  editingBenchmark.value = benchmark
+  benchmarkForm.value = {
+    benchmark_name: benchmark.name || '',
+    score: benchmark.score || '',
+    test_conditions: benchmark.test_conditions || '',
+    test_date: benchmark.year && benchmark.year !== 'N/A' ? `${benchmark.year}-01-01` : '',
+    notes: benchmark.notes || ''
+  }
+  showAddBenchmarkForm.value = true
+  showAddEconomicsForm.value = false
+}
+
+const submitBenchmark = async () => {
+  if (!benchmarkForm.value.benchmark_name || !benchmarkForm.value.score) {
+    alert('Please fill in required fields: Benchmark Name and Score')
+    return
+  }
+
+  try {
+    const config = useRuntimeConfig()
+    const url = editingBenchmark.value
+      ? `${config.public.backendUrl}/api/socs/${socId}/benchmarks/${editingBenchmark.value.id}`
+      : `${config.public.backendUrl}/api/socs/${socId}/benchmarks`
+    
+    const method = editingBenchmark.value ? 'PUT' : 'POST'
+    
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        benchmark_name: benchmarkForm.value.benchmark_name,
+        score: parseFloat(benchmarkForm.value.score),
+        test_conditions: benchmarkForm.value.test_conditions || null,
+        test_date: benchmarkForm.value.test_date || null,
+        notes: benchmarkForm.value.notes || null
+      })
+    })
+
+    if (response.ok) {
+      // Refresh SOC data
+      await refreshSocData()
+      cancelBenchmarkForm()
+    } else {
+      const errorData = await response.json()
+      alert(`Failed to ${editingBenchmark.value ? 'update' : 'create'} benchmark: ${errorData.error || 'Unknown error'}`)
+    }
+  } catch (error) {
+    console.error('Error submitting benchmark:', error)
+    alert('Error submitting benchmark')
+  }
+}
+
+const deleteBenchmark = async (benchmarkId) => {
+  if (!confirm('Are you sure you want to delete this benchmark?')) return
+
+  try {
+    const config = useRuntimeConfig()
+    const response = await fetch(`${config.public.backendUrl}/api/socs/${socId}/benchmarks/${benchmarkId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+
+    if (response.ok) {
+      await refreshSocData()
+    } else {
+      const errorData = await response.json()
+      alert(`Failed to delete benchmark: ${errorData.error || 'Unknown error'}`)
+    }
+  } catch (error) {
+    console.error('Error deleting benchmark:', error)
+    alert('Error deleting benchmark')
+  }
+}
+
+// Economics form functions
+const toggleAddEconomicsForm = () => {
+  showAddEconomicsForm.value = !showAddEconomicsForm.value
+  if (!showAddEconomicsForm.value) {
+    cancelEconomicsForm()
+  } else {
+    showAddBenchmarkForm.value = false
+    cancelBenchmarkForm()
+  }
+}
+
+const cancelEconomicsForm = () => {
+  editingEconomic.value = null
+  economicsForm.value = {
+    year: '',
+    price: '',
+    sales_in_units: '',
+    revenue: '',
+    notes: ''
+  }
+  showAddEconomicsForm.value = false
+}
+
+const editEconomic = (economic) => {
+  editingEconomic.value = economic
+  economicsForm.value = {
+    year: economic.year || '',
+    price: economic.price || '',
+    sales_in_units: economic.sales ? economic.sales.replace(' units', '').replace('N/A', '') : '',
+    revenue: economic.revenue || '',
+    notes: economic.notes || ''
+  }
+  showAddEconomicsForm.value = true
+  showAddBenchmarkForm.value = false
+}
+
+const submitEconomic = async () => {
+  if (!economicsForm.value.year || !economicsForm.value.price) {
+    alert('Please fill in required fields: Year and Price')
+    return
+  }
+
+  try {
+    const config = useRuntimeConfig()
+    const url = editingEconomic.value
+      ? `${config.public.backendUrl}/api/socs/${socId}/economics/${editingEconomic.value.id}`
+      : `${config.public.backendUrl}/api/socs/${socId}/economics`
+    
+    const method = editingEconomic.value ? 'PUT' : 'POST'
+    
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        year: parseInt(economicsForm.value.year),
+        price: parseFloat(economicsForm.value.price),
+        sales_in_units: economicsForm.value.sales_in_units ? parseInt(economicsForm.value.sales_in_units) : null,
+        revenue: economicsForm.value.revenue ? parseFloat(economicsForm.value.revenue) : null,
+        notes: economicsForm.value.notes || null
+      })
+    })
+
+    if (response.ok) {
+      await refreshSocData()
+      cancelEconomicsForm()
+    } else {
+      const errorData = await response.json()
+      alert(`Failed to ${editingEconomic.value ? 'update' : 'create'} economic data: ${errorData.error || 'Unknown error'}`)
+    }
+  } catch (error) {
+    console.error('Error submitting economic data:', error)
+    alert('Error submitting economic data')
+  }
+}
+
+const deleteEconomic = async (economicId) => {
+  if (!confirm('Are you sure you want to delete this economic data?')) return
+
+  try {
+    const config = useRuntimeConfig()
+    const response = await fetch(`${config.public.backendUrl}/api/socs/${socId}/economics/${economicId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+
+    if (response.ok) {
+      await refreshSocData()
+    } else {
+      const errorData = await response.json()
+      alert(`Failed to delete economic data: ${errorData.error || 'Unknown error'}`)
+    }
+  } catch (error) {
+    console.error('Error deleting economic data:', error)
+    alert('Error deleting economic data')
+  }
+}
+
+// Refresh SOC data
+const refreshSocData = async () => {
+  try {
+    const { data: refreshedData } = await useFetch(`/api/socs/${socId}`, {
+      server: false,
+      default: () => null
+    })
+    rawSocData.value = refreshedData.value
+  } catch (error) {
+    console.error('Error refreshing SOC data:', error)
+  }
+}
 </script>
 
 <style scoped>

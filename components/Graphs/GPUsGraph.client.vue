@@ -62,10 +62,10 @@
               @click="groupBy = option">
               {{ option.label }}
             </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-    </div>
 
     <div v-if="chartError" class="flex items-center justify-center h-64 bg-red-50 rounded-lg border border-red-200">
       <div class="text-center">
@@ -88,7 +88,14 @@
 </template>
 
 <script setup>
-import { computed, ref, onErrorCaptured } from 'vue';
+import { computed, ref, onErrorCaptured, onMounted } from 'vue';
+import { 
+  calculateDataDensity, 
+  binData, 
+  clusterData, 
+  createHeatmap,
+  detectDenseRegions 
+} from '@/lib/chartUtils';
 // import { useRoute } from 'vue-router';
 import {
   DropdownMenu,
@@ -178,13 +185,16 @@ const yAxis = ref(numericOptions.value.find(opt => opt.value === 'core_count') |
 const groupBy = ref(filteredGroupOptions.value[0]);
 
 // Utility: Get the proper value from the data item based on the axis source.
+// Utility: Get the appropriate value from an item based on the axis's source
+// Handles both nested structure (from regular API) and flattened structure (from chart-data endpoint)
 const getAxisData = (item, axis) => {
   if (axis.source === 'soc') {
-    // For grouping by manufacturer, special handling may be needed.
     if (axis.value === 'manufacturer_name') {
-      return item.SoC?.Manufacturer?.name ?? null;
+      // Try flattened structure first (chart-data endpoint), then nested structure
+      return item.manufacturer_name ?? item.SoC?.Manufacturer?.name ?? null;
     }
-    return item.SoC?.[axis.value] ?? null;
+    // Try flattened structure first (chart-data endpoint), then nested structure
+    return item[axis.value] ?? item.SoC?.[axis.value] ?? null;
   }
   return item[axis.value] ?? null;
 };
@@ -220,6 +230,10 @@ const getColorForCategory = (colorCategory) => {
   return 'gray';
 };
 
+// Phase 2: Zoom level tracking
+const currentZoomLevel = ref({ xMin: null, xMax: null, yMin: null, yMax: null });
+const chartInstance = ref(null);
+
 const chartOptions = computed(() => {
   // Handle undefined or empty data
   if (!props.data || !props.data.length) {
@@ -230,11 +244,9 @@ const chartOptions = computed(() => {
     }
   }
   
-  // Performance optimization: Sample data for large datasets
-  const MAX_POINTS = 1000;
-  const dataToProcess = props.data.length > MAX_POINTS 
-    ? props.data.filter((_, index) => index % Math.ceil(props.data.length / MAX_POINTS) === 0)
-    : props.data;
+  // Use all data - Highcharts turbo mode and data grouping handle performance
+  const dataToProcess = props.data;
+  const dataSize = props.data.length;
 
   let groupedData = {};
   let series = [];
@@ -270,11 +282,58 @@ const chartOptions = computed(() => {
       data: groupedData[category],
       color: getColorForCategory(category),
       marker: { symbol: 'circle' },
-      opacity: 0.8,
+      opacity: dataSize > 5000 ? 0.5 : 0.8,
     }));
+  
+  // Ensure we have at least one series - if all data was filtered out, create a placeholder
+  if (series.length === 0 && dataToProcess.length > 0) {
+    console.warn('[GPUsGraph] No valid data points after filtering, creating placeholder series');
+    const firstItem = dataToProcess.find(item => {
+      const xValue = getAxisData(item, xAxis.value);
+      const yValue = getAxisData(item, yAxis.value);
+      return xValue !== null && yValue !== null;
+    });
+    if (firstItem) {
+      const xValue = getAxisData(firstItem, xAxis.value);
+      const yValue = getAxisData(firstItem, yAxis.value);
+      series = [{
+        name: 'Data',
+        data: [{
+          x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
+          y: yValue,
+          name: firstItem.name,
+          data: firstItem
+        }],
+        marker: { symbol: 'circle' },
+        opacity: 0.8,
+      }];
+    }
+  }
 
   return {
-    chart: { type: 'scatter', zoomType: 'xy' },
+    chart: { 
+      type: 'scatter', 
+      zoomType: 'xy',
+      events: {
+        load: function() {
+          chartInstance.value = this;
+          const xAxis = this.xAxis[0];
+          const yAxis = this.yAxis[0];
+          currentZoomLevel.value = {
+            xMin: xAxis.min,
+            xMax: xAxis.max,
+            yMin: yAxis.min,
+            yMax: yAxis.max
+          };
+          xAxis.update({ events: { afterSetExtremes: function() {
+            currentZoomLevel.value = { xMin: this.min, xMax: this.max, yMin: yAxis.min, yMax: yAxis.max };
+          }}});
+          yAxis.update({ events: { afterSetExtremes: function() {
+            currentZoomLevel.value = { xMin: xAxis.min, xMax: xAxis.max, yMin: this.min, yMax: this.max };
+          }}});
+        }
+      }
+    },
     credits: false,
     title: false,
     xAxis: {
@@ -358,13 +417,33 @@ const chartOptions = computed(() => {
     },
     plotOptions: {
       scatter: {
+        // Enable turbo mode for optimal performance with large datasets
+        turboThreshold: 0, // Always use optimized rendering
+        
+        // Data grouping - automatically groups nearby points for better performance
+        dataGrouping: {
+          enabled: true,
+          approximation: 'average',
+          groupPixelWidth: 5, // Group points within 5 pixels
+          smoothed: false,
+        },
+        
         marker: {
-          radius: 4,
+          radius: dataSize > 10000 ? 1 : (dataSize > 5000 ? 2 : 4), // Smaller markers for large datasets
           symbol: 'circle',
-          states: { hover: { enabled: true, lineColor: 'rgb(100,100,100)' } },
+          enabledThreshold: 20000, // Hide markers if >20k points (use grouping instead)
+          states: { 
+            hover: { 
+              enabled: true, 
+              radius: dataSize > 10000 ? 3 : 4,
+              lineColor: 'rgb(100,100,100)' 
+            } 
+          },
         },
         states: { hover: { marker: { enabled: false } } },
         jitter: { x: 0.005 },
+        // Adjust opacity for better visibility with large datasets
+        opacity: dataSize > 5000 ? 0.5 : 0.8,
       },
     },
     legend: {

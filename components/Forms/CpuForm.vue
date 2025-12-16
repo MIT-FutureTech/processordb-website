@@ -92,34 +92,77 @@
     <div>
       <div class="flex justify-between items-center mb-4 mt-8">
         <h3 class="text-lg font-medium">Cores</h3>
-        <NuxtLink to="/soc/form"
+        <button 
+          v-if="!readOnly && editMode"
+          @click="toggleAddCoreForm"
           class="px-6 py-2.5 bg-[#A32035] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#8a1b2d] hover:shadow-lg text-center inline-flex items-center justify-center">
-          <span class="mr-2"> Add CPU core </span>
-        </NuxtLink>
+          <span class="mr-2">{{ showAddCoreForm ? 'Cancel' : 'Add CPU core' }}</span>
+        </button>
       </div>
-      <!-- Table with core information (read-only or editable as needed) -->
+
+      <!-- Add Core Form -->
+      <Transition name="collapse">
+        <div v-if="showAddCoreForm && !readOnly && editMode" class="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+          <h4 class="text-md font-medium mb-4">{{ editingCore ? 'Edit Core' : 'Add Core' }}</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Core Name *</label>
+              <input v-model="coreForm.core_name" type="text" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Base Clock (GHz)</label>
+              <input v-model="coreForm.base_clock" type="number" step="0.01"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Max Turbo Clock (GHz)</label>
+              <input v-model="coreForm.max_turbo_clock" type="number" step="0.01"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+              <input v-model="coreForm.notes" type="text"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+            </div>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button @click="submitCore" 
+              class="px-4 py-2 bg-[#A32035] text-white rounded-lg hover:bg-[#8a1b2d]">
+              {{ editingCore ? 'Update' : 'Add' }}
+            </button>
+            <button @click="cancelCoreForm" 
+              class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </Transition>
+
+      <!-- Table with core information -->
       <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-black bg-opacity-80">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-white">Number of cores</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-white">Core name</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-white">Base Frequency</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-white">Max Turbo Frequency</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-white"></th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-white">Base Frequency (GHz)</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-white">Max Turbo Frequency (GHz)</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-white" v-if="!readOnly && editMode"></th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr>
-              <td class="px-6 py-4 whitespace-nowrap">2</td>
-              <td class="px-6 py-4 whitespace-nowrap">Performance-cores</td>
-              <td class="px-6 py-4 whitespace-nowrap">1.7 GHz</td>
-              <td class="px-6 py-4 whitespace-nowrap">4.8 GHz</td>
-              <td class="px-6 py-4 whitespace-nowrap text-right">
-                <button class="text-[#A32035] hover:underline" :disabled="readOnly">Edit</button>
+            <tr v-if="cores.length === 0">
+              <td colspan="4" class="px-6 py-4 text-center text-gray-500">No cores found</td>
+            </tr>
+            <tr v-for="core in cores" :key="core.core_id">
+              <td class="px-6 py-4 whitespace-nowrap">{{ core.core_name || 'N/A' }}</td>
+              <td class="px-6 py-4 whitespace-nowrap">{{ core.base_clock ? core.base_clock + ' GHz' : 'N/A' }}</td>
+              <td class="px-6 py-4 whitespace-nowrap">{{ core.max_turbo_clock ? core.max_turbo_clock + ' GHz' : 'N/A' }}</td>
+              <td v-if="!readOnly && editMode" class="px-6 py-4 whitespace-nowrap text-right">
+                <button @click="editCore(core)" class="text-[#A32035] hover:underline mr-2">Edit</button>
+                <button @click="deleteCore(core.core_id)" class="text-red-600 hover:underline">Delete</button>
               </td>
             </tr>
-            <!-- Add more rows as needed -->
           </tbody>
         </table>
       </div>
@@ -842,6 +885,132 @@ const toggleTechnicalDetails = () => {
 
 const toggleHistory = () => {
   isHistoryExpanded.value = !isHistoryExpanded.value
+}
+
+// Cores functionality
+const cores = computed(() => {
+  return props.cpuData?.cores || []
+})
+
+const showAddCoreForm = ref(false)
+const editingCore = ref(null)
+const coreForm = ref({
+  core_name: '',
+  base_clock: '',
+  max_turbo_clock: '',
+  notes: ''
+})
+
+const toggleAddCoreForm = () => {
+  showAddCoreForm.value = !showAddCoreForm.value
+  if (!showAddCoreForm.value) {
+    cancelCoreForm()
+  }
+}
+
+const cancelCoreForm = () => {
+  editingCore.value = null
+  coreForm.value = {
+    core_name: '',
+    base_clock: '',
+    max_turbo_clock: '',
+    notes: ''
+  }
+  showAddCoreForm.value = false
+}
+
+const editCore = (core) => {
+  editingCore.value = core
+  coreForm.value = {
+    core_name: core.core_name || '',
+    base_clock: core.base_clock || '',
+    max_turbo_clock: core.max_turbo_clock || '',
+    notes: core.notes || ''
+  }
+  showAddCoreForm.value = true
+}
+
+const submitCore = async () => {
+  if (!coreForm.value.core_name) {
+    errorMessage.value = 'Core name is required'
+    return
+  }
+
+  try {
+    const cpuId = props.cpuData?.cpu?.cpu_id
+    if (!cpuId) {
+      errorMessage.value = 'CPU ID not found'
+      return
+    }
+
+    const url = editingCore.value
+      ? `${useRuntimeConfig().public.backendUrl}/cpus/${cpuId}/cores/${editingCore.value.core_id}`
+      : `${useRuntimeConfig().public.backendUrl}/cpus/${cpuId}/cores`
+    
+    const method = editingCore.value ? 'PUT' : 'POST'
+    
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        core_name: coreForm.value.core_name,
+        base_clock: coreForm.value.base_clock ? parseFloat(coreForm.value.base_clock) : null,
+        max_turbo_clock: coreForm.value.max_turbo_clock ? parseFloat(coreForm.value.max_turbo_clock) : null,
+        notes: coreForm.value.notes || null
+      })
+    })
+
+    if (response.ok) {
+      successMessage.value = `Core ${editingCore.value ? 'updated' : 'added'} successfully!`
+      cancelCoreForm()
+      // Refresh page to reload cores
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000)
+    } else {
+      const errorData = await response.json()
+      errorMessage.value = errorData.error || 'Failed to save core'
+    }
+  } catch (error) {
+    console.error('Error submitting core:', error)
+    errorMessage.value = 'Error submitting core'
+  }
+}
+
+const deleteCore = async (coreId) => {
+  if (!confirm('Are you sure you want to delete this core?')) return
+
+  try {
+    const cpuId = props.cpuData?.cpu?.cpu_id
+    if (!cpuId) {
+      errorMessage.value = 'CPU ID not found'
+      return
+    }
+
+    const response = await fetch(`${useRuntimeConfig().public.backendUrl}/cpus/${cpuId}/cores/${coreId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+
+    if (response.ok) {
+      successMessage.value = 'Core deleted successfully!'
+      // Refresh page to reload cores
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000)
+    } else {
+      const errorData = await response.json()
+      errorMessage.value = errorData.error || 'Failed to delete core'
+    }
+  } catch (error) {
+    console.error('Error deleting core:', error)
+    errorMessage.value = 'Error deleting core'
+  }
 }
 
 // Expose the submitData function so that a parent component can call it.
