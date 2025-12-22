@@ -9,10 +9,11 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        // Get query parameters for pagination
+        // Get query parameters for pagination and search
         const query = getQuery(event)
         const page = parseInt(query.page) || 1
         const limit = parseInt(query.limit) || 100
+        const search = query.search || null
 
         // Check for cache-busting parameter (useful for tests)
         const forceRefresh = query.refresh === 'true' || query.nocache === 'true'
@@ -23,7 +24,7 @@ export default defineEventHandler(async (event) => {
             event.node.res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
             event.node.res.setHeader('Pragma', 'no-cache')
             event.node.res.setHeader('Expires', '0')
-            console.log(`[CPU API] Cache bypass requested for page=${page}, limit=${limit}`)
+            console.log(`[CPU API] Cache bypass requested for page=${page}, limit=${limit}, search=${search}`)
         } else {
             // Enable HTTP caching - 30 minutes (1800 seconds)
             event.node.res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800')
@@ -36,9 +37,12 @@ export default defineEventHandler(async (event) => {
         backendUrl = backendUrl.replace(/\/$/, '')
         // If backendUrl already includes /api, use it as-is; otherwise add /api
         const apiPrefix = backendUrl.endsWith('/api') ? '' : '/api'
-        const url = `${backendUrl}${apiPrefix}/cpus?page=${page}&pageSize=${limit}`
+        const searchParam = search ? `&search=${encodeURIComponent(search)}` : ''
+        const url = `${backendUrl}${apiPrefix}/cpus?page=${page}&pageSize=${limit}${searchParam}`
         
-        console.log(`[CPU API] Fetching from backend: ${url}`)
+        // #region agent log
+        console.log(`[CPU API] Fetching from backend: ${url}`, { page, limit, search });
+        // #endregion
         
         // Performance timing
         const fetchStartTime = Date.now()

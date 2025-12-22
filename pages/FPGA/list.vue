@@ -127,7 +127,7 @@ definePageMeta({
 
 import { isLogged } from '../lib/isLogged';
 import { ref, computed, onMounted, onActivated, watch, onUnmounted, defineAsyncComponent, nextTick } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute } from '#app';
 // Lazy load the chart component
 const FPGAsGraph = defineAsyncComponent(() => import('~/components/Graphs/FPGAsGraph.client.vue'));
 
@@ -305,8 +305,14 @@ async function fetchFpgasData(forceRefresh = false, retryCount = 0) {
   }
 }
 
-const route = useRoute();
 const hasInitialized = ref(false);
+// Initialize route after component setup
+let route = null;
+try {
+  route = useRoute();
+} catch (e) {
+  console.warn('[FPGA List] useRoute failed:', e);
+}
 
 // Function to initialize data fetching
 async function initializeData(forceRefresh = false) {
@@ -411,7 +417,8 @@ onActivated(async () => {
 });
 
 // Watch route changes to refresh data
-watch(() => route.path, async (newPath, oldPath) => {
+watch(() => route?.path, async (newPath, oldPath) => {
+  if (!route || !newPath) return;
   if (newPath === '/fpga/list' && newPath !== oldPath) {
     console.log('[FPGA List] Route changed to /fpga/list, refreshing table data...');
     // Don't clear chart data on route change - it refreshes periodically

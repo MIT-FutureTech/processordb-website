@@ -8,6 +8,7 @@
         SOCs
       </h1>
       <NuxtLink
+        v-show="isLoggedIn"
         to="/soc/form"
         class="px-6 py-2.5 bg-[#A32035] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#8a1b2d] hover:shadow-lg text-center inline-flex items-center justify-center"
       >
@@ -57,10 +58,40 @@
 
     <!-- Table Container -->
     <div class="mt-8 bg-white mb-16">
-      <div class="overflow-x-auto">
+      <div v-if="pending" class="flex items-center justify-center h-32">
+        <div class="flex flex-col items-center space-y-2">
+          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-[#A32035]"></div>
+          <div class="text-gray-500 text-sm">Loading data...</div>
+        </div>
+      </div>
+      <div v-else-if="error" class="p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+            <div>
+              <span class="text-red-800 font-medium">Failed to load data.</span>
+              <p class="text-red-600 text-sm mt-1">{{ error.message || 'Unknown error occurred' }}</p>
+            </div>
+          </div>
+          <button @click="fetchSocsData(true)" class="px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200 transition-colors">
+            Retry
+          </button>
+        </div>
+      </div>
+      <div v-else class="overflow-x-auto">
         <PrivateTable
           :data="filterData"
           class-name="soc"
+          :total-count="pagination?.totalRecords || 0"
+          :current-page="currentPage"
+          :page-size="pageSize"
+          :has-previous-page="pagination?.currentPage > 1 || false"
+          :has-next-page="pagination?.currentPage < pagination?.totalPages || false"
+          :total-pages="pagination?.totalPages || 0"
+          @update:current-page="currentPage = $event"
+          @update:page-size="handlePageSizeChange($event)"
         />
       </div>
     </div>
@@ -74,10 +105,20 @@ definePageMeta({
   ssr: false
 });
 
-import { ref, computed, defineAsyncComponent, onMounted, nextTick } from 'vue'
+import { ref, computed, defineAsyncComponent, onMounted, nextTick, watch } from 'vue'
+import { isLogged } from '../lib/isLogged'
 
-// Lazy load the chart component
-const InteractiveGraph = defineAsyncComponent(() => import('~/components/Graphs/InteractiveGraph.client.vue'));
+// Lazy load the chart component - ensure it's only loaded on client
+const InteractiveGraph = defineAsyncComponent({
+  loader: () => import('~/components/Graphs/InteractiveGraph.client.vue'),
+  loadingComponent: null,
+  errorComponent: null,
+  delay: 200,
+  timeout: 3000
+});
+
+// Authentication state
+const isLoggedIn = ref(false)
 
 const manufacturerNameFilter = ref('')
 const processorTypeFilter = ref('')
@@ -85,8 +126,13 @@ const familyFilter = ref('')
 const codeNameFilter = ref('')
 const microarchitectureFilter = ref('')
 
+// Pagination state
+const currentPage = ref(1)
+const pageSize = ref(100)
+
 // Data refs - initialize as empty to prevent errors before data loads
 const data = ref(null)
+const pagination = ref(null)
 const chartDataRef = ref([]) // Separate ref for chart data to prevent UI blocking
 const pending = ref(true)
 const error = ref(null)
@@ -106,8 +152,9 @@ async function fetchSocsData(forceRefresh = false) {
     error.value = null;
 
     // Use Nuxt server API route (like CPU/GPU/FPGA pages) - ensures proper component loading order
-    const cacheBust = forceRefresh ? `?refresh=true&_t=${Date.now()}` : '';
-    const url = `/api/socs${cacheBust}`;
+    // Add pagination parameters to URL (backend expects pageSize, not limit)
+    const cacheBust = forceRefresh ? `&refresh=true&_t=${Date.now()}` : '';
+    const url = `/api/socs?page=${currentPage.value}&pageSize=${pageSize.value}${cacheBust}`;
     
     // #region agent log
     if (typeof fetch !== 'undefined') {
@@ -135,8 +182,9 @@ async function fetchSocsData(forceRefresh = false) {
     }
     // #endregion
 
-    // Handle both { data: [...] } and direct array responses
+    // Handle paginated response - API returns { data: [...], pagination: {...} }
     const socsArray = responseData?.data || (Array.isArray(responseData) ? responseData : []);
+    const paginationData = responseData?.pagination || null;
     
     if (!socsArray || !Array.isArray(socsArray)) {
       // #region agent log
@@ -160,6 +208,14 @@ async function fetchSocsData(forceRefresh = false) {
       manufacturer: soc.manufacturer?.name || soc.manufacturer,
       code_name: soc.code_name || (soc.processors && soc.processors[0]?.code_name)
     }));
+
+    // Store pagination metadata
+    pagination.value = paginationData;
+    
+    // Update currentPage if pagination data indicates a different page
+    if (paginationData && paginationData.currentPage) {
+      currentPage.value = paginationData.currentPage;
+    }
 
     pending.value = false;
     
@@ -198,7 +254,16 @@ async function fetchSocsData(forceRefresh = false) {
 
 // Initialize data after component is mounted and components/plugins are ready
 onMounted(async () => {
+  // Ensure we're on the client
+  if (typeof window === 'undefined') {
+    console.log('[SOC List] onMounted - skipping on server');
+    return;
+  }
+  
   console.log('[SOC List] onMounted - initializing data...');
+  
+  // Check authentication status
+  isLoggedIn.value = isLogged();
   
   // Wait for next tick to ensure DOM and plugins are ready
   await nextTick();
@@ -281,4 +346,26 @@ function slugify(str) {
     .replace(/[^\w- ]+/g, '') // Allow hyphens by excluding them from the pattern
     .replace(/ +/g, '-')      // Replace spaces with hyphens
 }
+
+// Handle page size change - reset to page 1 and refetch
+function handlePageSizeChange(newPageSize) {
+  pageSize.value = newPageSize;
+  currentPage.value = 1;
+  fetchSocsData();
+}
+
+// Watch pagination and refetch when it changes
+// Watch for pagination changes - only after initial load
+watch([currentPage, pageSize], (newValues, oldValues) => {
+  console.log('[SOC List] Pagination changed:', { newValues, oldValues, hasInitialized: hasInitialized.value });
+  // Only refetch if:
+  // 1. We've already initialized (hasInitialized is true)
+  // 2. Values actually changed (not initial setup)
+  if (hasInitialized.value && oldValues && (oldValues[0] !== newValues[0] || oldValues[1] !== newValues[1])) {
+    console.log('[SOC List] Pagination values changed, refetching...');
+    fetchSocsData();
+  } else {
+    console.log('[SOC List] Skipping pagination refetch - not initialized yet or no change');
+  }
+}, { immediate: false });
 </script>

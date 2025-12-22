@@ -127,7 +127,7 @@ definePageMeta({
 
 import { ref, computed, onMounted, onActivated, watch, onUnmounted, defineAsyncComponent, nextTick } from 'vue';
 import { isLogged } from '../lib/isLogged';
-import { useRoute } from 'vue-router';
+import { useRoute } from '#app';
 // Lazy load the chart component
 const GPUsGraph = defineAsyncComponent(() => import('~/components/Graphs/GPUsGraph.client.vue'));
 
@@ -330,8 +330,14 @@ async function fetchGpusData(forceRefresh = false, retryCount = 0) {
   }
 }
 
-const route = useRoute();
 const hasInitialized = ref(false);
+// Initialize route after component setup
+let route = null;
+try {
+  route = useRoute();
+} catch (e) {
+  console.warn('[GPU List] useRoute failed:', e);
+}
 
 // Function to initialize data fetching
 async function initializeData(forceRefresh = false) {
@@ -446,7 +452,8 @@ onActivated(async () => {
 });
 
 // Watch route changes to refresh table data only (chart refreshes periodically)
-watch(() => route.path, async (newPath, oldPath) => {
+watch(() => route?.path, async (newPath, oldPath) => {
+  if (!route || !newPath) return;
   if (newPath === '/gpu/list' && newPath !== oldPath) {
     console.log('[GPU List] Route changed to /gpu/list, refreshing table data...');
     

@@ -81,6 +81,31 @@ echo "Building application..."
 # SITE_URL and BACKEND_URL should be loaded from .env if it exists
 npm run build
 
+# Verify build output exists
+echo "[Deploy Debug] Checking build output..."
+if [ -d ".output" ]; then
+  echo "[Deploy Debug] .output directory exists"
+  if [ -d ".output/public" ]; then
+    echo "[Deploy Debug] .output/public directory exists"
+    if [ -d ".output/public/_nuxt" ]; then
+      FILE_COUNT=$(find .output/public/_nuxt -type f 2>/dev/null | wc -l)
+      echo "[Deploy Debug] .output/public/_nuxt directory exists with $FILE_COUNT files"
+    else
+      echo "[Deploy Debug] WARNING: .output/public/_nuxt directory does NOT exist"
+    fi
+  else
+    echo "[Deploy Debug] WARNING: .output/public directory does NOT exist"
+  fi
+  if [ -d ".nuxt/dist/client" ]; then
+    CLIENT_FILE_COUNT=$(find .nuxt/dist/client -type f 2>/dev/null | wc -l)
+    echo "[Deploy Debug] .nuxt/dist/client directory exists with $CLIENT_FILE_COUNT files"
+  else
+    echo "[Deploy Debug] WARNING: .nuxt/dist/client directory does NOT exist"
+  fi
+else
+  echo "[Deploy Debug] ERROR: .output directory does NOT exist after build"
+fi
+
 # Determine ecosystem config file
 if [ "$ENVIRONMENT" == "staging" ] && [ -f "ecosystem.staging.config.cjs" ]; then
     ECOSYSTEM_FILE="ecosystem.staging.config.cjs"
