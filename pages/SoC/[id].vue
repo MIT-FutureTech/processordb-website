@@ -114,9 +114,13 @@ if (!socId) {
   throw createError({ statusCode: 404, statusMessage: 'SoC ID not found' });
 }
 
+// Use a reactive query parameter to force cache refresh
+const refreshKey = ref(Date.now())
+
 const { data: rawSocData, pending, error, refresh } = await useFetch(`/api/socs/${socId}`, {
   server: false, // Client-side only to avoid SSR issues
-    default: () => null
+    default: () => null,
+    query: computed(() => ({ refresh: 'true', _t: refreshKey.value })) // Cache-busting parameter
 });
 
 // Transform the data to match what the form expects
@@ -141,12 +145,15 @@ const socData = computed(() => {
   }
   
   const soc = data.soc || data;
+  const processors = soc.processors || [];
+  const benchmarks = soc.benchmarks || [];
+  const economics = soc.economics || [];
   
   return {
     soc: soc,
-    processors: soc.processors || [],
-    benchmarks: soc.benchmarks || [],
-    economics: soc.economics || [],
+    processors: processors,
+    benchmarks: benchmarks,
+    economics: economics,
     versionHistory: data.versionHistory || [],
     manufacturerName: data.manufacturerName
   };
@@ -169,6 +176,8 @@ const handleRetry = () => {
 const handleDataRefreshed = async () => {
   // Refresh the data when sub-entities are updated
   console.log('[SoC Detail] handleDataRefreshed called, refreshing data...')
+  // Update refresh key to force cache-busting, then refresh
+  refreshKey.value = Date.now()
   await refresh();
   console.log('[SoC Detail] Data refreshed, rawSocData.value:', rawSocData.value)
   

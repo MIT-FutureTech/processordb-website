@@ -64,11 +64,12 @@
       
       <!-- CPU Form -->
       <CpuForm
-        v-else-if="cpuData"
+        v-else-if="cpuData && cpuData.cpu"
         :cpu-data="cpuData"
         :edit-mode="true"
         ref="cpuFormRef"
         :read-only="!isLoggedIn"
+        @data-refreshed="handleDataRefreshed"
       />
       
       <!-- No Data State -->
@@ -105,9 +106,13 @@ if (!cpuId) {
   throw createError({ statusCode: 404, statusMessage: 'CPU ID not found' });
 }
 
-const { data: rawCpuData, pending, error } = await useFetch(`/api/cpus/${cpuId}`, {
+// Use a reactive query parameter to force cache refresh
+const refreshKey = ref(Date.now())
+
+const { data: rawCpuData, pending, error, refresh } = await useFetch(`/api/cpus/${cpuId}`, {
   server: false, // Client-side only to avoid SSR issues
-  default: () => null
+  default: () => null,
+  query: computed(() => ({ refresh: 'true', _t: refreshKey.value })) // Cache-busting parameter
 });
 
 // Transform the data to match what the form expects
@@ -119,16 +124,36 @@ const cpuData = computed(() => {
   // Handle different response structures
   const data = rawCpuData.value.data || rawCpuData.value;
   
-  return {
+  const result = {
     cpu: data.cpu || data,
     cores: data.cores || [],
     versionHistory: data.versionHistory || [],
     manufacturerName: data.manufacturerName
   };
+  
+  console.log('[CPU Detail] cpuData computed - cores count:', result.cores.length, 'cores:', result.cores);
+  
+  return result;
 });
 
 const handleBackClick = () => {
   console.log('Back button clicked - navigating to /cpu/list');
+};
+
+const handleDataRefreshed = async () => {
+  // Refresh the data when cores are updated
+  console.log('[CPU Detail] handleDataRefreshed called, refreshing data...')
+  // Update refresh key to force cache-busting, then refresh
+  refreshKey.value = Date.now()
+  await refresh();
+  console.log('[CPU Detail] Data refreshed, rawCpuData.value:', rawCpuData.value)
+  
+  // Log cores after refresh
+  if (rawCpuData.value) {
+    const data = rawCpuData.value.data || rawCpuData.value
+    const cores = data.cores || []
+    console.log('[CPU Detail] Cores after refresh:', cores.length, cores)
+  }
 };
 
 const submitForm = () => {

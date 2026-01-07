@@ -1,7 +1,7 @@
 <template>
   <div class="bg-black border-b-4 border-b-[#A32035] sticky top-0 z-10">
     <div class="max-w-7xl mx-auto  py-2 flex flex-wrap gap-4 justify-center md:justify-between items-center">
-      <div class="justify-start">
+      <div class="justify-start pl-4">
         <NuxtLink
           to="/"
           class="inline-block"
@@ -14,7 +14,7 @@
         </NuxtLink>
       </div>
       <div class="justify-end">
-        <div class="flex items-center justify-end gap-6">
+        <div class="flex items-center justify-end gap-6 pr-4">
           <div class="menu-item has-dropdown relative group">
             <a
               href="#"
@@ -90,6 +90,13 @@
           >
             Steering Committee
           </NuxtLink>
+          <NuxtLink
+            v-if="enableGalaxy"
+            to="/galaxy"
+            class="text-white hover:text-[#A32035] flex items-center"
+          >
+            Galaxy
+          </NuxtLink>
         </div>
       </div>
     </div>
@@ -97,9 +104,13 @@
 </template>
 
 <script setup lang="js">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
+import { useRuntimeConfig } from '#app';
 import { isLogged } from '../lib/isLogged';
+
+const config = useRuntimeConfig();
+const enableGalaxy = computed(() => config.public.enableGalaxy || false);
 
 const isLoggedIn = ref(false);
 const route = useRoute();

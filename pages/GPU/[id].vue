@@ -69,6 +69,7 @@
         :edit-mode="true"
         ref="gpuFormRef"
         :read-only="!isLoggedIn"
+        @data-refreshed="handleDataRefreshed"
       />
       
       <!-- No Data State -->
@@ -105,9 +106,13 @@ if (!gpuId) {
   throw createError({ statusCode: 404, statusMessage: 'GPU ID not found' });
 }
 
-const { data: rawGpuData, pending, error } = await useFetch(`/api/gpus/${gpuId}`, {
+// Use a reactive query parameter to force cache refresh
+const refreshKey = ref(Date.now())
+
+const { data: rawGpuData, pending, error, refresh } = await useFetch(`/api/gpus/${gpuId}`, {
   server: false, // Client-side only to avoid SSR issues
-  default: () => null
+  default: () => null,
+  query: computed(() => ({ refresh: 'true', _t: refreshKey.value })) // Cache-busting parameter
 });
 
 // Transform the data to match what the form expects
@@ -117,16 +122,36 @@ const gpuData = computed(() => {
   // Handle different response structures
   const data = rawGpuData.value.data || rawGpuData.value;
   
-  return {
+  const result = {
     gpu: data.gpu || data,
     cores: data.cores || [],
     versionHistory: data.versionHistory || [],
     manufacturerName: data.manufacturerName
   };
+  
+  console.log('[GPU Detail] gpuData computed - cores count:', result.cores.length, 'cores:', result.cores);
+  
+  return result;
 });
 
 const handleBackClick = () => {
   console.log('Back button clicked - navigating to /gpu/list');
+};
+
+const handleDataRefreshed = async () => {
+  // Refresh the data when cores are updated
+  console.log('[GPU Detail] handleDataRefreshed called, refreshing data...')
+  // Update refresh key to force cache-busting, then refresh
+  refreshKey.value = Date.now()
+  await refresh();
+  console.log('[GPU Detail] Data refreshed, rawGpuData.value:', rawGpuData.value)
+  
+  // Log cores after refresh
+  if (rawGpuData.value) {
+    const data = rawGpuData.value.data || rawGpuData.value
+    const cores = data.cores || []
+    console.log('[GPU Detail] Cores after refresh:', cores.length, cores)
+  }
 };
 
 const submitForm = () => {

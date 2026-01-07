@@ -166,6 +166,11 @@
               :class="['px-4 py-2 font-medium', selectedProcessorType === 'GPU' ? 'border-b-2 border-[#A32035] text-[#A32035]' : 'text-gray-600']">
               GPU
             </button>
+            <button 
+              @click="selectedProcessorType = 'FPGA'"
+              :class="['px-4 py-2 font-medium', selectedProcessorType === 'FPGA' ? 'border-b-2 border-[#A32035] text-[#A32035]' : 'text-gray-600']">
+              FPGA
+            </button>
           </div>
 
           <!-- Search Input -->
@@ -245,6 +250,11 @@
               class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-center text-sm font-medium">
               Add New GPU
             </NuxtLink>
+            <NuxtLink 
+              to="/fpga/form"
+              class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-center text-sm font-medium">
+              Add New FPGA
+            </NuxtLink>
           </div>
         </div>
       </Transition>
@@ -252,10 +262,6 @@
       <!-- Processors Table - Always visible when expanded, no Transition to avoid rendering issues -->
       <div v-if="isProcessorsExpanded" :key="`processors-${processors.length}`">
         <div class="mt-4 mb-8">
-          <!-- Debug info (temporary) -->
-          <div class="text-xs text-gray-500 mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
-            Debug: processors.length={{ processors.length }}, isProcessorsExpanded={{ isProcessorsExpanded }}
-          </div>
           <table class="w-full mt-4 border border-1 border-gray-200 rounded-lg overflow-hidden" :data-processors-count="processors.length">
               <thead class="bg-black opacity-80">
                 <tr>
@@ -391,7 +397,7 @@
       </Transition>
 
       <Transition name="collapse">
-        <div v-if="isPerformanceExpanded">
+        <div v-if="isPerformanceExpanded" :key="`benchmarks-${benchmarks.length}`">
           <div class="mt-4 mb-8">
             <table class="w-full mt-4 border border-1 border-gray-200 rounded-lg overflow-hidden">
               <thead class="bg-black opacity-80">
@@ -501,7 +507,7 @@
       </Transition>
 
       <Transition name="collapse">
-        <div v-if="isEconomicsExpanded">
+        <div v-if="isEconomicsExpanded" :key="`economics-${economics.length}`">
           <div class="mt-4 mb-8">
             <table class="w-full mt-4 border border-gray-300 rounded-lg overflow-hidden">
               <thead class="bg-black opacity-80">
@@ -794,16 +800,15 @@ const searchProcessors = async (resetPage = false) => {
   
   loadingProcessors.value = true
   try {
-    const endpoint = selectedProcessorType.value === 'CPU' ? '/api/cpus' : '/api/gpus'
+    let endpoint = '/api/cpus'
+    if (selectedProcessorType.value === 'GPU') {
+      endpoint = '/api/gpus'
+    } else if (selectedProcessorType.value === 'FPGA') {
+      endpoint = '/api/fpgas'
+    }
     const searchQuery = processorSearchQuery.value.trim()
     const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ''
     const url = `${endpoint}?page=${processorSearchPage.value}&pageSize=50${searchParam}`
-    
-    // #region agent log
-    if (typeof fetch !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:searchProcessors',message:'Search processors called',data:{endpoint:endpoint,searchQuery:searchQuery,url:url,page:processorSearchPage.value,type:selectedProcessorType.value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    }
-    // #endregion
     
     const response = await fetch(url, {
       headers: {
@@ -817,12 +822,6 @@ const searchProcessors = async (resetPage = false) => {
     
     const data = await response.json()
     
-    // #region agent log
-    if (typeof fetch !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:searchProcessors',message:'API response received',data:{hasData:!!data.data,dataLength:data.data?.length,hasPagination:!!data.pagination,pagination:data.pagination,firstProcessor:data.data?.[0]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    }
-    // #endregion
-    
     const processors = data.data || []
     const currentSocId = props.socData?.soc?.soc_id
     
@@ -832,15 +831,9 @@ const searchProcessors = async (resetPage = false) => {
       return !processorSocId || processorSocId !== currentSocId
     })
     
-    // #region agent log
-    if (typeof fetch !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:searchProcessors',message:'After filtering',data:{processorsLength:processors.length,filteredLength:filtered.length,currentSocId:currentSocId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    }
-    // #endregion
-    
     // Transform to common format
     availableProcessors.value = filtered.map(p => ({
-      id: p.cpu_id || p.gpu_id,
+      id: p.cpu_id || p.gpu_id || p.fpga_id,
       type: selectedProcessorType.value,
       name: p.model || p.name || 'Unknown',
       model: p.model || p.name,
@@ -848,12 +841,6 @@ const searchProcessors = async (resetPage = false) => {
       microarchitecture: p.microarchitecture || p.architecture,
       soc_id: p.soc_id || p.SoC?.soc_id
     }))
-    
-    // #region agent log
-    if (typeof fetch !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:searchProcessors',message:'Final available processors',data:{availableCount:availableProcessors.value.length,firstAvailable:availableProcessors.value[0]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    }
-    // #endregion
     
     // Store pagination info
     processorSearchPagination.value = data.pagination || null
@@ -868,12 +855,6 @@ const searchProcessors = async (resetPage = false) => {
 
 // Debounced search function
 const debouncedSearch = () => {
-  // #region agent log
-  if (typeof fetch !== 'undefined') {
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:debouncedSearch',message:'Debounced search triggered',data:{searchQuery:processorSearchQuery.value,hasTimer:!!searchDebounceTimer},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-  }
-  // #endregion
-  
   // Clear existing timer
   if (searchDebounceTimer) {
     clearTimeout(searchDebounceTimer)
@@ -881,11 +862,6 @@ const debouncedSearch = () => {
   
   // Set new timer - wait 300ms after user stops typing
   searchDebounceTimer = setTimeout(() => {
-    // #region agent log
-    if (typeof fetch !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:debouncedSearch',message:'Debounce timer fired, calling searchProcessors',data:{searchQuery:processorSearchQuery.value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    }
-    // #endregion
     searchProcessors(true) // Reset to page 1 on new search
   }, 300)
 }
@@ -908,11 +884,6 @@ const associateProcessor = async (processor) => {
     return
   }
   
-  // #region agent log
-  if (typeof fetch !== 'undefined') {
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:associateProcessor',message:'Starting processor association',data:{processorId:processor.id,processorType:processor.type,processorName:processor.name,socId:socId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  }
-  // #endregion
   console.log('[SocForm] Proceeding with association for socId:', socId)
   
   try {
@@ -925,7 +896,12 @@ const associateProcessor = async (processor) => {
     const hasApiPrefix = backendUrl.endsWith('/api')
     const apiPrefix = hasApiPrefix ? '' : '/api'
     
-    const endpoint = processor.type === 'CPU' ? `${apiPrefix}/cpus/${processor.id}` : `${apiPrefix}/gpus/${processor.id}`
+    let endpoint = `${apiPrefix}/cpus/${processor.id}`
+    if (processor.type === 'GPU') {
+      endpoint = `${apiPrefix}/gpus/${processor.id}`
+    } else if (processor.type === 'FPGA') {
+      endpoint = `${apiPrefix}/fpgas/${processor.id}`
+    }
     const url = `${backendUrl}${endpoint}`
     
     console.log('[SocForm] Constructed URL:', url, { backendUrl, hasApiPrefix, apiPrefix, endpoint })
@@ -945,14 +921,15 @@ const associateProcessor = async (processor) => {
     const processorData = await getResponse.json()
     const data = processorData.data || processorData
     
-    // #region agent log
-    if (typeof fetch !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:associateProcessor',message:'Fetched processor data',data:{hasData:!!data,hasCpu:!!data.cpu,hasGpu:!!data.gpu,hasSoc:!!(data.soc||data.SoC)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    }
-    // #endregion
-    
     // Extract current data structure
-    const currentProcessor = processor.type === 'CPU' ? (data.cpu || data) : (data.gpu || data)
+    let currentProcessor
+    if (processor.type === 'CPU') {
+      currentProcessor = data.cpu || data
+    } else if (processor.type === 'GPU') {
+      currentProcessor = data.gpu || data
+    } else if (processor.type === 'FPGA') {
+      currentProcessor = data.fpga || data
+    }
     const currentSoc = data.soc || data.SoC || {}
     const currentManufacturer = data.manufacturer || data.Manufacturer || {}
     
@@ -969,18 +946,14 @@ const associateProcessor = async (processor) => {
       }
     }
     
-    // Add CPU or GPU data based on processor type
+    // Add CPU, GPU, or FPGA data based on processor type
     if (processor.type === 'CPU') {
       updatePayload.cpu = currentProcessor
-    } else {
+    } else if (processor.type === 'GPU') {
       updatePayload.gpu = currentProcessor
+    } else if (processor.type === 'FPGA') {
+      updatePayload.fpga = currentProcessor
     }
-    
-    // #region agent log
-    if (typeof fetch !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:associateProcessor',message:'Sending update payload',data:{payloadSocId:updatePayload.soc.soc_id,hasCpu:!!updatePayload.cpu,hasGpu:!!updatePayload.gpu,processorType:processor.type},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    }
-    // #endregion
     
     const updateResponse = await fetch(url, {
       method: 'PUT',
@@ -991,22 +964,10 @@ const associateProcessor = async (processor) => {
       body: JSON.stringify(updatePayload)
     })
     
-    // #region agent log
-    if (typeof fetch !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:associateProcessor',message:'Update response received',data:{status:updateResponse.status,ok:updateResponse.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    }
-    // #endregion
-    
     if (updateResponse.ok) {
       console.log('[SocForm] Processor association successful')
       successMessage.value = `Processor ${processor.name} associated successfully!`
       setTimeout(() => { successMessage.value = '' }, 5000)
-      
-      // #region agent log
-      if (typeof fetch !== 'undefined') {
-        fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:associateProcessor',message:'Association successful, refreshing data',data:{socId:socId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      }
-      // #endregion
       
       console.log('[SocForm] Closing processor selector and emitting data-refreshed')
       toggleProcessorSelector()
@@ -1028,11 +989,6 @@ const associateProcessor = async (processor) => {
     }
   } catch (error) {
     console.error('Error associating processor:', error)
-    // #region agent log
-    if (typeof fetch !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:associateProcessor',message:'Error in association',data:{error:error.message,stack:error.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-    }
-    // #endregion
     errorMessage.value = 'Error associating processor'
     setTimeout(() => { errorMessage.value = '' }, 5000)
   }
@@ -1060,91 +1016,32 @@ const removeProcessor = async (processor) => {
     const hasApiPrefix = backendUrl.endsWith('/api')
     const apiPrefix = hasApiPrefix ? '' : '/api'
     
-    const endpoint = processor.type === 'CPU' ? `${apiPrefix}/cpus/${processor.id}` : `${apiPrefix}/gpus/${processor.id}`
-    const url = `${backendUrl}${endpoint}`
+    // Use SOC-scoped endpoint for consistency with benchmarks and economics
+    let processorType = 'cpus'
+    if (processor.type === 'GPU') {
+      processorType = 'gpus'
+    } else if (processor.type === 'FPGA') {
+      processorType = 'fpgas'
+    }
+    const url = `${backendUrl}${apiPrefix}/socs/${socId}/${processorType}/${processor.id}`
     
     console.log('[SocForm] Removing processor:', { processor, url })
     
-    // Get current processor data to preserve it
-    const getResponse = await fetch(url, {
+    const response = await fetch(url, {
+      method: 'DELETE',
       headers: {
-        'Accept': 'application/json',
         'Authorization': `Bearer ${getAuthToken()}`
       }
     })
     
-    if (!getResponse.ok) {
-      throw new Error('Failed to fetch processor data')
-    }
-    
-    const processorData = await getResponse.json()
-    const data = processorData.data || processorData
-    
-    // Extract current data structure
-    const currentProcessor = processor.type === 'CPU' ? (data.cpu || data) : (data.gpu || data)
-    const currentManufacturer = data.manufacturer || data.Manufacturer || {}
-    const currentSoc = data.soc || data.SoC || {}
-    
-    // For removal, we need to provide a valid soc_id (can be 0 or a dummy) but update the CPU's soc_id to null
-    // The backend validation requires soc_id to be present, but we'll update the CPU's soc_id field directly
-    // First, let's try setting soc_id to 0 or empty string, or we can update the CPU model directly
-    const updatePayload = {
-      soc: {
-        soc_id: currentSoc.soc_id || 0, // Provide current soc_id for validation, but we'll update CPU directly
-        name: currentSoc.name || ''
-      },
-      manufacturer: {
-        manufacturer_id: currentManufacturer.manufacturer_id || null,
-        name: currentManufacturer.name || ''
-      }
-    }
-    
-    // Add CPU or GPU data based on processor type
-    // Note: The backend's cpuObject/gpuObject helpers don't set soc_id directly,
-    // but Sequelize will use the socEntry association. To remove the association,
-    // we need to pass soc_id: null explicitly in the cpu/gpu object.
-    // However, the validation requires soc.soc_id to be truthy, so we pass the current soc_id
-    // and then directly update the CPU/GPU model's soc_id to null after validation.
-    // Actually, we can't do that in the same request. Let's try a different approach:
-    // Pass the current soc_id for validation, but set soc_id: null in the cpu/gpu object
-    // and hope the backend respects it (it might not due to the helper function).
-    // The safest approach is to update the CPU/GPU directly via Sequelize after validation.
-    // But for now, let's try passing soc_id: null in the cpu/gpu object.
-    if (processor.type === 'CPU') {
-      updatePayload.cpu = {
-        ...currentProcessor,
-        soc_id: null // Try to set soc_id to null to disassociate
-      }
-    } else {
-      updatePayload.gpu = {
-        ...currentProcessor,
-        soc_id: null // Try to set soc_id to null to disassociate
-      }
-    }
-    
-    const updateResponse = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAuthToken()}`
-      },
-      body: JSON.stringify(updatePayload)
-    })
-    
-    if (updateResponse.ok) {
+    if (response.ok) {
       successMessage.value = `${processor.type} removed from SoC successfully!`
       setTimeout(() => { successMessage.value = '' }, 3000)
       emit('data-refreshed')
     } else {
-      const errorData = await updateResponse.json()
+      const errorData = await response.json()
       console.error('Failed to remove processor:', errorData)
-      
-      // Check if the error is due to backend validation requiring soc_id
-      if (errorData.error && errorData.error.includes('Manufacturer and SoC IDs are required')) {
-        errorMessage.value = 'Unable to remove processor: Backend requires SoC ID. Please update the processor manually or contact an administrator.'
-      } else {
-        errorMessage.value = `Failed to remove processor: ${errorData.error || 'Unknown error'}`
-      }
+      errorMessage.value = `Failed to remove processor: ${errorData.error || 'Unknown error'}`
       setTimeout(() => { errorMessage.value = '' }, 5000)
     }
   } catch (error) {
@@ -1228,9 +1125,17 @@ const submitBenchmark = async () => {
       return
     }
 
+    // Normalize backendUrl - remove trailing slash and handle /api prefix
+    let backendUrl = config.public.backendUrl || 'http://localhost:3001'
+    backendUrl = backendUrl.replace(/\/$/, '') // Remove trailing slash
+    
+    // Check if backendUrl already includes /api
+    const hasApiPrefix = backendUrl.endsWith('/api')
+    const apiPrefix = hasApiPrefix ? '' : '/api'
+    
     const url = editingBenchmark.value
-      ? `${config.public.backendUrl}/api/socs/${socId}/benchmarks/${editingBenchmark.value.id}`
-      : `${config.public.backendUrl}/api/socs/${socId}/benchmarks`
+      ? `${backendUrl}${apiPrefix}/socs/${socId}/benchmarks/${editingBenchmark.value.id}`
+      : `${backendUrl}${apiPrefix}/socs/${socId}/benchmarks`
     
     const method = editingBenchmark.value ? 'PUT' : 'POST'
     
@@ -1252,7 +1157,8 @@ const submitBenchmark = async () => {
     if (response.ok) {
       successMessage.value = `Benchmark ${editingBenchmark.value ? 'updated' : 'created'} successfully!`
       setTimeout(() => { successMessage.value = '' }, 5000)
-      await refreshSocData()
+      // Ensure performance section is expanded so user can see the newly added benchmark
+      isPerformanceExpanded.value = true
       cancelBenchmarkForm()
       emit('data-refreshed')
     } else {
@@ -1279,7 +1185,15 @@ const deleteBenchmark = async (benchmarkId) => {
       return
     }
 
-    const response = await fetch(`${config.public.backendUrl}/api/socs/${socId}/benchmarks/${benchmarkId}`, {
+    // Normalize backendUrl - remove trailing slash and handle /api prefix
+    let backendUrl = config.public.backendUrl || 'http://localhost:3001'
+    backendUrl = backendUrl.replace(/\/$/, '') // Remove trailing slash
+    
+    // Check if backendUrl already includes /api
+    const hasApiPrefix = backendUrl.endsWith('/api')
+    const apiPrefix = hasApiPrefix ? '' : '/api'
+
+    const response = await fetch(`${backendUrl}${apiPrefix}/socs/${socId}/benchmarks/${benchmarkId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${getAuthToken()}`
@@ -1289,7 +1203,6 @@ const deleteBenchmark = async (benchmarkId) => {
     if (response.ok) {
       successMessage.value = 'Benchmark deleted successfully!'
       setTimeout(() => { successMessage.value = '' }, 5000)
-      await refreshSocData()
       emit('data-refreshed')
     } else {
       const errorData = await response.json()
@@ -1365,9 +1278,17 @@ const submitEconomic = async () => {
       return
     }
 
+    // Normalize backendUrl - remove trailing slash and handle /api prefix
+    let backendUrl = config.public.backendUrl || 'http://localhost:3001'
+    backendUrl = backendUrl.replace(/\/$/, '') // Remove trailing slash
+    
+    // Check if backendUrl already includes /api
+    const hasApiPrefix = backendUrl.endsWith('/api')
+    const apiPrefix = hasApiPrefix ? '' : '/api'
+
     const url = editingEconomic.value
-      ? `${config.public.backendUrl}/api/socs/${socId}/economics/${editingEconomic.value.id}`
-      : `${config.public.backendUrl}/api/socs/${socId}/economics`
+      ? `${backendUrl}${apiPrefix}/socs/${socId}/economics/${editingEconomic.value.id}`
+      : `${backendUrl}${apiPrefix}/socs/${socId}/economics`
     
     const method = editingEconomic.value ? 'PUT' : 'POST'
     
@@ -1389,7 +1310,8 @@ const submitEconomic = async () => {
     if (response.ok) {
       successMessage.value = `Economic data ${editingEconomic.value ? 'updated' : 'created'} successfully!`
       setTimeout(() => { successMessage.value = '' }, 5000)
-      await refreshSocData()
+      // Ensure economics section is expanded so user can see the newly added economic data
+      isEconomicsExpanded.value = true
       cancelEconomicsForm()
       emit('data-refreshed')
     } else {
@@ -1416,7 +1338,15 @@ const deleteEconomic = async (economicId) => {
       return
     }
 
-    const response = await fetch(`${config.public.backendUrl}/api/socs/${socId}/economics/${economicId}`, {
+    // Normalize backendUrl - remove trailing slash and handle /api prefix
+    let backendUrl = config.public.backendUrl || 'http://localhost:3001'
+    backendUrl = backendUrl.replace(/\/$/, '') // Remove trailing slash
+    
+    // Check if backendUrl already includes /api
+    const hasApiPrefix = backendUrl.endsWith('/api')
+    const apiPrefix = hasApiPrefix ? '' : '/api'
+
+    const response = await fetch(`${backendUrl}${apiPrefix}/socs/${socId}/economics/${economicId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${getAuthToken()}`
@@ -1426,7 +1356,6 @@ const deleteEconomic = async (economicId) => {
     if (response.ok) {
       successMessage.value = 'Economic data deleted successfully!'
       setTimeout(() => { successMessage.value = '' }, 5000)
-      await refreshSocData()
       emit('data-refreshed')
     } else {
       const errorData = await response.json()

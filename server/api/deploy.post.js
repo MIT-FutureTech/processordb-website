@@ -4,6 +4,9 @@ import { join } from 'path'
 import { existsSync } from 'fs'
 
 export default defineEventHandler(async (event) => {
+  // Log immediately to confirm endpoint is being hit
+  console.log('[Deploy API] Endpoint hit at', new Date().toISOString())
+  
   // Skip during prerender
   if (import.meta.prerender) {
     console.log('[Deploy API] Skipping during build/prerender')
@@ -17,6 +20,8 @@ export default defineEventHandler(async (event) => {
     // Debug: Log all headers to verify what's being received
     const allHeaders = event.node.req.headers
     console.log('[Deploy API] Received headers:', Object.keys(allHeaders).filter(h => h.toLowerCase().includes('webhook')))
+    console.log('[Deploy API] Request method:', event.node.req.method)
+    console.log('[Deploy API] Request URL:', event.node.req.url)
     
     // Validate webhook secret
     // Node.js lowercases all header names, so X-Webhook-Secret becomes x-webhook-secret
@@ -52,8 +57,25 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Read payload
-    const body = await readBody(event)
+    // Read payload with timeout protection
+    console.log('[Deploy API] Reading request body...')
+    let body
+    try {
+      // Add timeout to readBody to prevent hanging
+      body = await Promise.race([
+        readBody(event),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('readBody timeout after 5 seconds')), 5000)
+        )
+      ])
+      console.log('[Deploy API] Request body read successfully')
+    } catch (readError) {
+      console.error('[Deploy API] Error reading body:', readError.message)
+      throw createError({
+        statusCode: 400,
+        message: `Failed to read request body: ${readError.message}`
+      })
+    }
     const environment = body.environment || (body.branch === 'main' ? 'production' : 'staging')
     const branch = body.branch || (environment === 'production' ? 'main' : 'dev')
 

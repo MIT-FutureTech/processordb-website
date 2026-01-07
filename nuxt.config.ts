@@ -25,7 +25,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || process.env.SITE_URL,
-      backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:3001'
+      backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:3001',
+      enableGalaxy: process.env.NUXT_PUBLIC_ENABLE_GALAXY === 'true' || false
     }
   },
 
@@ -235,6 +236,13 @@ export default defineNuxtConfig({
         'X-Frame-Options': 'SAMEORIGIN',
         'X-Content-Type-Options': 'nosniff',
         'Referrer-Policy': 'strict-origin-when-cross-origin'
+      }
+    },
+    '/galaxy': {
+      ssr: false, // Client-side only for 3D visualization
+      headers: {
+        'X-Frame-Options': 'SAMEORIGIN',
+        'X-Content-Type-Options': 'nosniff'
       }
     },
   },

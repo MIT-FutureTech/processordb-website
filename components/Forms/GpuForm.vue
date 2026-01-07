@@ -797,6 +797,7 @@
 <script setup lang="js">
 import { ref, watch } from 'vue'
 import { useRuntimeConfig } from '#imports'
+import { getItemWithExpiry } from '@/lib/encrypter'
 
 const props = defineProps({
   gpuData: {
@@ -812,6 +813,17 @@ const props = defineProps({
     default: false
   }
 })
+
+const emit = defineEmits(['data-refreshed'])
+
+// Helper function to get the authentication token
+const getAuthToken = () => {
+  const token = getItemWithExpiry('encryptedJWTPDB')
+  if (!token) {
+    console.warn('[GpuForm] No authentication token found. User may need to log in again.')
+  }
+  return token || null
+}
 
 const successMessage = ref('')
 const errorMessage = ref('')
@@ -1099,7 +1111,13 @@ const redirectPage = (data) => {
 
 // Cores functionality
 const cores = computed(() => {
-  return props.gpuData?.cores || []
+  const coresData = props.gpuData?.cores || []
+  // #region agent log
+  if (typeof fetch !== 'undefined') {
+    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GpuForm.vue:1101',message:'Cores computed',data:{hasGpuData:!!props.gpuData,coresCount:coresData.length,coresIsArray:Array.isArray(coresData),coresData:coresData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+  }
+  // #endregion
+  return coresData
 })
 
 const showAddCoreForm = ref(false)
@@ -1163,7 +1181,7 @@ const submitCore = async () => {
       method,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${getAuthToken()}`
       },
       body: JSON.stringify({
         core_name: coreForm.value.core_name,
@@ -1176,10 +1194,11 @@ const submitCore = async () => {
     if (response.ok) {
       successMessage.value = `Core ${editingCore.value ? 'updated' : 'added'} successfully!`
       cancelCoreForm()
-      // Refresh page to reload cores
       setTimeout(() => {
-        window.location.reload()
-      }, 1000)
+        successMessage.value = ''
+      }, 3000)
+      // Emit event to refresh data without page reload
+      emit('data-refreshed')
     } else {
       const errorData = await response.json()
       errorMessage.value = errorData.error || 'Failed to save core'
@@ -1203,16 +1222,17 @@ const deleteCore = async (coreId) => {
     const response = await fetch(`${useRuntimeConfig().public.backendUrl}/gpus/${gpuId}/cores/${coreId}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${getAuthToken()}`
       }
     })
 
     if (response.ok) {
       successMessage.value = 'Core deleted successfully!'
-      // Refresh page to reload cores
       setTimeout(() => {
-        window.location.reload()
-      }, 1000)
+        successMessage.value = ''
+      }, 3000)
+      // Emit event to refresh data without page reload
+      emit('data-refreshed')
     } else {
       const errorData = await response.json()
       errorMessage.value = errorData.error || 'Failed to delete core'
