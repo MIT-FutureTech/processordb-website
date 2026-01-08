@@ -135,9 +135,27 @@ App must be built and configured manually in desired instance for this workflow 
 2. GitHub Actions workflow triggers
 3. Workflow determines environment based on branch (`dev` → `staging`, `main` → `production`)
 4. Workflow retrieves environment-specific secrets (`WEBHOOK_URL` and `WEBHOOK_SECRET`)
-5. Workflow sends POST request to the webhook endpoint with `X-Webhook-Secret` header
-6. Server receives webhook, validates secret, and runs deployment script
-7. Deployment script pulls latest code, builds, and restarts the application
+5. Workflow sends POST request to the webhook endpoint (`/api/deploy`) with `X-Webhook-Secret` header
+6. **Server receives webhook** (via `server/api/deploy.post.js`):
+   - Validates webhook secret against `DEPLOY_WEBHOOK_SECRET` environment variable
+   - Reads request body (with 5-second timeout protection)
+   - Extracts `environment` and `branch` from request body
+   - Spawns `scripts/deploy.sh` asynchronously using `spawn()` with detached process
+   - Returns immediately with success response (deployment continues in background)
+7. **Deployment script** (`scripts/deploy.sh`) runs on host:
+   - Determines deployment path and PM2 app name based on environment
+   - Loads `.env` file if present
+   - Pulls latest code using git (`git fetch`, `git checkout`, `git reset --hard`)
+   - Fixes line endings in deploy script (CRLF to LF)
+   - Loads nvm (Node Version Manager) if available
+   - Installs dependencies with `npm ci`
+   - Prepares Nuxt modules with `npx nuxt prepare`
+   - Builds application with `npm run build`
+   - Verifies build output exists
+   - Restarts PM2 application (`pm2 restart` or `pm2 start`)
+   - Saves PM2 process list
+
+**Note:** Unlike the API deployment system, the website does not use a file-based trigger or watch service. The webhook directly spawns the deployment script asynchronously.
 
 #### Webhook Security
 
@@ -181,13 +199,16 @@ pm2 logs ProcessorDB-website-staging --lines 200 --nostream
 
 **What to Look For:**
 When monitoring deployment logs, you'll see:
-- `"Deployment triggered for staging (dev)"` - Webhook received
-- `"Starting deployment for staging..."` - Deployment script started
-- `"Pulling latest code from dev..."` - Git operations
-- `"Installing dependencies..."` - npm install
-- `"Building application..."` - Build process
-- `"Restarting PM2 application..."` - PM2 restart
-- `"Deployment completed successfully for staging!"` - Success
+- `"[Deploy API] Deployment triggered for staging (dev)"` - Webhook received
+- `"[Deploy Script] Starting deployment for staging..."` - Deployment script started
+- `"[Deploy Script] Pulling latest code from dev..."` - Git operations
+- `"[Deploy Script] Installing dependencies..."` - npm install
+- `"[Deploy Script] Building application..."` - Build process
+- `"[Deploy Script] Restarting PM2 application..."` - PM2 restart
+- `"[Deploy Script] Deployment completed successfully for staging!"` - Success
+
+**Deployment Script Output:**
+The deployment script output is captured and logged by the webhook handler. You'll see `[Deploy Script]` prefixed messages in the PM2 logs, as the script's stdout/stderr are piped to the webhook process.
 
 **Additional Log Sources:**
 ```bash
@@ -212,10 +233,29 @@ pm2 logs ProcessorDB-website-staging --err --lines 50
 # Check nginx errors
 sudo tail -50 /var/log/nginx/staging.processordb.mit.edu.error.log
 
+# Check webhook endpoint logs (deployment script output appears here)
+pm2 logs ProcessorDB-website-staging | grep -E "\[Deploy (API|Script)\]"
+
 # Manually test deployment script
 cd ~/processordb-website-staging
 bash scripts/deploy.sh staging dev
 ```
+
+**Deployment Script Details:**
+The deployment script (`scripts/deploy.sh`) uses `#!/bin/bash` and:
+- Determines environment and branch from arguments (defaults: `production`, `main`)
+- Sets deployment path and PM2 app name based on environment:
+  - Production: `$HOME/processordb-website`, `ProcessorDB-website`
+  - Staging: `$HOME/processordb-website-staging`, `ProcessorDB-website-staging`
+- Loads `.env` file if present
+- Pulls latest code and resets to remote branch
+- Fixes line endings (CRLF to LF)
+- Loads nvm if available
+- Installs dependencies with `npm ci` (development mode)
+- Prepares Nuxt modules
+- Builds application
+- Verifies build output
+- Restarts PM2 application using environment-specific ecosystem config if available
 
 ## Reverse Proxy (Nginx)
 
