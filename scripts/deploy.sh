@@ -78,7 +78,37 @@ npx nuxt prepare || {
 
 # Build application
 echo "Building application..."
-# SITE_URL and BACKEND_URL should be loaded from .env if it exists
+# Reload .env file right before build to ensure NUXT_PUBLIC_* vars are available
+if [ -f .env ]; then
+    echo "Reloading environment variables for build..."
+    set -a
+    source .env
+    set +a
+    # Explicitly export NUXT_PUBLIC_* variables for Nuxt build
+    if [ -n "$NUXT_PUBLIC_BACKEND_URL" ]; then
+        export NUXT_PUBLIC_BACKEND_URL
+        echo "✓ NUXT_PUBLIC_BACKEND_URL is set: $NUXT_PUBLIC_BACKEND_URL"
+    else
+        echo "⚠ WARNING: NUXT_PUBLIC_BACKEND_URL is not set!"
+        # Try to set it from BACKEND_URL if available
+        if [ -n "$BACKEND_URL" ]; then
+            export NUXT_PUBLIC_BACKEND_URL="$BACKEND_URL"
+            echo "✓ Set NUXT_PUBLIC_BACKEND_URL from BACKEND_URL: $NUXT_PUBLIC_BACKEND_URL"
+        fi
+    fi
+    if [ -n "$NUXT_PUBLIC_SITE_URL" ]; then
+        export NUXT_PUBLIC_SITE_URL
+        echo "✓ NUXT_PUBLIC_SITE_URL is set: $NUXT_PUBLIC_SITE_URL"
+    else
+        # Try to set it from SITE_URL if available
+        if [ -n "$SITE_URL" ]; then
+            export NUXT_PUBLIC_SITE_URL="$SITE_URL"
+            echo "✓ Set NUXT_PUBLIC_SITE_URL from SITE_URL: $NUXT_PUBLIC_SITE_URL"
+        fi
+    fi
+else
+    echo "⚠ WARNING: .env file not found!"
+fi
 npm run build
 
 # Verify build output exists
