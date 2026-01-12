@@ -1172,8 +1172,8 @@ const submitCore = async () => {
     }
 
     const url = editingCore.value
-      ? `${useRuntimeConfig().public.backendUrl}/gpus/${gpuId}/cores/${editingCore.value.core_id}`
-      : `${useRuntimeConfig().public.backendUrl}/gpus/${gpuId}/cores`
+      ? `/api/gpus/${gpuId}/cores/${editingCore.value.core_id}`
+      : `/api/gpus/${gpuId}/cores`
     
     const method = editingCore.value ? 'PUT' : 'POST'
     
@@ -1219,7 +1219,7 @@ const deleteCore = async (coreId) => {
       return
     }
 
-    const response = await fetch(`${useRuntimeConfig().public.backendUrl}/gpus/${gpuId}/cores/${coreId}`, {
+    const response = await fetch(`/api/gpus/${gpuId}/cores/${coreId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${getAuthToken()}`

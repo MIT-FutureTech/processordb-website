@@ -888,6 +888,7 @@ const associateProcessor = async (processor) => {
   
   try {
     const config = useRuntimeConfig()
+    console.log('[SocForm] Backend URL from config:', config.public.backendUrl)
     // Normalize backendUrl - remove trailing slash and handle /api prefix
     let backendUrl = config.public.backendUrl || 'http://localhost:3001'
     backendUrl = backendUrl.replace(/\/$/, '') // Remove trailing slash

@@ -961,16 +961,23 @@ const submitCore = async () => {
     }
 
     const url = editingCore.value
-      ? `${useRuntimeConfig().public.backendUrl}/cpus/${cpuId}/cores/${editingCore.value.core_id}`
-      : `${useRuntimeConfig().public.backendUrl}/cpus/${cpuId}/cores`
+      ? `/api/cpus/${cpuId}/cores/${editingCore.value.core_id}`
+      : `/api/cpus/${cpuId}/cores`
     
     const method = editingCore.value ? 'PUT' : 'POST'
+    const authToken = getAuthToken()
+    
+    // #region agent log
+    if (typeof fetch !== 'undefined') {
+      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CpuForm.vue:950',message:'submitCore called',data:{cpuId,url,method,hasAuthToken:!!authToken,windowLocation:typeof window !== 'undefined' ? window.location.href : 'server',isLocalhost:typeof window !== 'undefined' ? window.location.hostname === 'localhost' : false},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    }
+    // #endregion
     
     const response = await fetch(url, {
       method,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAuthToken()}`
+        'Authorization': `Bearer ${authToken}`
       },
       body: JSON.stringify({
         core_name: coreForm.value.core_name,
@@ -979,6 +986,12 @@ const submitCore = async () => {
         notes: coreForm.value.notes || null
       })
     })
+
+    // #region agent log
+    if (typeof fetch !== 'undefined') {
+      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CpuForm.vue:982',message:'submitCore response',data:{status:response.status,statusText:response.statusText,ok:response.ok,url:response.url,actualUrl:url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    }
+    // #endregion
 
     if (response.ok) {
       successMessage.value = `Core ${editingCore.value ? 'updated' : 'added'} successfully!`
@@ -989,12 +1002,24 @@ const submitCore = async () => {
       // Emit event to refresh data without page reload
       emit('data-refreshed')
     } else {
-      const errorData = await response.json()
+      const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }))
       errorMessage.value = errorData.error || 'Failed to save core'
+      
+      // #region agent log
+      if (typeof fetch !== 'undefined') {
+        fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CpuForm.vue:992',message:'submitCore error response',data:{status:response.status,errorData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      }
+      // #endregion
     }
   } catch (error) {
     console.error('Error submitting core:', error)
     errorMessage.value = 'Error submitting core'
+    
+    // #region agent log
+    if (typeof fetch !== 'undefined') {
+      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CpuForm.vue:996',message:'submitCore exception',data:{errorMessage:error.message,errorName:error.name,errorStack:error.stack?.substring(0,300)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    }
+    // #endregion
   }
 }
 
@@ -1008,7 +1033,7 @@ const deleteCore = async (coreId) => {
       return
     }
 
-    const response = await fetch(`${useRuntimeConfig().public.backendUrl}/cpus/${cpuId}/cores/${coreId}`, {
+    const response = await fetch(`/api/cpus/${cpuId}/cores/${coreId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${getAuthToken()}`

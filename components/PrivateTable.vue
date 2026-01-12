@@ -287,25 +287,12 @@ const formatYear = (date) => {
 const uniqueId = (row) => {
   const socClass = props.className.toLowerCase();
   
-  // #region agent log
-  if (typeof fetch !== 'undefined') {
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PrivateTable.vue:uniqueId',message:'uniqueId called',data:{className:props.className,socClass:socClass,rowKeys:Object.keys(row),soc_id:row.soc_id,id:row.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  }
-  // #endregion
-  
   switch (socClass) {
     case 'soc':
     case 'socs':
       // For SOC, use soc_id for linking to detail page
       // Multiple rows may share same soc_id (one per processor), which is fine for detail links
       const socId = row.soc_id || row.id;
-      
-      // #region agent log
-      if (typeof fetch !== 'undefined') {
-        fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PrivateTable.vue:uniqueId',message:'SOC ID resolved',data:{socId:socId,type:typeof socId,isString:typeof socId === 'string',containsApi:socId && typeof socId === 'string' && socId.includes('/api/')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      }
-      // #endregion
-      
       return socId;
     case 'cpu':
       return row.cpu_id || '';
@@ -322,24 +309,11 @@ const getDetailPath = (row) => {
   const id = uniqueId(row);
   const basePath = props.className.replace(/s$/i, '');
   const fullPath = `/${basePath}/${id}`;
-  
-  // #region agent log
-  if (typeof fetch !== 'undefined') {
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PrivateTable.vue:getDetailPath',message:'Detail path generated',data:{className:props.className,basePath:basePath,id:id,fullPath:fullPath,containsApi:fullPath.includes('/api/')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  }
-  // #endregion
-  
   return fullPath;
 }
 
 const logNavigation = (row) => {
   const path = getDetailPath(row);
-  
-  // #region agent log
-  if (typeof fetch !== 'undefined') {
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PrivateTable.vue:logNavigation',message:'Navigation clicked',data:{path:path,rowId:row.soc_id || row.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-  }
-  // #endregion
 }
 
 // --- Helper: Format Column Label ---
