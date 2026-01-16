@@ -1009,9 +1009,6 @@ const associateProcessor = async (processor) => {
   
   try {
     const config = useRuntimeConfig()
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/Forms/SocForm.vue:890',message:'Client runtime config check',data:{backendUrl:config.public.backendUrl||'EMPTY',hasBackendUrl:!!config.public.backendUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'client-runtime',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     console.log('[SocForm] Backend URL from config:', config.public.backendUrl)
     // Normalize backendUrl - remove trailing slash and handle /api prefix
     let backendUrl = config.public.backendUrl || 'http://localhost:3001'
