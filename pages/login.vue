@@ -38,6 +38,16 @@
               </button>
             </form>
 
+            <!-- Registration Link -->
+            <div v-if="!logged" class="text-center mt-4">
+              <p class="text-gray-600 text-sm">
+                Don't have an account?
+                <NuxtLink to="/register" class="text-[#A32035] hover:underline">
+                  Register here
+                </NuxtLink>
+              </p>
+            </div>
+
             <!-- Logout Form -->
             <form v-else @submit.prevent="logout" class="space-y-4">
               <button type="submit" class="w-full px-4 py-2 text-white bg-[#A32035] rounded-lg hover:bg-opacity-90">
@@ -63,6 +73,15 @@
                 Login
               </button>
             </form>
+            <!-- Registration Link for fallback -->
+            <div class="text-center mt-4">
+              <p class="text-gray-600 text-sm">
+                Don't have an account?
+                <NuxtLink to="/register" class="text-[#A32035] hover:underline">
+                  Register here
+                </NuxtLink>
+              </p>
+            </div>
           </template>
         </ClientOnly>
       </div>

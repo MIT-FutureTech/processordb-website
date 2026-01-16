@@ -39,7 +39,7 @@
     "file-saver": "^2.0.5",
     "highcharts": "^11.4.8",
     "highcharts-vue": "^2.0.1",
-    "jspdf": "^3.0.1",
+    "jspdf": "^4.0.0",
     "jszip": "^3.10.1",
     "lucide-vue-next": "^0.453.0",
     "nuxt": "^3.20.1",

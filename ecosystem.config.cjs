@@ -1,8 +1,45 @@
 const { config } = require('dotenv')
 const path = require('path')
+const fs = require('fs')
+
+// #region agent log
+const logPath = path.join(__dirname, '..', '.cursor', 'debug.log')
+const logEntry = {
+  sessionId: 'debug-session',
+  runId: 'ecosystem-config',
+  hypothesisId: 'A',
+  location: 'ecosystem.config.cjs:start',
+  message: 'Ecosystem config loading',
+  data: {
+    hasBackendUrl: !!process.env.BACKEND_URL,
+    hasNuxtPublicBackendUrl: !!process.env.NUXT_PUBLIC_BACKEND_URL,
+    backendUrl: process.env.BACKEND_URL || 'NOT_SET',
+    nuxtPublicBackendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || 'NOT_SET',
+    envFileExists: fs.existsSync(path.join(__dirname, '.env'))
+  },
+  timestamp: Date.now()
+}
+fs.appendFileSync(logPath, JSON.stringify(logEntry) + '\n')
+// #endregion
 
 // Load .env file
 config({ path: path.join(__dirname, '.env') })
+
+// #region agent log
+const logEntry2 = {
+  sessionId: 'debug-session',
+  runId: 'ecosystem-config',
+  hypothesisId: 'A',
+  location: 'ecosystem.config.cjs:after-dotenv',
+  message: 'After dotenv load',
+  data: {
+    backendUrl: process.env.BACKEND_URL || 'NOT_SET',
+    nuxtPublicBackendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || 'NOT_SET'
+  },
+  timestamp: Date.now()
+}
+fs.appendFileSync(logPath, JSON.stringify(logEntry2) + '\n')
+// #endregion
 
 // Read environment variables from .env
 const env = {}
@@ -31,6 +68,23 @@ if (process.env.NUXT_PUBLIC_SITE_URL) {
 if (process.env.NUXT_PUBLIC_BACKEND_URL) {
   env.NUXT_PUBLIC_BACKEND_URL = process.env.NUXT_PUBLIC_BACKEND_URL
 }
+
+// #region agent log
+const logEntry3 = {
+  sessionId: 'debug-session',
+  runId: 'ecosystem-config',
+  hypothesisId: 'A',
+  location: 'ecosystem.config.cjs:final-env',
+  message: 'Final env object for PM2',
+  data: {
+    envKeys: Object.keys(env),
+    backendUrl: env.BACKEND_URL || 'NOT_SET',
+    nuxtPublicBackendUrl: env.NUXT_PUBLIC_BACKEND_URL || 'NOT_SET'
+  },
+  timestamp: Date.now()
+}
+fs.appendFileSync(logPath, JSON.stringify(logEntry3) + '\n')
+// #endregion
 
 module.exports = {
   apps : [{

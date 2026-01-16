@@ -83,6 +83,10 @@
 </template>
 
 <script setup lang="js">
+definePageMeta({
+  ssr: false
+});
+
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useFetch, createError } from '#imports';
 import Navbar from '@/components/Navbar.vue';
@@ -95,10 +99,6 @@ const isLoggedIn = ref(false);
 const cpuFormRef = ref(null);
 const route = useRoute();
 
-onMounted(() => {
-  isLoggedIn.value = isLogged();
-});
-
 // Add safety check for route params
 const cpuId = route.params.id;
 if (!cpuId) {
@@ -109,10 +109,16 @@ if (!cpuId) {
 // Use a reactive query parameter to force cache refresh
 const refreshKey = ref(Date.now())
 
+// Use lazy useFetch to avoid blocking component initialization
 const { data: rawCpuData, pending, error, refresh } = await useFetch(`/api/cpus/${cpuId}`, {
   server: false, // Client-side only to avoid SSR issues
   default: () => null,
+  lazy: true, // Don't block component initialization
   query: computed(() => ({ refresh: 'true', _t: refreshKey.value })) // Cache-busting parameter
+});
+
+onMounted(() => {
+  isLoggedIn.value = isLogged();
 });
 
 // Transform the data to match what the form expects

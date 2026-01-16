@@ -39,7 +39,14 @@ export default defineEventHandler(async (event) => {
         }
 
         // Fetch from backend API
-        let backendUrl = useRuntimeConfig().public.backendUrl || 'http://localhost:3001'
+        const config = useRuntimeConfig()
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/api/socs/[id].js:42',message:'Runtime config check',data:{backendUrl:config.public.backendUrl||'EMPTY',hasBackendUrl:!!config.public.backendUrl,processEnvBackendUrl:process.env.BACKEND_URL||'NOT_SET',processEnvNuxtPublicBackendUrl:process.env.NUXT_PUBLIC_BACKEND_URL||'NOT_SET'},timestamp:Date.now(),sessionId:'debug-session',runId:'server-runtime',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+        let backendUrl = config.public.backendUrl || 'http://localhost:3001'
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/api/socs/[id].js:45',message:'Backend URL after fallback',data:{backendUrl,usedFallback:backendUrl==='http://localhost:3001'},timestamp:Date.now(),sessionId:'debug-session',runId:'server-runtime',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
         // Remove trailing slash
         backendUrl = backendUrl.replace(/\/$/, '')
         // If backendUrl already includes /api, use it as-is; otherwise add /api

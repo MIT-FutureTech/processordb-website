@@ -42,6 +42,10 @@
 </template>
 
 <script setup lang="js">
+definePageMeta({
+  ssr: false
+});
+
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useFetch, createError } from '#imports'
 import Footer from '@/components/Footer.vue'

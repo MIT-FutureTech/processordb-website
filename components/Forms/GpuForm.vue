@@ -1,17 +1,21 @@
 <template>
   <div class="min-h-screen max-w-7xl mx-auto py-2 px-4">
-    <!-- Área de Mensagens -->
-    <div
-      v-if="successMessage"
-      class="mb-4 p-2 bg-green-200 text-green-800 rounded"
-    >
-      {{ successMessage }}
+    <!-- Message Area -->
+    <div v-if="successMessage" class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded shadow-md">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <strong>Success:</strong> <span class="ml-2">{{ successMessage }}</span>
+      </div>
     </div>
-    <div
-      v-if="errorMessage"
-      class="mb-4 p-2 bg-red-200 text-red-800 rounded"
-    >
-      {{ errorMessage }}
+    <div v-if="errorMessage" class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded shadow-md">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        </svg>
+        <strong>Error:</strong> <span class="ml-2">{{ errorMessage }}</span>
+      </div>
     </div>
 
     <!-- General Information -->
@@ -219,6 +223,19 @@
               <input v-model="coreForm.notes" type="text"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
             </div>
+          </div>
+          <!-- Suggestion Note (for suggestors only) -->
+          <div v-if="!readOnly && userRole === 'suggestor'" class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Note <span class="text-red-600">*</span> - Explain your suggestion
+            </label>
+            <textarea 
+              v-model="coreNote" 
+              rows="3"
+              placeholder="Please provide an explanation for this core suggestion..."
+              class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            ></textarea>
           </div>
           <div class="mt-4 flex gap-2">
             <button @click="submitCore" 
@@ -711,6 +728,20 @@
 
     <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8">
 
+    <!-- Suggestion Note (for suggestors only) -->
+    <div v-if="!readOnly && userRole === 'suggestor'" class="mt-8">
+      <label class="block text-sm font-medium text-gray-700 pl-2 mb-2">
+        Note <span class="text-red-600">*</span> - Explain your suggestion
+      </label>
+      <textarea 
+        v-model="suggestionNote" 
+        rows="3"
+        placeholder="Please provide an explanation for your suggestion..."
+        class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        required
+      ></textarea>
+    </div>
+
     <!-- History Section -->
     <div v-if="editMode">
       <div class="flex items-center gap-2 mt-8">
@@ -795,9 +826,11 @@
 </template>
 
 <script setup lang="js">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useRuntimeConfig } from '#imports'
 import { getItemWithExpiry } from '@/lib/encrypter'
+import { getRole } from '@/lib/isLogged'
+import { submitSuggestion } from '@/lib/suggestionUtils'
 
 const props = defineProps({
   gpuData: {
@@ -827,6 +860,11 @@ const getAuthToken = () => {
 
 const successMessage = ref('')
 const errorMessage = ref('')
+
+// User role and suggestion note
+const userRole = computed(() => getRole())
+const suggestionNote = ref('')
+const coreNote = ref('')
 const isProcessorsExpanded = ref(true)
 const isArchitectureExpanded = ref(true)
 const isClockExpanded = ref(true)
@@ -1059,19 +1097,81 @@ const submitData = async () => {
   // Basic validation
   if (!form.value.manufacturer || !form.value.variant || !form.value.name) {
     errorMessage.value = 'Please fill in all required fields (Manufacturer, Variant, Name)'
+    setTimeout(() => {
+      errorMessage.value = ''
+    }, 5000)
     return
   }
 
   const postData = preparePostRequestBody()
+  const currentRole = userRole.value
+  const isSuggestion = currentRole === 'suggestor'
+
+  console.log('[Form] Submission started', { 
+    formType: 'GPU', 
+    role: currentRole, 
+    isSuggestion,
+    editMode: props.editMode 
+  })
 
   try {
+    // If user is a suggestor, submit as suggestion
+    if (isSuggestion) {
+      // Validate note is provided for suggestors
+      if (!suggestionNote.value || suggestionNote.value.trim() === '') {
+        errorMessage.value = 'Note is required for suggestions. Please provide an explanation for your suggestion.'
+        setTimeout(() => {
+          errorMessage.value = ''
+        }, 5000)
+        return
+      }
+
+      const entityId = props.editMode ? props.gpuData.gpu?.gpu_id : null
+      
+      try {
+        const result = await submitSuggestion('gpu', entityId, postData, suggestionNote.value)
+        
+        console.log('[Form] Submission successful', { 
+          formType: 'GPU', 
+          role: currentRole, 
+          isSuggestion: true 
+        })
+        
+        successMessage.value = 'Suggestion submitted successfully! It will be reviewed by an admin or editor.'
+        
+        // Redirect after delay
+        setTimeout(() => {
+          if (entityId) {
+            window.location.href = `/gpu/${entityId}`
+          } else {
+            window.location.href = '/gpu/list'
+          }
+        }, 3000)
+      } catch (suggestionError) {
+        console.error('[Form] Submission failed', { 
+          formType: 'GPU', 
+          role: currentRole, 
+          error: suggestionError.message 
+        })
+        errorMessage.value = suggestionError.message || 'Failed to submit suggestion. Please try again.'
+        setTimeout(() => {
+          errorMessage.value = ''
+        }, 5000)
+      }
+      return
+    }
+
+    // Otherwise, submit directly (admin/editor)
     const response = await fetch(
       props.editMode
         ? `${useRuntimeConfig().public.backendUrl}/gpus/${props.gpuData.gpu?.gpu_id}`
         : `${useRuntimeConfig().public.backendUrl}/gpus`,
       {
         method: props.editMode ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken()}`
+        },
         body: JSON.stringify(postData)
       }
     )
@@ -1082,20 +1182,42 @@ const submitData = async () => {
     } catch (jsonError) {
       console.error('Error parsing JSON response:', jsonError)
       errorMessage.value = 'Invalid response from server. Please try again.'
+      setTimeout(() => {
+        errorMessage.value = ''
+      }, 5000)
       return
     }
     
+    console.log('[Form] Submission successful', { 
+      formType: 'GPU', 
+      role: currentRole, 
+      isSuggestion: false 
+    })
+
     if (response.ok) {
-      successMessage.value = 'GPU saved successfully!'
+      successMessage.value = `GPU ${props.editMode ? 'updated' : 'created'} successfully!`
       // Handle both wrapped and direct response formats
       const responseData = serverData.data || serverData
-      redirectPage(responseData)
+      // Show success message for 2 seconds before redirecting
+      setTimeout(() => {
+        redirectPage(responseData)
+      }, 2000)
     } else {
       errorMessage.value = serverData.error || 'An error occurred during submission.'
+      setTimeout(() => {
+        errorMessage.value = ''
+      }, 5000)
     }
   } catch (error) {
-    console.error('Error submitting data:', error)
+    console.error('[Form] Submission failed', { 
+      formType: 'GPU', 
+      role: currentRole, 
+      error: error.message 
+    })
     errorMessage.value = error.message || 'An unexpected error occurred.'
+    setTimeout(() => {
+      errorMessage.value = ''
+    }, 5000)
   }
 }
 
@@ -1144,6 +1266,7 @@ const cancelCoreForm = () => {
     max_turbo_clock: '',
     notes: ''
   }
+  coreNote.value = ''
   showAddCoreForm.value = false
 }
 
@@ -1161,13 +1284,82 @@ const editCore = (core) => {
 const submitCore = async () => {
   if (!coreForm.value.core_name) {
     errorMessage.value = 'Core name is required'
+    setTimeout(() => {
+      errorMessage.value = ''
+    }, 5000)
     return
   }
 
+  const currentRole = userRole.value
+  const isSuggestion = currentRole === 'suggestor'
+
+  // If user is a suggestor, validate note and submit as suggestion
+  if (isSuggestion) {
+    if (!coreNote.value || coreNote.value.trim() === '') {
+      errorMessage.value = 'Note is required for suggestions. Please provide an explanation for your core suggestion.'
+      setTimeout(() => {
+        errorMessage.value = ''
+      }, 5000)
+      return
+    }
+
+    try {
+      const gpuId = props.gpuData?.gpu?.gpu_id
+      if (!gpuId) {
+        errorMessage.value = 'GPU ID not found'
+        setTimeout(() => {
+          errorMessage.value = ''
+        }, 5000)
+        return
+      }
+
+      // Get GPU name for identifying information
+      const gpuName = props.gpuData?.gpu?.name || `GPU ID ${gpuId}`
+
+      // Prepare core data for suggestion
+      const coreData = {
+        operation: editingCore.value ? 'update_core' : 'create_core',
+        core_id: editingCore.value ? editingCore.value.core_id : null,
+        core_name: coreForm.value.core_name,
+        base_clock: coreForm.value.base_clock ? parseFloat(coreForm.value.base_clock) : null,
+        max_turbo_clock: coreForm.value.max_turbo_clock ? parseFloat(coreForm.value.max_turbo_clock) : null,
+        notes: coreForm.value.notes || null,
+        // Include identifying information
+        processor_name: gpuName,
+        processor_id: gpuId
+      }
+
+      // Submit as suggestion
+      const result = await submitSuggestion('gpu', gpuId, coreData, coreNote.value)
+      
+      successMessage.value = 'Core suggestion submitted successfully! It will be reviewed by an admin or editor.'
+      cancelCoreForm()
+      coreNote.value = ''
+      setTimeout(() => {
+        successMessage.value = ''
+      }, 3000)
+      // Emit event to refresh data without page reload
+      emit('data-refreshed')
+    } catch (suggestionError) {
+      console.error('[Form] Core suggestion submission failed', { 
+        error: suggestionError.message 
+      })
+      errorMessage.value = suggestionError.message || 'Failed to submit core suggestion. Please try again.'
+      setTimeout(() => {
+        errorMessage.value = ''
+      }, 5000)
+    }
+    return
+  }
+
+  // Otherwise, submit directly (admin/editor)
   try {
     const gpuId = props.gpuData?.gpu?.gpu_id
     if (!gpuId) {
       errorMessage.value = 'GPU ID not found'
+      setTimeout(() => {
+        errorMessage.value = ''
+      }, 5000)
       return
     }
 
@@ -1202,20 +1394,99 @@ const submitCore = async () => {
     } else {
       const errorData = await response.json()
       errorMessage.value = errorData.error || 'Failed to save core'
+      setTimeout(() => {
+        errorMessage.value = ''
+      }, 5000)
     }
   } catch (error) {
     console.error('Error submitting core:', error)
     errorMessage.value = 'Error submitting core'
+    setTimeout(() => {
+      errorMessage.value = ''
+    }, 5000)
   }
 }
 
 const deleteCore = async (coreId) => {
   if (!confirm('Are you sure you want to delete this core?')) return
 
+  const currentRole = userRole.value
+  const isSuggestion = currentRole === 'suggestor'
+
+  // If user is a suggestor, route to suggestion queue
+  if (isSuggestion) {
+    // Get note from user
+    const note = prompt('Please provide a note explaining why this core should be deleted:')
+    if (!note || note.trim() === '') {
+      errorMessage.value = 'Note is required for deletion suggestions.'
+      setTimeout(() => { errorMessage.value = '' }, 3000)
+      return
+    }
+
+    try {
+      const gpuId = props.gpuData?.gpu?.gpu_id
+      if (!gpuId) {
+        errorMessage.value = 'GPU ID not found'
+        setTimeout(() => {
+          errorMessage.value = ''
+        }, 5000)
+        return
+      }
+
+      // Find the core to get its data for the suggestion
+      const core = cores.value.find(c => c.core_id === coreId)
+      if (!core) {
+        errorMessage.value = 'Core not found'
+        setTimeout(() => {
+          errorMessage.value = ''
+        }, 5000)
+        return
+      }
+
+      // Get GPU name for identifying information
+      const gpuName = props.gpuData?.gpu?.name || `GPU ID ${gpuId}`
+
+      // Prepare deletion data for suggestion
+      const coreData = {
+        operation: 'delete_core',
+        core_id: coreId,
+        core_name: core.core_name,
+        base_clock: core.base_clock,
+        max_turbo_clock: core.max_turbo_clock,
+        notes: core.notes,
+        // Include identifying information
+        processor_name: gpuName,
+        processor_id: gpuId
+      }
+
+      // Submit as suggestion
+      const result = await submitSuggestion('gpu', gpuId, coreData, note)
+      
+      successMessage.value = 'Core deletion suggestion submitted successfully! It will be reviewed by an admin or editor.'
+      setTimeout(() => {
+        successMessage.value = ''
+      }, 3000)
+      emit('data-refreshed')
+    } catch (suggestionError) {
+      console.error('[Form] Core deletion suggestion submission failed', { 
+        error: suggestionError.message 
+      })
+      errorMessage.value = suggestionError.message || 'Failed to submit core deletion suggestion. Please try again.'
+      setTimeout(() => {
+        errorMessage.value = ''
+      }, 5000)
+    }
+    return
+  }
+
+  // Otherwise, delete directly (admin/editor)
   try {
     const gpuId = props.gpuData?.gpu?.gpu_id
     if (!gpuId) {
       errorMessage.value = 'GPU ID not found'
+      setTimeout(() => {
+        errorMessage.value = ''
+      }, 5000)
       return
     }
 
@@ -1236,10 +1507,16 @@ const deleteCore = async (coreId) => {
     } else {
       const errorData = await response.json()
       errorMessage.value = errorData.error || 'Failed to delete core'
+      setTimeout(() => {
+        errorMessage.value = ''
+      }, 5000)
     }
   } catch (error) {
     console.error('Error deleting core:', error)
     errorMessage.value = 'Error deleting core'
+    setTimeout(() => {
+      errorMessage.value = ''
+    }, 5000)
   }
 }
 

@@ -83,6 +83,10 @@
 </template>
 
 <script setup lang="js">
+definePageMeta({
+  ssr: false
+});
+
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useFetch, createError } from '#imports';
 import Navbar from '@/components/Navbar.vue';
@@ -109,9 +113,11 @@ if (!gpuId) {
 // Use a reactive query parameter to force cache refresh
 const refreshKey = ref(Date.now())
 
+// Use lazy useFetch to avoid blocking component initialization
 const { data: rawGpuData, pending, error, refresh } = await useFetch(`/api/gpus/${gpuId}`, {
   server: false, // Client-side only to avoid SSR issues
   default: () => null,
+  lazy: true, // Don't block component initialization
   query: computed(() => ({ refresh: 'true', _t: refreshKey.value })) // Cache-busting parameter
 });
 

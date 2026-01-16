@@ -90,6 +90,10 @@
 </template>
 
 <script setup lang="js">
+definePageMeta({
+  ssr: false
+});
+
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useFetch, createError } from '#imports';
 // ClientOnly is auto-imported in Nuxt 3
@@ -109,7 +113,7 @@ onMounted(() => {
 
 // Add safety check for route params
 const socId = route.params.id;
-if (!socId) {
+if (!socId || socId === 'null') {
   console.error('SoC ID is missing from route params');
   throw createError({ statusCode: 404, statusMessage: 'SoC ID not found' });
 }

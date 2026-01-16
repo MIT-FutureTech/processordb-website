@@ -120,6 +120,12 @@
           <TableCell>
             <span class="text-[#A32035]">{{ user.role }}</span>
           </TableCell>
+          <TableCell>
+            <span v-if="user.role === 'editor'" class="text-[#A32035]">
+              {{ user.can_review_suggestions ? 'Yes' : 'No' }}
+            </span>
+            <span v-else class="text-gray-400">-</span>
+          </TableCell>
           <TableCell v-if="canEdit">
             <button
               @click="editUser(user)"
@@ -168,6 +174,18 @@
           </select>
         </div>
 
+        <!-- Review Permission (only for editors) -->
+        <div v-if="editedUser.role === 'editor'" class="mb-4">
+          <label class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              v-model="editedUser.can_review_suggestions"
+              class="w-4 h-4"
+            >
+            <span class="text-sm">Can Review Suggestions</span>
+          </label>
+        </div>
+
         <div
           v-if="successMessage"
           class="mb-4 p-2 bg-green-200 text-green-800 rounded"
@@ -213,6 +231,7 @@ import {
   TableRow,
 } from '@/components/ui/table/table-index'
 import { getRole } from '@/lib/isLogged'
+import { getItemWithExpiry } from '@/lib/encrypter'
 
 // Props
 const props = defineProps({
@@ -245,6 +264,7 @@ const userDisplayData = computed(() => {
     name: user.username,
     email: user.email,
     role: user.role,
+    can_review_suggestions: user.can_review_suggestions || false,
   }))
 })
 
@@ -304,6 +324,7 @@ const displayedColumns = [
   { value: 'name', label: 'Name' },
   { value: 'email', label: 'Email' },
   { value: 'role', label: 'Role' },
+  { value: 'can_review_suggestions', label: 'Can Review' },
 ]
 
 const startRecord = computed(() => {
@@ -348,7 +369,10 @@ const editedUser = ref({}) // temporary store for the user being edited
 
 function editUser(user) {
   // Copy user data into editedUser so we don't mutate the table row directly
-  editedUser.value = { ...user }
+  editedUser.value = { 
+    ...user,
+    can_review_suggestions: user.can_review_suggestions || false,
+  }
   showEditModal.value = true
 }
 
@@ -358,10 +382,14 @@ function closeModal() {
 
 async function saveEdits() {
   try {
-    const response = await fetch(`${useRuntimeConfig().public.backendUrl}/users`, {
+    console.log('[User Management] Updating user', { userId: editedUser.value.user_id });
+    
+    // Update user role and username
+    const response = await fetch(`${useRuntimeConfig().public.backendUrl}/api/users`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getItemWithExpiry('encryptedJWTPDB')}`,
       },
       body: JSON.stringify({
         email: editedUser.value.email,
@@ -376,12 +404,41 @@ async function saveEdits() {
       return;
     }
 
+    // If user is an editor, update review permission separately
+    if (editedUser.value.role === 'editor' && editedUser.value.user_id) {
+      console.log('[User Management] Updating review permission', { 
+        userId: editedUser.value.user_id, 
+        canReview: editedUser.value.can_review_suggestions 
+      });
+      
+      const reviewResponse = await fetch(
+        `${useRuntimeConfig().public.backendUrl}/api/users/${editedUser.value.user_id}/review-permission`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getItemWithExpiry('encryptedJWTPDB')}`,
+          },
+          body: JSON.stringify({
+            can_review_suggestions: editedUser.value.can_review_suggestions || false,
+          }),
+        }
+      );
+
+      if (!reviewResponse.ok) {
+        const { error } = await reviewResponse.json();
+        errorMessage.value = 'User updated but failed to update review permission. \n ' + error;
+        return;
+      }
+    }
+
+    console.log('[User Management] User updated successfully', { userId: editedUser.value.user_id });
     successMessage.value = 'User updated successfully!';
     // Emit event to parent to refresh user data
     emit('refresh');
 
   } catch (err) {
-    console.error(err);
+    console.error('[User Management] Error updating user', err);
     window.alert('An error occurred while updating the user.');
   } finally {
     // Close the modal in either case

@@ -225,7 +225,6 @@
                 v-if="uniqueId(row)"
                 class="text-[#A32035] hover:underline"
                 :to="getDetailPath(row)"
-                @click="logNavigation(row)"
               >
                 Details
               </NuxtLink>

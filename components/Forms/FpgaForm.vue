@@ -1,11 +1,21 @@
 <template>
   <div class="min-h-screen max-w-7xl mx-auto py-2 px-4">
     <!-- Success & Error Messages -->
-    <div v-if="successMessage" class="mb-4 p-2 bg-green-200 text-green-800 rounded">
-      {{ successMessage }}
+    <div v-if="successMessage" class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded shadow-md">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <strong>Success:</strong> <span class="ml-2">{{ successMessage }}</span>
+      </div>
     </div>
-    <div v-if="errorMessage" class="mb-4 p-2 bg-red-200 text-red-800 rounded">
-      {{ errorMessage }}
+    <div v-if="errorMessage" class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded shadow-md">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        </svg>
+        <strong>Error:</strong> <span class="ml-2">{{ errorMessage }}</span>
+      </div>
     </div>
 
     <!-- General Information (always visible) -->
@@ -252,12 +262,29 @@
     </Transition>
 
     <hr class="border-t border-[#A32035] opacity-80 my-4 mt-8" />
+
+    <!-- Suggestion Note (for suggestors only) -->
+    <div v-if="!readOnly && userRole === 'suggestor'" class="mt-8">
+      <label class="block text-sm font-medium text-gray-700 pl-2 mb-2">
+        Note <span class="text-red-600">*</span> - Explain your suggestion
+      </label>
+      <textarea 
+        v-model="suggestionNote" 
+        rows="3"
+        placeholder="Please provide an explanation for your suggestion..."
+        class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        required
+      ></textarea>
+    </div>
   </div>
 </template>
 
 <script setup lang="js">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useRuntimeConfig } from '#imports'
+import { getItemWithExpiry } from '@/lib/encrypter'
+import { getRole } from '@/lib/isLogged'
+import { submitSuggestion } from '@/lib/suggestionUtils'
 
 const props = defineProps({
   fpgaData: { type: Object, required: true },
@@ -267,6 +294,19 @@ const props = defineProps({
 
 const successMessage = ref('')
 const errorMessage = ref('')
+
+// User role and suggestion note
+const userRole = computed(() => getRole())
+const suggestionNote = ref('')
+
+// Helper function to get the authentication token
+const getAuthToken = () => {
+  const token = getItemWithExpiry('encryptedJWTPDB')
+  if (!token) {
+    console.warn('[FpgaForm] No authentication token found. User may need to log in again.')
+  }
+  return token || null
+}
 
 const form = ref({
   manufacturer: '',
@@ -436,18 +476,82 @@ const submitData = async () => {
   // Basic validation
   if (!form.value.manufacturer || !form.value.generation || !form.value.model) {
     errorMessage.value = 'Please fill in all required fields (Manufacturer, Generation, Model)'
+    setTimeout(() => {
+      errorMessage.value = ''
+    }, 5000)
     return
   }
 
+  const postData = preparePostRequestBody()
+  const currentRole = userRole.value
+  const isSuggestion = currentRole === 'suggestor'
+
+  console.log('[Form] Submission started', { 
+    formType: 'FPGA', 
+    role: currentRole, 
+    isSuggestion,
+    editMode: props.editMode 
+  })
+
   try {
+    // If user is a suggestor, submit as suggestion
+    if (isSuggestion) {
+      // Validate note is provided for suggestors
+      if (!suggestionNote.value || suggestionNote.value.trim() === '') {
+        errorMessage.value = 'Note is required for suggestions. Please provide an explanation for your suggestion.'
+        setTimeout(() => {
+          errorMessage.value = ''
+        }, 5000)
+        return
+      }
+
+      const entityId = props.editMode ? props.fpgaData.fpga_id : null
+      
+      try {
+        const result = await submitSuggestion('fpga', entityId, postData, suggestionNote.value)
+        
+        console.log('[Form] Submission successful', { 
+          formType: 'FPGA', 
+          role: currentRole, 
+          isSuggestion: true 
+        })
+        
+        successMessage.value = 'Suggestion submitted successfully! It will be reviewed by an admin or editor.'
+        
+        // Redirect after delay
+        setTimeout(() => {
+          if (entityId) {
+            window.location.href = `/fpga/${entityId}`
+          } else {
+            window.location.href = '/fpga/list'
+          }
+        }, 3000)
+      } catch (suggestionError) {
+        console.error('[Form] Submission failed', { 
+          formType: 'FPGA', 
+          role: currentRole, 
+          error: suggestionError.message 
+        })
+        errorMessage.value = suggestionError.message || 'Failed to submit suggestion. Please try again.'
+        setTimeout(() => {
+          errorMessage.value = ''
+        }, 5000)
+      }
+      return
+    }
+
+    // Otherwise, submit directly (admin/editor)
     const url = props.editMode
       ? `${useRuntimeConfig().public.backendUrl}/fpgas/${props.fpgaData.fpga_id}`
       : `${useRuntimeConfig().public.backendUrl}/fpgas`
 
     const res = await fetch(url, {
       method: props.editMode ? 'PUT' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(preparePostRequestBody())
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify(postData)
     })
 
     let data
@@ -456,20 +560,43 @@ const submitData = async () => {
     } catch (jsonError) {
       console.error('Error parsing JSON response:', jsonError)
       errorMessage.value = 'Invalid response from server. Please try again.'
+      setTimeout(() => {
+        errorMessage.value = ''
+      }, 5000)
       return
     }
     
+    console.log('[Form] Submission successful', { 
+      formType: 'FPGA', 
+      role: currentRole, 
+      isSuggestion: false 
+    })
+    
     if (res.ok) {
-      successMessage.value = 'FPGA saved successfully!'
+      successMessage.value = `FPGA ${props.editMode ? 'updated' : 'created'} successfully!`
       // Handle both wrapped and direct response formats
       const responseData = data.data || data
       const fpgaId = responseData.fpga?.fpga_id || responseData.fpga_id
-      setTimeout(() => window.location.href = `/fpga/${fpgaId}`, 2000)
+      // Show success message for 2 seconds before redirecting
+      setTimeout(() => {
+        window.location.href = `/fpga/${fpgaId}`
+      }, 2000)
     } else {
-      errorMessage.value = data.error || 'Submission error.'
+      errorMessage.value = data.error || 'An error occurred during submission.'
+      setTimeout(() => {
+        errorMessage.value = ''
+      }, 5000)
     }
   } catch (err) {
-    errorMessage.value = err.message || 'Unexpected error.'
+    console.error('[Form] Submission failed', { 
+      formType: 'FPGA', 
+      role: currentRole, 
+      error: err.message 
+    })
+    errorMessage.value = err.message || 'An unexpected error occurred.'
+    setTimeout(() => {
+      errorMessage.value = ''
+    }, 5000)
   }
 }
 

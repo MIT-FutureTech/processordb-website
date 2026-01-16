@@ -2,6 +2,154 @@
 
 Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
+## Repository Structure
+
+```
+processordb-website/
+├── app.vue                    # Root application component
+├── nuxt.config.ts            # Nuxt configuration
+├── tailwind.config.js        # Tailwind CSS configuration
+├── tsconfig.json             # TypeScript configuration
+│
+├── pages/                     # Application pages (file-based routing)
+│   ├── index.vue             # Home page
+│   ├── about.vue             # About page
+│   ├── login.vue             # Login page
+│   ├── register.vue          # Registration page
+│   ├── galaxy.vue            # Processor galaxy visualization
+│   ├── team.vue              # Team page
+│   ├── steering-committee.vue # Steering committee page
+│   ├── CPU/                  # CPU pages
+│   │   ├── list.vue          # CPU list page
+│   │   ├── [id].vue          # CPU detail page
+│   │   └── form.vue          # CPU form (create/edit)
+│   ├── GPU/                  # GPU pages
+│   │   ├── list.vue          # GPU list page
+│   │   ├── [id].vue          # GPU detail page
+│   │   └── form.vue          # GPU form (create/edit)
+│   ├── FPGA/                 # FPGA pages
+│   │   ├── list.vue          # FPGA list page
+│   │   ├── [id].vue          # FPGA detail page
+│   │   └── form.vue          # FPGA form (create/edit)
+│   ├── SoC/                  # SoC pages
+│   │   ├── list.vue          # SoC list page
+│   │   ├── index.vue         # SoC index page
+│   │   ├── [id].vue          # SoC detail page
+│   │   └── form.vue          # SoC form (create/edit)
+│   ├── manufacturers/        # Manufacturer pages
+│   │   └── list.vue          # Manufacturer list page
+│   ├── suggestions/          # Suggestion pages
+│   │   └── my.vue            # User's suggestions page
+│   └── admin/                # Admin pages
+│       ├── profile.vue       # Admin profile page
+│       └── suggestions.vue   # Admin suggestions management
+│
+├── components/               # Vue components
+│   ├── Navbar.vue           # Navigation bar
+│   ├── Footer.vue           # Footer component
+│   ├── Breadcrumbs.vue      # Breadcrumb navigation
+│   ├── DataTable.vue        # Data table component
+│   ├── PrivateTable.vue     # Private data table
+│   ├── ManufacturersTable.vue # Manufacturers table
+│   ├── UsersTable.vue       # Users table
+│   ├── UsersPhoto.vue       # User photo component
+│   ├── Forms/               # Form components
+│   │   ├── CpuForm.vue      # CPU form component
+│   │   ├── GpuForm.vue      # GPU form component
+│   │   ├── FpgaForm.vue     # FPGA form component
+│   │   ├── SocForm.vue      # SoC form component
+│   │   ├── RegisterForm.vue # Registration form
+│   │   └── UpdatePassword.vue # Password update form
+│   ├── Galaxy/              # Galaxy visualization components
+│   │   ├── ProcessorGalaxy3D.client.vue # 3D galaxy visualization
+│   │   ├── ClusterList.vue  # Cluster list component
+│   │   ├── SelectionPanel.vue # Selection panel
+│   │   ├── TrendChart.vue   # Trend chart component
+│   │   ├── DisplayModeFilter.vue # Display mode filter
+│   │   ├── ManufacturerFilter.vue # Manufacturer filter
+│   │   ├── ProcessorTypeFilter.vue # Processor type filter
+│   │   └── YearFilter.vue    # Year filter
+│   ├── Graphs/              # Graph components
+│   │   ├── InteractiveGraph.client.vue # Interactive graph
+│   │   ├── CPUsGraph.client.vue # CPU graph
+│   │   ├── GPUsGraph.client.vue # GPU graph
+│   │   └── FPGAsGraph.client.vue # FPGA graph
+│   └── ui/                  # UI component library (shadcn-vue)
+│       ├── breadcrumb/      # Breadcrumb components
+│       ├── dropdown-menu/   # Dropdown menu components
+│       └── table/           # Table components
+│
+├── server/                   # Server-side code (Nuxt server routes)
+│   ├── api/                 # API endpoints
+│   │   ├── login.js         # Login endpoint
+│   │   ├── register.js      # Registration endpoint
+│   │   ├── health.js        # Health check endpoint
+│   │   ├── subscribe.js     # Subscription endpoint
+│   │   ├── deploy.post.js   # Deployment webhook endpoint
+│   │   ├── cache-invalidation.js # Cache invalidation
+│   │   ├── cpus.js          # CPU list endpoint
+│   │   ├── cpus/            # CPU detail endpoints
+│   │   │   ├── [id].js      # CPU by ID
+│   │   │   ├── chart-data.js # CPU chart data
+│   │   │   └── [id]/cores/  # CPU cores endpoints
+│   │   ├── gpus.js          # GPU list endpoint
+│   │   ├── gpus/            # GPU detail endpoints
+│   │   │   ├── [id].js      # GPU by ID
+│   │   │   ├── chart-data.js # GPU chart data
+│   │   │   └── [id]/cores/  # GPU cores endpoints
+│   │   ├── fpgas.js         # FPGA list endpoint
+│   │   ├── fpgas/           # FPGA detail endpoints
+│   │   │   ├── [id].js      # FPGA by ID
+│   │   │   └── chart-data.js # FPGA chart data
+│   │   ├── socs.js          # SoC list endpoint
+│   │   ├── socs/            # SoC detail endpoints
+│   │   │   ├── [id].js      # SoC by ID
+│   │   │   └── chart-data.js # SoC chart data
+│   │   └── processors/      # Processor endpoints
+│   │       ├── clusters.js  # Processor clusters
+│   │       ├── clusters/[id].js # Cluster by ID
+│   │       ├── embedding.js # Processor embeddings
+│   │       └── trends.js    # Trend analysis
+│   ├── middleware/          # Server middleware
+│   └── plugins/             # Server plugins
+│       ├── runtime-config-debug.ts # Runtime config debug
+│       └── static-assets.ts # Static assets handling
+│
+├── lib/                      # Utility libraries
+│   ├── utils.ts             # General utilities
+│   ├── isLogged.js          # Authentication check utility
+│   ├── chartUtils.js        # Chart utilities
+│   ├── galaxyUtils.js       # Galaxy visualization utilities
+│   ├── suggestionUtils.js   # Suggestion utilities
+│   └── encrypter.js         # Encryption utilities
+│
+├── middleware/               # Route middleware
+│   ├── passwordProtect.global.js # Password protection middleware
+│   └── routeGuard.global.js # Route guard middleware
+│
+├── plugins/                  # Nuxt plugins
+│   └── [plugin files]       # Client-side plugins
+│
+├── assets/                   # Static assets
+│   ├── css/                 # CSS files
+│   └── people.js            # People data
+│
+├── public/                   # Public static files
+│   └── [images and assets]  # Public images and assets
+│
+├── tests/                    # Test files
+│   └── [test files]         # Unit and integration tests
+│
+├── scripts/                  # Utility scripts
+│   └── [script files]       # Deployment and utility scripts
+│
+├── ecosystem.config.cjs      # PM2 ecosystem configuration
+├── ecosystem.config.js       # PM2 ecosystem configuration (alternative)
+├── playwright.config.ts      # Playwright test configuration
+├── vitest.config.ts          # Vitest test configuration
+└── package.json              # Dependencies and scripts
+```
+
 ## Setup
 
 Make sure to install the dependencies:

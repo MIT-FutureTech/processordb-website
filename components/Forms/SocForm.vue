@@ -1,11 +1,21 @@
 <template>
   <div class="min-h-screen max-w-7xl mx-auto py-2 px-4 justify-start md:justify-between items-center">
     <!-- Message Area -->
-    <div v-if="successMessage" class="mb-4 p-2 bg-green-200 text-green-800 rounded">
-      {{ successMessage }}
+    <div v-if="successMessage" class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded shadow-md">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <strong>Success:</strong> <span class="ml-2">{{ successMessage }}</span>
+      </div>
     </div>
-    <div v-if="errorMessage" class="mb-4 p-2 bg-red-200 text-red-800 rounded">
-      {{ errorMessage }}
+    <div v-if="errorMessage" class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded shadow-md">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        </svg>
+        <strong>Error:</strong> <span class="ml-2">{{ errorMessage }}</span>
+      </div>
     </div>
 
     <!-- General Information -->
@@ -216,6 +226,20 @@
             </div>
           </div>
 
+          <!-- Note field for suggestors -->
+          <div v-if="!readOnly && userRole === 'suggestor'" class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Note <span class="text-red-600">*</span> - Explain why you want to associate this processor
+            </label>
+            <textarea
+              v-model="processorNote"
+              rows="3"
+              placeholder="Please explain why you want to associate this processor with the SoC..."
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A32035] focus:border-[#A32035]"
+              required
+            ></textarea>
+          </div>
+
           <!-- Pagination Controls -->
           <div v-if="processorSearchPagination && processorSearchPagination.totalPages > 1" class="flex items-center justify-between pt-4 border-t border-gray-300">
             <div class="text-sm text-gray-600">
@@ -383,6 +407,19 @@
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]"></textarea>
             </div>
           </div>
+          <!-- Suggestion Note (for suggestors only) -->
+          <div v-if="!readOnly && userRole === 'suggestor'" class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Note <span class="text-red-600">*</span> - Explain your suggestion
+            </label>
+            <textarea 
+              v-model="benchmarkNote" 
+              rows="3"
+              placeholder="Please provide an explanation for this benchmark suggestion..."
+              class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            ></textarea>
+          </div>
           <div class="mt-4 flex gap-2">
             <button @click="submitBenchmark" 
               class="px-4 py-2 bg-[#A32035] text-white rounded-lg hover:bg-[#8a1b2d]">
@@ -493,6 +530,19 @@
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]"></textarea>
             </div>
           </div>
+          <!-- Suggestion Note (for suggestors only) -->
+          <div v-if="!readOnly && userRole === 'suggestor'" class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Note <span class="text-red-600">*</span> - Explain your suggestion
+            </label>
+            <textarea 
+              v-model="economicNote" 
+              rows="3"
+              placeholder="Please provide an explanation for this economic data suggestion..."
+              class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            ></textarea>
+          </div>
           <div class="mt-4 flex gap-2">
             <button @click="submitEconomic" 
               class="px-4 py-2 bg-[#A32035] text-white rounded-lg hover:bg-[#8a1b2d]">
@@ -551,14 +601,29 @@
         </div>
       </Transition>
     </div>
+
+    <!-- Suggestion Note (for suggestors only) -->
+    <div v-if="!readOnly && userRole === 'suggestor'" class="mt-8">
+      <label class="block text-sm font-medium text-gray-700 pl-2 mb-2">
+        Note <span class="text-red-600">*</span> - Explain your suggestion
+      </label>
+      <textarea 
+        v-model="suggestionNote" 
+        rows="3"
+        placeholder="Please provide an explanation for your suggestion..."
+        class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        required
+      ></textarea>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, watch, computed, onUnmounted, onMounted, nextTick } from 'vue'
 import { useRuntimeConfig, useFetch, navigateTo } from '#imports'
-import { isLogged } from '@/lib/isLogged'
+import { isLogged, getRole } from '@/lib/isLogged'
 import { getItemWithExpiry } from '@/lib/encrypter'
+import { submitSuggestion } from '@/lib/suggestionUtils'
 
 const props = defineProps({
   socData: {
@@ -589,6 +654,13 @@ const getAuthToken = () => {
 // Reactive states for messages
 const successMessage = ref('')
 const errorMessage = ref('')
+
+// User role and suggestion note
+const userRole = computed(() => getRole())
+const suggestionNote = ref('')
+const benchmarkNote = ref('')
+const economicNote = ref('')
+const processorNote = ref('')
 
 // Check if user is logged in
 const isLoggedIn = ref(false)
@@ -666,43 +738,45 @@ const processors = computed(() => {
     return []
   }
   
-  const mapped = procs.map((p, idx) => {
-    // Log each processor structure for debugging
-    console.log(`[SocForm] Processing processor ${idx}:`, p)
-    
-    // Handle different processor structures from backend
-    let processorId = p.cpu_id || p.gpu_id || p.fpga_id || idx
-    let processorType = p.processor_type || 'Unknown'
-    let processorName = 'Unknown'
-    let memory = 'N/A'
-    
-    // CPU structure: model is in core_info.model or top-level model
-    if (processorType === 'CPU') {
-      processorName = p.core_info?.model || p.model || 'Unknown'
-      memory = p.memory_info?.max_memory_size ? `${p.memory_info.max_memory_size}GB` : 'N/A'
-    }
-    // GPU structure: name is at top level or in general_info.name
-    else if (processorType === 'GPU') {
-      processorName = p.name || p.general_info?.name || 'Unknown'
-      memory = p.memory_info?.memory_size ? `${p.memory_info.memory_size}GB` : 'N/A'
-    }
-    // FPGA structure
-    else if (processorType === 'FPGA') {
-      processorName = p.model || 'Unknown'
-      memory = 'N/A'
-    }
-    
-    const mappedProc = {
-      id: processorId,
-      type: processorType,
-      name: processorName,
-      quantity: 1,
-      memory: memory
-    }
-    
-    console.log(`[SocForm] Mapped processor ${idx}:`, mappedProc)
-    return mappedProc
-  })
+  const mapped = procs
+    .filter(p => p != null) // Filter out null/undefined processors
+    .map((p, idx) => {
+      // Log each processor structure for debugging
+      console.log(`[SocForm] Processing processor ${idx}:`, p)
+      
+      // Handle different processor structures from backend
+      let processorId = p.cpu_id || p.gpu_id || p.fpga_id || idx
+      let processorType = p.processor_type || 'Unknown'
+      let processorName = 'Unknown'
+      let memory = 'N/A'
+      
+      // CPU structure: model is in core_info.model or top-level model
+      if (processorType === 'CPU') {
+        processorName = p.core_info?.model || p.model || 'Unknown'
+        memory = p.memory_info?.max_memory_size ? `${p.memory_info.max_memory_size}GB` : 'N/A'
+      }
+      // GPU structure: name is at top level or in general_info.name
+      else if (processorType === 'GPU') {
+        processorName = p.name || p.general_info?.name || 'Unknown'
+        memory = p.memory_info?.memory_size ? `${p.memory_info.memory_size}GB` : 'N/A'
+      }
+      // FPGA structure
+      else if (processorType === 'FPGA') {
+        processorName = p.model || 'Unknown'
+        memory = 'N/A'
+      }
+      
+      const mappedProc = {
+        id: processorId,
+        type: processorType,
+        name: processorName,
+        quantity: 1,
+        memory: memory
+      }
+      
+      console.log(`[SocForm] Mapped processor ${idx}:`, mappedProc)
+      return mappedProc
+    })
   
   console.log('[SocForm] Final mapped processors array:', mapped, 'length:', mapped.length)
   return mapped
@@ -784,6 +858,7 @@ const toggleProcessorSelector = () => {
     processorSearchQuery.value = ''
     availableProcessors.value = []
     processorSearchPagination.value = null
+    processorNote.value = '' // Clear processor note when closing selector
     if (searchDebounceTimer) {
       clearTimeout(searchDebounceTimer)
     }
@@ -884,13 +959,65 @@ const associateProcessor = async (processor) => {
     return
   }
   
+  const currentRole = userRole.value
+  const isSuggestion = currentRole === 'suggestor'
+  
+  // If suggestor, validate note and submit as suggestion
+  if (isSuggestion) {
+    if (!processorNote.value || processorNote.value.trim() === '') {
+      errorMessage.value = 'Note is required for suggestions. Please provide an explanation for associating this processor.'
+      setTimeout(() => { errorMessage.value = '' }, 5000)
+      return
+    }
+    
+    try {
+      // Determine processor entity type
+      const processorEntityType = processor.type.toLowerCase() // 'CPU' -> 'cpu', 'GPU' -> 'gpu', 'FPGA' -> 'fpga'
+      
+      // Prepare suggestion data for processor association
+      const suggestionData = {
+        operation: 'associate_processor',
+        processor_id: processor.id,
+        processor_type: processor.type,
+        processor_name: processor.name || processor.model || `Processor ID ${processor.id}`,
+        soc_id: socId,
+        soc_name: props.socData.soc.name || `SoC ID ${socId}`
+      }
+      
+      // Submit as suggestion for the processor entity
+      const result = await submitSuggestion(processorEntityType, processor.id, suggestionData, processorNote.value)
+      
+      successMessage.value = 'Processor association suggestion submitted successfully! It will be reviewed by an admin or editor.'
+      processorNote.value = ''
+      setTimeout(() => { successMessage.value = '' }, 5000)
+      
+      // Close processor selector
+      toggleProcessorSelector()
+      emit('data-refreshed')
+      return
+    } catch (suggestionError) {
+      console.error('[SocForm] Processor association suggestion submission failed', { 
+        error: suggestionError.message 
+      })
+      errorMessage.value = suggestionError.message || 'Failed to submit processor association suggestion. Please try again.'
+      setTimeout(() => { errorMessage.value = '' }, 5000)
+      return
+    }
+  }
+  
   console.log('[SocForm] Proceeding with association for socId:', socId)
   
   try {
     const config = useRuntimeConfig()
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/Forms/SocForm.vue:890',message:'Client runtime config check',data:{backendUrl:config.public.backendUrl||'EMPTY',hasBackendUrl:!!config.public.backendUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'client-runtime',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     console.log('[SocForm] Backend URL from config:', config.public.backendUrl)
     // Normalize backendUrl - remove trailing slash and handle /api prefix
     let backendUrl = config.public.backendUrl || 'http://localhost:3001'
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/Forms/SocForm.vue:893',message:'Client backend URL after fallback',data:{backendUrl,usedFallback:backendUrl==='http://localhost:3001'},timestamp:Date.now(),sessionId:'debug-session',runId:'client-runtime',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     backendUrl = backendUrl.replace(/\/$/, '') // Remove trailing slash
     
     // Check if backendUrl already includes /api
@@ -972,6 +1099,8 @@ const associateProcessor = async (processor) => {
       
       console.log('[SocForm] Closing processor selector and emitting data-refreshed')
       toggleProcessorSelector()
+      // Clear processor note after successful submission
+      processorNote.value = ''
       // Ensure processors section is expanded so user can see the newly added processor
       isProcessorsExpanded.value = true
       console.log('[SocForm] Set isProcessorsExpanded to true, processors.length:', processors.value.length)
@@ -1001,6 +1130,50 @@ const removeProcessor = async (processor) => {
     errorMessage.value = 'SoC ID not found'
     setTimeout(() => { errorMessage.value = '' }, 5000)
     return
+  }
+  
+  const currentRole = userRole.value
+  const isSuggestion = currentRole === 'suggestor'
+  
+  // If suggestor, require note and submit as suggestion
+  if (isSuggestion) {
+    const note = prompt('Please provide a note explaining why you want to remove this processor (required):')
+    if (!note || note.trim() === '') {
+      errorMessage.value = 'Note is required for deletion suggestions.'
+      setTimeout(() => { errorMessage.value = '' }, 5000)
+      return
+    }
+    
+    if (!confirm(`Are you sure you want to remove ${processor.name} from this SoC?`)) {
+      return
+    }
+    
+    try {
+      // Prepare suggestion data for processor disassociation
+      const suggestionData = {
+        operation: 'disassociate_processor',
+        processor_id: processor.id,
+        processor_type: processor.type,
+        processor_name: processor.name || processor.model || `Processor ID ${processor.id}`,
+        soc_id: socId,
+        soc_name: props.socData.soc.name || `SoC ID ${socId}`
+      }
+      
+      // Submit as suggestion for the soc entity
+      const result = await submitSuggestion('soc', socId, suggestionData, note)
+      
+      successMessage.value = 'Processor disassociation suggestion submitted successfully! It will be reviewed by an admin or editor.'
+      setTimeout(() => { successMessage.value = '' }, 5000)
+      emit('data-refreshed')
+      return
+    } catch (suggestionError) {
+      console.error('[SocForm] Processor disassociation suggestion submission failed', { 
+        error: suggestionError.message 
+      })
+      errorMessage.value = suggestionError.message || 'Failed to submit processor disassociation suggestion. Please try again.'
+      setTimeout(() => { errorMessage.value = '' }, 5000)
+      return
+    }
   }
   
   if (!confirm(`Are you sure you want to remove ${processor.name} from this SoC?`)) {
@@ -1090,6 +1263,7 @@ const cancelBenchmarkForm = () => {
     test_date: '',
     notes: ''
   }
+  benchmarkNote.value = ''
   showAddBenchmarkForm.value = false
 }
 
@@ -1117,6 +1291,65 @@ const submitBenchmark = async () => {
     return
   }
 
+  const currentRole = userRole.value
+  const isSuggestion = currentRole === 'suggestor'
+
+  // If user is a suggestor, validate note and submit as suggestion
+  if (isSuggestion) {
+    if (!benchmarkNote.value || benchmarkNote.value.trim() === '') {
+      errorMessage.value = 'Note is required for suggestions. Please provide an explanation for your benchmark suggestion.'
+      setTimeout(() => { errorMessage.value = '' }, 5000)
+      return
+    }
+
+    try {
+      const socId = props.socData?.soc?.soc_id
+      if (!socId) {
+        errorMessage.value = 'Please save the SOC first before adding benchmarks'
+        setTimeout(() => { errorMessage.value = '' }, 5000)
+        return
+      }
+
+      // Get SoC name for identifying information
+      const socName = props.socData?.soc?.name || `SoC ID ${socId}`
+
+      // Get the actual benchmark_id (could be id or benchmark_id)
+      const actualBenchmarkId = editingBenchmark.value ? (editingBenchmark.value.benchmark_id || editingBenchmark.value.id) : null
+
+      // Prepare benchmark data for suggestion
+      const benchmarkData = {
+        operation: editingBenchmark.value ? 'update_benchmark' : 'create_benchmark',
+        benchmark_id: actualBenchmarkId,
+        benchmark_name: benchmarkForm.value.benchmark_name,
+        score: parseFloat(benchmarkForm.value.score),
+        test_conditions: benchmarkForm.value.test_conditions || null,
+        test_date: benchmarkForm.value.test_date || null,
+        notes: benchmarkForm.value.notes || null,
+        // Include identifying information
+        soc_name: socName,
+        soc_id: socId
+      }
+
+      // Submit as suggestion
+      const result = await submitSuggestion('soc', socId, benchmarkData, benchmarkNote.value)
+      
+      successMessage.value = 'Benchmark suggestion submitted successfully! It will be reviewed by an admin or editor.'
+      setTimeout(() => { successMessage.value = '' }, 5000)
+      isPerformanceExpanded.value = true
+      cancelBenchmarkForm()
+      benchmarkNote.value = ''
+      emit('data-refreshed')
+    } catch (suggestionError) {
+      console.error('[Form] Benchmark suggestion submission failed', { 
+        error: suggestionError.message 
+      })
+      errorMessage.value = suggestionError.message || 'Failed to submit benchmark suggestion. Please try again.'
+      setTimeout(() => { errorMessage.value = '' }, 5000)
+    }
+    return
+  }
+
+  // Otherwise, submit directly (admin/editor)
   try {
     const config = useRuntimeConfig()
     const socId = props.socData?.soc?.soc_id
@@ -1177,6 +1410,72 @@ const submitBenchmark = async () => {
 const deleteBenchmark = async (benchmarkId) => {
   if (!confirm('Are you sure you want to delete this benchmark?')) return
 
+  const currentRole = userRole.value
+  const isSuggestion = currentRole === 'suggestor'
+
+  // If user is a suggestor, route to suggestion queue
+  if (isSuggestion) {
+    // Get note from user
+    const note = prompt('Please provide a note explaining why this benchmark should be deleted:')
+    if (!note || note.trim() === '') {
+      errorMessage.value = 'Note is required for deletion suggestions.'
+      setTimeout(() => { errorMessage.value = '' }, 5000)
+      return
+    }
+
+    try {
+      const socId = props.socData?.soc?.soc_id
+      if (!socId) {
+        errorMessage.value = 'SoC ID not found'
+        setTimeout(() => { errorMessage.value = '' }, 5000)
+        return
+      }
+
+      // Find the benchmark to get its data for the suggestion
+      const benchmark = benchmarks.value.find(b => b.id === benchmarkId || b.benchmark_id === benchmarkId)
+      if (!benchmark) {
+        errorMessage.value = 'Benchmark not found'
+        setTimeout(() => { errorMessage.value = '' }, 5000)
+        return
+      }
+
+      // Get SoC name for identifying information
+      const socName = props.socData?.soc?.name || `SoC ID ${socId}`
+
+      // Get the actual benchmark_id (could be id or benchmark_id)
+      const actualBenchmarkId = benchmark.benchmark_id || benchmark.id || benchmarkId
+
+      // Prepare deletion data for suggestion
+      const benchmarkData = {
+        operation: 'delete_benchmark',
+        benchmark_id: actualBenchmarkId,
+        benchmark_name: benchmark.name || benchmark.benchmark_name,
+        score: benchmark.score,
+        test_conditions: benchmark.test_conditions,
+        test_date: benchmark.year || benchmark.test_date,
+        notes: benchmark.notes,
+        // Include identifying information
+        soc_name: socName,
+        soc_id: socId
+      }
+
+      // Submit as suggestion
+      const result = await submitSuggestion('soc', socId, benchmarkData, note)
+      
+      successMessage.value = 'Benchmark deletion suggestion submitted successfully! It will be reviewed by an admin or editor.'
+      setTimeout(() => { successMessage.value = '' }, 5000)
+      emit('data-refreshed')
+    } catch (suggestionError) {
+      console.error('[Form] Benchmark deletion suggestion submission failed', { 
+        error: suggestionError.message 
+      })
+      errorMessage.value = suggestionError.message || 'Failed to submit benchmark deletion suggestion. Please try again.'
+      setTimeout(() => { errorMessage.value = '' }, 5000)
+    }
+    return
+  }
+
+  // Otherwise, delete directly (admin/editor)
   try {
     const config = useRuntimeConfig()
     const socId = props.socData?.soc?.soc_id
@@ -1247,6 +1546,7 @@ const cancelEconomicsForm = () => {
     revenue: '',
     notes: ''
   }
+  economicNote.value = ''
   showAddEconomicsForm.value = false
 }
 
@@ -1270,6 +1570,65 @@ const submitEconomic = async () => {
     return
   }
 
+  const currentRole = userRole.value
+  const isSuggestion = currentRole === 'suggestor'
+
+  // If user is a suggestor, validate note and submit as suggestion
+  if (isSuggestion) {
+    if (!economicNote.value || economicNote.value.trim() === '') {
+      errorMessage.value = 'Note is required for suggestions. Please provide an explanation for your economic data suggestion.'
+      setTimeout(() => { errorMessage.value = '' }, 5000)
+      return
+    }
+
+    try {
+      const socId = props.socData?.soc?.soc_id
+      if (!socId) {
+        errorMessage.value = 'Please save the SOC first before adding economic data'
+        setTimeout(() => { errorMessage.value = '' }, 5000)
+        return
+      }
+
+      // Get SoC name for identifying information
+      const socName = props.socData?.soc?.name || `SoC ID ${socId}`
+
+      // Get the actual economic_data_id (could be id or economic_data_id)
+      const actualEconomicId = editingEconomic.value ? (editingEconomic.value.economic_data_id || editingEconomic.value.id) : null
+
+      // Prepare economic data for suggestion
+      const economicData = {
+        operation: editingEconomic.value ? 'update_economic' : 'create_economic',
+        economic_data_id: actualEconomicId,
+        year: parseInt(economicsForm.value.year),
+        price: parseFloat(economicsForm.value.price),
+        sales_in_units: economicsForm.value.sales_in_units ? parseInt(economicsForm.value.sales_in_units) : null,
+        revenue: economicsForm.value.revenue ? parseFloat(economicsForm.value.revenue) : null,
+        notes: economicsForm.value.notes || null,
+        // Include identifying information
+        soc_name: socName,
+        soc_id: socId
+      }
+
+      // Submit as suggestion
+      const result = await submitSuggestion('soc', socId, economicData, economicNote.value)
+      
+      successMessage.value = 'Economic data suggestion submitted successfully! It will be reviewed by an admin or editor.'
+      setTimeout(() => { successMessage.value = '' }, 5000)
+      isEconomicsExpanded.value = true
+      cancelEconomicsForm()
+      economicNote.value = ''
+      emit('data-refreshed')
+    } catch (suggestionError) {
+      console.error('[Form] Economic data suggestion submission failed', { 
+        error: suggestionError.message 
+      })
+      errorMessage.value = suggestionError.message || 'Failed to submit economic data suggestion. Please try again.'
+      setTimeout(() => { errorMessage.value = '' }, 5000)
+    }
+    return
+  }
+
+  // Otherwise, submit directly (admin/editor)
   try {
     const config = useRuntimeConfig()
     const socId = props.socData?.soc?.soc_id
@@ -1330,6 +1689,72 @@ const submitEconomic = async () => {
 const deleteEconomic = async (economicId) => {
   if (!confirm('Are you sure you want to delete this economic data?')) return
 
+  const currentRole = userRole.value
+  const isSuggestion = currentRole === 'suggestor'
+
+  // If user is a suggestor, route to suggestion queue
+  if (isSuggestion) {
+    // Get note from user
+    const note = prompt('Please provide a note explaining why this economic data should be deleted:')
+    if (!note || note.trim() === '') {
+      errorMessage.value = 'Note is required for deletion suggestions.'
+      setTimeout(() => { errorMessage.value = '' }, 5000)
+      return
+    }
+
+    try {
+      const socId = props.socData?.soc?.soc_id
+      if (!socId) {
+        errorMessage.value = 'SoC ID not found'
+        setTimeout(() => { errorMessage.value = '' }, 5000)
+        return
+      }
+
+      // Find the economic data to get its data for the suggestion
+      const economic = economics.value.find(e => e.id === economicId || e.economic_data_id === economicId)
+      if (!economic) {
+        errorMessage.value = 'Economic data not found'
+        setTimeout(() => { errorMessage.value = '' }, 5000)
+        return
+      }
+
+      // Get SoC name for identifying information
+      const socName = props.socData?.soc?.name || `SoC ID ${socId}`
+
+      // Get the actual economic_data_id (could be id or economic_data_id)
+      const actualEconomicId = economic.economic_data_id || economic.id || economicId
+
+      // Prepare deletion data for suggestion
+      const economicData = {
+        operation: 'delete_economic',
+        economic_data_id: actualEconomicId,
+        year: economic.year,
+        price: economic.price,
+        sales_in_units: economic.sales ? (typeof economic.sales === 'string' ? parseInt(economic.sales.replace(' units', '').replace('N/A', '')) : economic.sales) : null,
+        revenue: economic.revenue,
+        notes: economic.notes,
+        // Include identifying information
+        soc_name: socName,
+        soc_id: socId
+      }
+
+      // Submit as suggestion
+      const result = await submitSuggestion('soc', socId, economicData, note)
+      
+      successMessage.value = 'Economic data deletion suggestion submitted successfully! It will be reviewed by an admin or editor.'
+      setTimeout(() => { successMessage.value = '' }, 5000)
+      emit('data-refreshed')
+    } catch (suggestionError) {
+      console.error('[Form] Economic data deletion suggestion submission failed', { 
+        error: suggestionError.message 
+      })
+      errorMessage.value = suggestionError.message || 'Failed to submit economic data deletion suggestion. Please try again.'
+      setTimeout(() => { errorMessage.value = '' }, 5000)
+    }
+    return
+  }
+
+  // Otherwise, delete directly (admin/editor)
   try {
     const config = useRuntimeConfig()
     const socId = props.socData?.soc?.soc_id
@@ -1356,7 +1781,7 @@ const deleteEconomic = async (economicId) => {
 
     if (response.ok) {
       successMessage.value = 'Economic data deleted successfully!'
-      setTimeout(() => { successMessage.value = '' }, 5000)
+      setTimeout(() => { errorMessage.value = '' }, 5000)
       emit('data-refreshed')
     } else {
       const errorData = await response.json()
@@ -1428,19 +1853,92 @@ const submitData = async () => {
     return
   }
 
+  const currentRole = userRole.value
+  const isSuggestion = currentRole === 'suggestor'
+
+  console.log('[Form] Submission started', { 
+    formType: 'SoC', 
+    role: currentRole, 
+    isSuggestion,
+    editMode: props.editMode 
+  })
+
   try {
     const config = useRuntimeConfig()
     const socId = props.editMode ? props.socData?.soc?.soc_id : null
     
-    // Get manufacturer ID
-    const manufacturerId = form.value.manufacturerId || await getOrCreateManufacturer(form.value.manufacturer)
-    
-    if (!manufacturerId && form.value.manufacturer) {
-      errorMessage.value = 'Failed to find or create manufacturer. Please try again.'
-      setTimeout(() => { errorMessage.value = '' }, 5000)
-      return
+    // For suggestors, we don't create manufacturers directly - include manufacturer name in suggestion
+    // For admin/editor, get or create manufacturer
+    let manufacturerId = form.value.manufacturerId
+    if (!isSuggestion && !manufacturerId && form.value.manufacturer) {
+      manufacturerId = await getOrCreateManufacturer(form.value.manufacturer)
+      if (!manufacturerId) {
+        errorMessage.value = 'Failed to find or create manufacturer. Please try again.'
+        setTimeout(() => { errorMessage.value = '' }, 5000)
+        return
+      }
     }
     
+    const postData = {
+      manufacturer_id: manufacturerId,
+      // Include manufacturer name for suggestors (will be used to find/create on approval)
+      manufacturer: isSuggestion && form.value.manufacturer ? { name: form.value.manufacturer } : undefined,
+      name: form.value.codeName,
+      release_date: form.value.year ? `${form.value.year}-01-01` : null,
+      core_count: form.value.coreCount ? parseInt(form.value.coreCount) : null,
+      process_node: form.value.processNode ? parseFloat(form.value.processNode) : null,
+      total_transistor_count: form.value.totalTransistorCount ? parseFloat(form.value.totalTransistorCount) : null,
+      die_sizes: form.value.dieSizes ? parseFloat(form.value.dieSizes) : null,
+      package_size: form.value.packageSize ? parseFloat(form.value.packageSize) : null,
+      number_of_die: form.value.numberOfDie ? parseInt(form.value.numberOfDie) : null,
+      voltage_range_low: form.value.voltageLow ? parseFloat(form.value.voltageLow) : null,
+      voltage_range_high: form.value.voltageHigh ? parseFloat(form.value.voltageHigh) : null,
+      platform: form.value.platform,
+      transistor_density: form.value.transistorDensity ? parseFloat(form.value.transistorDensity) : null,
+      notes: form.value.notes
+    }
+
+    // If user is a suggestor, submit as suggestion
+    if (isSuggestion) {
+      // Validate note is provided for suggestors
+      if (!suggestionNote.value || suggestionNote.value.trim() === '') {
+        errorMessage.value = 'Note is required for suggestions. Please provide an explanation for your suggestion.'
+        setTimeout(() => { errorMessage.value = '' }, 5000)
+        return
+      }
+
+      try {
+        const result = await submitSuggestion('soc', socId, postData, suggestionNote.value)
+        
+        console.log('[Form] Submission successful', { 
+          formType: 'SoC', 
+          role: currentRole, 
+          isSuggestion: true 
+        })
+        
+        successMessage.value = 'Suggestion submitted successfully! It will be reviewed by an admin or editor.'
+        
+        // Redirect after delay
+        setTimeout(() => {
+          if (socId) {
+            window.location.href = `/soc/${socId}`
+          } else {
+            window.location.href = '/soc/list'
+          }
+        }, 3000)
+      } catch (suggestionError) {
+        console.error('[Form] Submission failed', { 
+          formType: 'SoC', 
+          role: currentRole, 
+          error: suggestionError.message 
+        })
+        errorMessage.value = suggestionError.message || 'Failed to submit suggestion. Please try again.'
+        setTimeout(() => { errorMessage.value = '' }, 5000)
+      }
+      return
+    }
+
+    // Otherwise, submit directly (admin/editor)
     const url = props.editMode && socId
       ? `${config.public.backendUrl}/api/socs/${socId}`
       : `${config.public.backendUrl}/api/socs`
@@ -1453,22 +1951,7 @@ const submitData = async () => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${getAuthToken()}`
       },
-      body: JSON.stringify({
-        manufacturer_id: manufacturerId,
-        name: form.value.codeName,
-        release_date: form.value.year ? `${form.value.year}-01-01` : null,
-        core_count: form.value.coreCount ? parseInt(form.value.coreCount) : null,
-        process_node: form.value.processNode ? parseFloat(form.value.processNode) : null,
-        total_transistor_count: form.value.totalTransistorCount ? parseFloat(form.value.totalTransistorCount) : null,
-        die_sizes: form.value.dieSizes ? parseFloat(form.value.dieSizes) : null,
-        package_size: form.value.packageSize ? parseFloat(form.value.packageSize) : null,
-        number_of_die: form.value.numberOfDie ? parseInt(form.value.numberOfDie) : null,
-        voltage_range_low: form.value.voltageLow ? parseFloat(form.value.voltageLow) : null,
-        voltage_range_high: form.value.voltageHigh ? parseFloat(form.value.voltageHigh) : null,
-        platform: form.value.platform,
-        transistor_density: form.value.transistorDensity ? parseFloat(form.value.transistorDensity) : null,
-        notes: form.value.notes
-      })
+      body: JSON.stringify(postData)
     })
 
     let serverData
@@ -1481,7 +1964,11 @@ const submitData = async () => {
       return
     }
     
-    console.log('Response:', serverData)
+    console.log('[Form] Submission successful', { 
+      formType: 'SoC', 
+      role: currentRole, 
+      isSuggestion: false 
+    })
 
     if (response.ok) {
       successMessage.value = `SoC ${props.editMode ? 'updated' : 'created'} successfully!`
@@ -1503,13 +1990,21 @@ const submitData = async () => {
       if (props.editMode) {
         console.log('[SocForm] SoC updated, emitting data-refreshed')
         emit('data-refreshed')
+        // Keep success message visible for 5 seconds
+        setTimeout(() => {
+          successMessage.value = ''
+        }, 5000)
       }
     } else {
       errorMessage.value = serverData.error || 'An error occurred during submission.'
       setTimeout(() => { errorMessage.value = '' }, 5000)
     }
   } catch (error) {
-    console.error('Error submitting data:', error)
+    console.error('[Form] Submission failed', { 
+      formType: 'SoC', 
+      role: currentRole, 
+      error: error.message 
+    })
     errorMessage.value = error.message || 'An unexpected error occurred.'
     setTimeout(() => { errorMessage.value = '' }, 5000)
   }

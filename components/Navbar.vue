@@ -97,6 +97,20 @@
           >
             Galaxy
           </NuxtLink>
+          <NuxtLink
+            v-if="isLoggedIn"
+            to="/suggestions/my"
+            class="text-white hover:text-[#A32035] flex items-center"
+          >
+            My Suggestions
+          </NuxtLink>
+          <NuxtLink
+            v-if="canReviewSuggestions"
+            to="/admin/suggestions"
+            class="text-white hover:text-[#A32035] flex items-center"
+          >
+            Review Queue
+          </NuxtLink>
         </div>
       </div>
     </div>
@@ -107,16 +121,28 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useRuntimeConfig } from '#app';
-import { isLogged } from '../lib/isLogged';
+import { isLogged, getRole } from '../lib/isLogged';
+import { getItemWithExpiry } from '../lib/encrypter';
 
 const config = useRuntimeConfig();
 const enableGalaxy = computed(() => config.public.enableGalaxy || false);
 
 const isLoggedIn = ref(false);
+const userRole = ref(null);
 const route = useRoute();
 
 onMounted(() => {
   isLoggedIn.value = isLogged();
+  userRole.value = getRole();
+});
+
+// Check if user can review suggestions (admin or editor with permission)
+const canReviewSuggestions = computed(() => {
+  if (!isLoggedIn.value) return false;
+  const role = userRole.value;
+  // For now, we'll show the link to admins and editors
+  // The actual permission check happens on the backend
+  return role === 'admin' || role === 'editor';
 });
 
 const links = ref([
