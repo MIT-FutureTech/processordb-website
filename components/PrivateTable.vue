@@ -206,7 +206,7 @@
 
 <script setup lang="js">
 import { ref, computed, watch } from 'vue'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
 import {
@@ -398,29 +398,34 @@ const generateXLSX = async () => {
     });
     return newItem;
   });
-  const worksheet = XLSX.utils.json_to_sheet(minimalData, { header: filteredColumns });
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
-  workbook.Props = {
-    Title: `${props.className} Data - ProcessorDB - MIT FutureTech`,
-    Subject: `${props.className.toUpperCase()} Hardware Specifications`,
-    Author: 'Neil Thompson, Jonathan Koomey, Sylvia Downing, Kenneth Flamm, Emanuele Del Sozzo, Zachary Schmidt, Rebecca Wenjing Lyu, João Lucas Zarbielli',
-    CreatedDate: new Date()
-  };
-  workbook.Custprops = {
-    License: 'CC-BY-4.0',
-    Source: `https://processordb.mit.edu/${props.className}/list`
-  };
-  const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-  function s2ab(s) {
-    const buf = new ArrayBuffer(s.length);
-    const view = new Uint8Array(buf);
-    for (let i = 0; i < s.length; i++) {
-      view[i] = s.charCodeAt(i) & 0xff;
-    }
-    return buf;
-  }
-  return new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Data');
+  
+  // Add headers
+  worksheet.addRow(filteredColumns);
+  
+  // Add data rows
+  minimalData.forEach(item => {
+    const row = filteredColumns.map(col => item[col] ?? '');
+    worksheet.addRow(row);
+  });
+  
+  // Set workbook properties
+  workbook.creator = 'MIT FutureTech';
+  workbook.lastModifiedBy = 'MIT FutureTech';
+  workbook.created = new Date();
+  workbook.modified = new Date();
+  workbook.description = 'Data exported from ProcessorDB';
+  workbook.keywords = 'processors, database, export';
+  workbook.category = 'Data Export';
+  workbook.company = 'MIT FutureTech';
+  workbook.manager = 'MIT FutureTech';
+  workbook.title = `${props.className} Data - ProcessorDB - MIT FutureTech`;
+  workbook.subject = `${props.className.toUpperCase()} Hardware Specifications`;
+  workbook.comments = 'This data is provided under CC-BY-4.0 license';
+  
+  const buffer = await workbook.xlsx.writeBuffer();
+  return new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 };
 
 // Generate PDF Blob (async because of image loading)

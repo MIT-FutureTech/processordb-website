@@ -16,7 +16,7 @@ export default defineNuxtConfig({
 
   vite: {
     optimizeDeps: {
-      include: ["plotly.js-dist-min"]
+      include: ["plotly.js-dist-min", "exceljs"]
     },
     build: {
       target: 'es2015',
@@ -39,8 +39,8 @@ export default defineNuxtConfig({
               if (id.includes("jspdf")) {
                 return "jspdf";
               }
-              if (id.includes("xlsx")) {
-                return "xlsx";
+              if (id.includes("exceljs")) {
+                return "exceljs";
               }
               return "vendor";
             }
