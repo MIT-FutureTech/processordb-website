@@ -97,14 +97,38 @@ onMounted(() => {
 // Check if we're editing an existing SoC
 const socId = route.params.id;
 
+// #region agent log
+if (typeof window !== 'undefined') {
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/form.vue:98',message:'form.vue route handler called',data:{socId,routePath:route.path,routeParams:route.params,routeName:route.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+}
+// #endregion
+
 // Only fetch SoC data if we have a valid ID (editing mode)
+// Don't fetch if socId is 'null', 'form', or undefined
+const shouldFetch = socId && socId !== 'null' && socId !== 'form' && !isNaN(Number(socId));
+// #region agent log
+if (typeof window !== 'undefined') {
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/form.vue:108',message:'Checking if should fetch SoC data',data:{socId,shouldFetch,isNaN:isNaN(Number(socId)),routePath:route.path,typeofSocId:typeof socId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+}
+// #endregion
+const fetchUrl = shouldFetch ? `/api/socs/${socId}` : null;
+// #region agent log
+if (typeof window !== 'undefined') {
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/form.vue:114',message:'About to call useFetch',data:{fetchUrl,shouldFetch,socId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+}
+// #endregion
 const { data: rawSocData, pending, error, refresh } = await useFetch(
-  socId && socId !== 'null' ? `/api/socs/${socId}` : null,
+  fetchUrl,
   {
     server: false,
     default: () => null
   }
 );
+// #region agent log
+if (typeof window !== 'undefined' && rawSocData.value) {
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/form.vue:122',message:'useFetch completed',data:{hasData:!!rawSocData.value,dataType:typeof rawSocData.value,isString:typeof rawSocData.value === 'string',isHTML:typeof rawSocData.value === 'string' && rawSocData.value.trim().startsWith('<!DOCTYPE'),fetchUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+}
+// #endregion
 
 // Transform the data to match what the form expects
 const socData = computed(() => {
@@ -121,8 +145,17 @@ const socData = computed(() => {
   }
   
   // Check if the response is HTML (error page) instead of JSON
+  // Only log error if we actually tried to fetch (shouldFetch was true)
   if (typeof rawSocData.value === 'string' && rawSocData.value.trim().startsWith('<!DOCTYPE')) {
-    console.error('[SoC Form] Received HTML instead of JSON - API error:', rawSocData.value.substring(0, 200))
+    // Only log if we actually made a fetch request - check if fetchUrl was set
+    // #region agent log
+    if (typeof window !== 'undefined') {
+      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/form.vue:147',message:'Received HTML response',data:{shouldFetch,fetchUrl,hasRawData:!!rawSocData.value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+    }
+    // #endregion
+    if (shouldFetch && fetchUrl) {
+      console.error('[SoC Form] Received HTML instead of JSON - API error:', rawSocData.value.substring(0, 200))
+    }
     return {
       soc: {},
       processors: [],

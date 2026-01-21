@@ -95,7 +95,7 @@ definePageMeta({
 });
 
 import { ref, onMounted, computed } from 'vue';
-import { useRoute, useFetch, createError } from '#imports';
+import { useRoute, useFetch, createError, navigateTo } from '#imports';
 // ClientOnly is auto-imported in Nuxt 3
 import Navbar from '@/components/Navbar.vue';
 import Footer from '@/components/Footer.vue';
@@ -113,9 +113,26 @@ onMounted(() => {
 
 // Add safety check for route params
 const socId = route.params.id;
-if (!socId || socId === 'null') {
-  console.error('SoC ID is missing from route params');
-  throw createError({ statusCode: 404, statusMessage: 'SoC ID not found' });
+// #region agent log
+if (typeof window !== 'undefined') {
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/[id].vue:115',message:'[id].vue route handler called',data:{socId,routePath:route.path,routeParams:route.params,routeName:route.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+}
+// #endregion
+
+// Don't throw error for 'null' or 'form' - these should be handled by other routes
+// Redirect to form page if 'form' or 'null', otherwise show error for invalid IDs
+const shouldRedirect = !socId || socId === 'null' || socId === 'form' || isNaN(Number(socId));
+
+if (shouldRedirect) {
+  // #region agent log
+  if (typeof window !== 'undefined') {
+    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/[id].vue:122',message:'Invalid route param - redirecting to form',data:{socId,routePath:route.path,isNaN:isNaN(Number(socId))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+  }
+  // #endregion
+  // Redirect to form page - navigateTo will handle the redirect
+  navigateTo('/soc/form', { replace: true });
+  // Prevent further execution by throwing an error (this is valid in script setup)
+  throw createError({ statusCode: 302, statusMessage: 'Redirecting to form page' });
 }
 
 // Use a reactive query parameter to force cache refresh

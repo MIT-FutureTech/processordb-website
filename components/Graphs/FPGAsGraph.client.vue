@@ -251,9 +251,11 @@ const chartOptions = computed(() => {
           const yValue = getAxisData(item, yAxis.value);
 
           if (xValue !== null && yValue !== null && processNode >= bucket.min && processNode <= bucket.max) {
+            const xFormattedValue = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
+            const yFormattedValue = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
             return {
-              x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
-              y: yValue,
+              x: xFormattedValue,
+              y: yFormattedValue,
               name: `${item.generation || '-'} ${item.family_subfamily || '-'} ${item.model || '-'}`,
               data: item,
               color: seabornColors.processNode(processNode),
@@ -283,9 +285,10 @@ const chartOptions = computed(() => {
       if (xValue === null || yValue === null || colorCategory === null) return acc;
 
       const xFormattedValue = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
+      const yFormattedValue = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
       const point = {
         x: xFormattedValue,
-        y: yValue,
+        y: yFormattedValue,
         name: `${item.generation || '-'} ${item.family_subfamily || '-'} ${item.model || '-'}`,
         color: getColorForCategory(colorCategory),
         data: item,
@@ -319,11 +322,13 @@ const chartOptions = computed(() => {
       if (firstItem) {
         const xValue = getAxisData(firstItem, xAxis.value);
         const yValue = getAxisData(firstItem, yAxis.value);
+        const xFormattedValue = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
+        const yFormattedValue = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
         series = [{
           name: 'Data',
           data: [{
-            x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
-            y: yValue,
+            x: xFormattedValue,
+            y: yFormattedValue,
             name: `${firstItem.generation || '-'} ${firstItem.family_subfamily || '-'} ${firstItem.model || '-'}`,
             data: firstItem
           }],
@@ -341,9 +346,11 @@ const chartOptions = computed(() => {
       const xValue = getAxisData(item, xAxis.value);
       const yValue = getAxisData(item, yAxis.value);
       if (xValue === null || yValue === null) return null;
+      const xFormattedValue = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
+      const yFormattedValue = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
       return {
-        x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
-        y: yValue,
+        x: xFormattedValue,
+        y: yFormattedValue,
         data: item
       };
     }).filter(p => p !== null && !isNaN(p.x) && !isNaN(p.y));
@@ -416,7 +423,16 @@ const chartOptions = computed(() => {
       title: {
         text: yAxis.value.label,
       },
-      type: 'logarithmic',
+      type: (yAxis.value?.value === 'release_date') ? 'datetime' : 'logarithmic',
+      labels: {
+        formatter: function () {
+          if (yAxis.value?.value === 'release_date') {
+            return new Date(this.value).getFullYear();
+          }
+          return this.value;
+        }
+      },
+      tickInterval: (yAxis.value?.value === 'release_date') ? null : 'auto',
       startOnTick: false,
     },
     tooltip: {

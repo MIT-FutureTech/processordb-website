@@ -15,21 +15,51 @@
           <template #default>
             <form v-if="!logged" @submit.prevent="login" class="space-y-4">
               <!-- Email -->
-              <input v-model="email" type="email" placeholder="Email" data-testid="email-input"
-                class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <div>
+                <FormFieldLabel 
+                  label="Email" 
+                  field-id="login_email"
+                  :required="true"
+                  tooltip="Enter your registered email address (e.g., user@example.com). This is a required field."
+                />
+                <input 
+                  id="login_email"
+                  v-model="email" 
+                  type="email" 
+                  placeholder="Example: user@example.com" 
+                  data-testid="email-input"
+                  required
+                  class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
+                />
+              </div>
 
               <!-- Password with show/hide toggle -->
-              <div class="relative">
-                <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="Enter Password" data-testid="password-input"
-                  class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-3" @click="togglePassword">
-                  <div v-if="showPassword">
-                    <v-icon name="bi-eye-slash" />
-                  </div>
-                  <div v-else>
-                    <v-icon name="bi-eye" />
-                  </div>
-                </button>
+              <div>
+                <FormFieldLabel 
+                  label="Password" 
+                  field-id="login_password"
+                  :required="true"
+                  tooltip="Enter your password. This is a required field."
+                />
+                <div class="relative">
+                  <input 
+                    id="login_password"
+                    v-model="password" 
+                    :type="showPassword ? 'text' : 'password'" 
+                    placeholder="Enter your password" 
+                    data-testid="password-input"
+                    required
+                    class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
+                  />
+                  <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-3" @click="togglePassword">
+                    <div v-if="showPassword">
+                      <v-icon name="bi-eye-slash" />
+                    </div>
+                    <div v-else>
+                      <v-icon name="bi-eye" />
+                    </div>
+                  </button>
+                </div>
               </div>
 
               <!-- Submit -->
@@ -56,9 +86,15 @@
             </form>
 
             <!-- Error -->
-            <p v-if="error" class="text-center text-red-600">
-              Invalid email or password
-            </p>
+            <div 
+              v-if="error" 
+              data-testid="form-error"
+              :data-message-code="errorMessageCode"
+              :data-error-type="errorType"
+              class="text-center text-red-600 text-sm p-3 bg-red-50 border border-red-200 rounded-lg"
+            >
+              {{ errorMessage || 'Invalid email or password' }}
+            </div>
           </template>
           <template #fallback>
             <!-- Fallback form - always visible, works even without Vue -->
@@ -95,12 +131,17 @@
 import { ref, onMounted } from 'vue';
 import { setItemWithExpiry } from '../lib/encrypter';
 import { isLogged } from '../lib/isLogged';
+import FormFieldLabel from '@/components/FormFieldLabel.vue';
+import { handleApiError, handleNetworkError } from '@/lib/formErrorHandler';
 
 const password = ref('');
 const email = ref('');
 
 const logged = ref(false);
 const error = ref(false);
+const errorMessage = ref('');
+const errorMessageCode = ref('');
+const errorType = ref('');
 
 // show/hide password state
 const showPassword = ref(false);
@@ -156,7 +197,11 @@ async function login() {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Login failed:', response.status, errorText);
+      const errorObj = await handleApiError(response, 'user', 'login');
       error.value = true;
+      errorMessage.value = errorObj.message;
+      errorMessageCode.value = errorObj.code;
+      errorType.value = errorObj.type;
       return;
     }
 
@@ -190,7 +235,11 @@ async function login() {
       stack: loginError.stack,
       name: loginError.name
     });
+    const errorObj = handleNetworkError(loginError, 'user', 'login');
     error.value = true;
+    errorMessage.value = errorObj.message;
+    errorMessageCode.value = errorObj.code;
+    errorType.value = errorObj.type;
   }
 }
 

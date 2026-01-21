@@ -1,7 +1,15 @@
 <template>
   <div class="min-h-screen max-w-7xl mx-auto py-2 px-4 justify-start md:justify-between items-center">
     <!-- Message Area -->
-    <div v-if="successMessage" class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded shadow-md">
+    <div 
+      v-if="successMessage" 
+      data-testid="form-success"
+      :data-message-code="successMessageCode"
+      :data-action-type="successActionType"
+      :data-entity-type="successEntityType"
+      :data-entity-id="successEntityId"
+      class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded shadow-md"
+    >
       <div class="flex items-center">
         <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
@@ -9,7 +17,14 @@
         <strong>Success:</strong> <span class="ml-2">{{ successMessage }}</span>
       </div>
     </div>
-    <div v-if="errorMessage" class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded shadow-md">
+    <div 
+      v-if="errorMessage" 
+      data-testid="form-error"
+      :data-message-code="errorMessageCode"
+      :data-error-type="errorType"
+      :data-field-name="errorFieldName"
+      class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded shadow-md"
+    >
       <div class="flex items-center">
         <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
@@ -22,78 +37,202 @@
     <h3 class="text-xl font-medium font-semibold">General Information</h3>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mt-8">
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">Manufacturer</label>
-        <input v-model="form.manufacturer" type="text" :disabled="readOnly"
-          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
+        <FormFieldLabel 
+          label="Manufacturer" 
+          field-id="manufacturer"
+          :required="true"
+          tooltip="The company that manufactures the CPU (e.g., Intel, AMD, ARM). This is a required field."
+        />
+        <input 
+          id="manufacturer"
+          v-model="form.manufacturer" 
+          type="text" 
+          :disabled="readOnly"
+          placeholder="Example: Intel"
+          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" 
+        />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">Family</label>
-        <input v-model="form.family" type="text" :disabled="readOnly"
-          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
+        <FormFieldLabel 
+          label="Family" 
+          field-id="family"
+          :required="true"
+          tooltip="The CPU family name (e.g., Core i7, Ryzen 9, Cortex-A78). This is a required field."
+        />
+        <input 
+          id="family"
+          v-model="form.family" 
+          type="text" 
+          :disabled="readOnly"
+          placeholder="Example: Core i7"
+          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" 
+        />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">Code Name</label>
-        <input v-model="form.codeName" type="text" :disabled="readOnly"
-          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
+        <FormFieldLabel 
+          label="Code Name" 
+          field-id="codeName"
+          tooltip="Internal code name for the CPU architecture or generation (e.g., Alder Lake, Zen 3)."
+        />
+        <input 
+          id="codeName"
+          v-model="form.codeName" 
+          type="text" 
+          :disabled="readOnly"
+          placeholder="Example: Alder Lake"
+          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" 
+        />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">Microarchitecture</label>
-        <input v-model="form.microarchitecture" type="text" :disabled="readOnly"
-          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
+        <FormFieldLabel 
+          label="Microarchitecture" 
+          field-id="microarchitecture"
+          tooltip="The microarchitecture name (e.g., Golden Cove, Zen 3, Cortex-X1)."
+        />
+        <input 
+          id="microarchitecture"
+          v-model="form.microarchitecture" 
+          type="text" 
+          :disabled="readOnly"
+          placeholder="Example: Golden Cove"
+          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" 
+        />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">Model</label>
-        <input v-model="form.model" type="text" :disabled="readOnly"
-          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
+        <FormFieldLabel 
+          label="Model" 
+          field-id="model"
+          :required="true"
+          tooltip="The specific CPU model number (e.g., 12700K, 5900X, M1). This is a required field."
+        />
+        <input 
+          id="model"
+          v-model="form.model" 
+          type="text" 
+          :disabled="readOnly"
+          placeholder="Example: 12700K"
+          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" 
+        />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">Year</label>
-        <input v-model="form.year" type="number" :disabled="readOnly"
-          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
+        <FormFieldLabel 
+          label="Year" 
+          field-id="year"
+          tooltip="The release year of the CPU (e.g., 2022, 2021)."
+        />
+        <input 
+          id="year"
+          v-model="form.year" 
+          type="number" 
+          :disabled="readOnly"
+          placeholder="Example: 2022"
+          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" 
+        />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">Clock</label>
+        <FormFieldLabel 
+          label="Clock" 
+          field-id="clock"
+          tooltip="Base clock frequency in MHz (e.g., 3200, 3600). This is the base operating frequency of the CPU."
+        />
         <div class="input-container">
-          <input v-model="form.clock" type="number" :disabled="readOnly"
-            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
+          <input 
+            id="clock"
+            v-model="form.clock" 
+            type="number" 
+            :disabled="readOnly"
+            placeholder="Example: 3200"
+            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" 
+          />
           <span class="unit-label">MHz</span>
         </div>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">Max Clock</label>
+        <FormFieldLabel 
+          label="Max Clock" 
+          field-id="maxClock"
+          tooltip="Maximum boost/turbo clock frequency in MHz (e.g., 5000, 4800). The highest frequency the CPU can reach under load."
+        />
         <div class="input-container">
-          <input v-model="form.maxClock" type="number" :disabled="readOnly"
-            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
+          <input 
+            id="maxClock"
+            v-model="form.maxClock" 
+            type="number" 
+            :disabled="readOnly"
+            placeholder="Example: 5000"
+            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" 
+          />
           <span class="unit-label">MHz</span>
         </div>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">Threads/Core</label>
-        <input v-model="form.threadsPerCore" type="number" :disabled="readOnly"
-          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
+        <FormFieldLabel 
+          label="Threads/Core" 
+          field-id="threadsPerCore"
+          tooltip="Number of threads per core (typically 1 or 2). Hyperthreading/SMT enables 2 threads per core."
+        />
+        <input 
+          id="threadsPerCore"
+          v-model="form.threadsPerCore" 
+          type="number" 
+          :disabled="readOnly"
+          placeholder="Example: 2"
+          class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" 
+        />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">Lithography</label>
+        <FormFieldLabel 
+          label="Lithography" 
+          field-id="lithography"
+          tooltip="Process node size in nanometers (e.g., 7, 10, 14). Smaller numbers indicate more advanced manufacturing process."
+        />
         <div class="input-container">
-          <input v-model="form.lithography" type="number" :disabled="readOnly"
-            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
+          <input 
+            id="lithography"
+            v-model="form.lithography" 
+            type="number" 
+            :disabled="readOnly"
+            placeholder="Example: 10"
+            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" 
+          />
           <span class="unit-label">nm</span>
         </div>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">TDP</label>
+        <FormFieldLabel 
+          label="TDP" 
+          field-id="tdp"
+          tooltip="Thermal Design Power in watts (e.g., 65, 105, 125). The maximum amount of heat the CPU is designed to generate."
+        />
         <div class="input-container">
-          <input v-model="form.tdp" type="number" :disabled="readOnly"
-            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" />
+          <input 
+            id="tdp"
+            v-model="form.tdp" 
+            type="number" 
+            :disabled="readOnly"
+            placeholder="Example: 65"
+            class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent" 
+          />
           <span class="unit-label">W</span>
         </div>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">Platform</label>
-        <select v-model="form.platform" :disabled="readOnly"
-          class="mt-1 pl-2 block w-full h-10 border-1 border-gray-200 rounded-md drop-shadow focus:ring-[#A32035] focus:border-[#A32035] sm:text-sm">
-          <option>Server</option>
-          <!-- Add other platforms as needed -->
+        <FormFieldLabel 
+          label="Platform" 
+          field-id="platform"
+          tooltip="Target platform for the CPU (e.g., Server, Desktop, Mobile, Embedded)."
+        />
+        <select 
+          id="platform"
+          v-model="form.platform" 
+          :disabled="readOnly"
+          class="mt-1 pl-2 block w-full h-10 border-1 border-gray-200 rounded-md drop-shadow focus:ring-[#A32035] focus:border-[#A32035] sm:text-sm"
+        >
+          <option value="">Select Platform</option>
+          <option value="Server">Server</option>
+          <option value="Desktop">Desktop</option>
+          <option value="Mobile">Mobile</option>
+          <option value="Embedded">Embedded</option>
         </select>
       </div>
     </div>
@@ -103,7 +242,7 @@
       <div class="flex justify-between items-center mb-4 mt-8">
         <h3 class="text-lg font-medium">Cores</h3>
         <button 
-          v-if="!readOnly && editMode"
+          v-if="!readOnly"
           @click="toggleAddCoreForm"
           class="px-6 py-2.5 bg-[#A32035] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#8a1b2d] hover:shadow-lg text-center inline-flex items-center justify-center">
           <span class="mr-2">{{ showAddCoreForm ? 'Cancel' : 'Add CPU core' }}</span>
@@ -112,28 +251,67 @@
 
       <!-- Add Core Form -->
       <Transition name="collapse">
-        <div v-if="showAddCoreForm && !readOnly && editMode" class="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+        <div v-if="showAddCoreForm && !readOnly" class="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
           <h4 class="text-md font-medium mb-4">{{ editingCore ? 'Edit Core' : 'Add Core' }}</h4>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Core Name *</label>
-              <input v-model="coreForm.core_name" type="text" 
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+              <FormFieldLabel 
+                label="Core Name" 
+                field-id="core_name"
+                :required="true"
+                tooltip="Name of the CPU core (e.g., P-Core, E-Core, Performance Core). This is a required field."
+              />
+              <input 
+                id="core_name"
+                v-model="coreForm.core_name" 
+                type="text" 
+                placeholder="Example: P-Core"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]"
+              />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Base Clock (GHz)</label>
-              <input v-model="coreForm.base_clock" type="number" step="0.01"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+              <FormFieldLabel 
+                label="Base Clock (GHz)" 
+                field-id="base_clock"
+                tooltip="Base clock frequency in GHz (e.g., 3.6, 2.4). The base operating frequency of this core."
+              />
+              <input 
+                id="base_clock"
+                v-model="coreForm.base_clock" 
+                type="number" 
+                step="0.01"
+                placeholder="Example: 3.6"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]"
+              />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Max Turbo Clock (GHz)</label>
-              <input v-model="coreForm.max_turbo_clock" type="number" step="0.01"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+              <FormFieldLabel 
+                label="Max Turbo Clock (GHz)" 
+                field-id="max_turbo_clock"
+                tooltip="Maximum turbo/boost clock frequency in GHz (e.g., 5.0, 4.2). The highest frequency this core can reach."
+              />
+              <input 
+                id="max_turbo_clock"
+                v-model="coreForm.max_turbo_clock" 
+                type="number" 
+                step="0.01"
+                placeholder="Example: 5.0"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]"
+              />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-              <input v-model="coreForm.notes" type="text"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+              <FormFieldLabel 
+                label="Notes" 
+                field-id="core_notes"
+                tooltip="Additional notes or information about this core (optional)."
+              />
+              <input 
+                id="core_notes"
+                v-model="coreForm.notes" 
+                type="text"
+                placeholder="Example: Performance core with AVX-512 support"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]"
+              />
             </div>
           </div>
           <!-- Suggestion Note (for suggestors only) -->
@@ -170,20 +348,20 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-white">Core name</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-white">Base Frequency (GHz)</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-white">Max Turbo Frequency (GHz)</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-white" v-if="!readOnly && editMode"></th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-white" v-if="!readOnly"></th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-if="cores.length === 0">
               <td colspan="4" class="px-6 py-4 text-center text-gray-500">No cores found</td>
             </tr>
-            <tr v-for="core in cores" :key="core.core_id">
+            <tr v-for="(core, index) in cores" :key="core.core_id || `new-core-${index}`">
               <td class="px-6 py-4 whitespace-nowrap">{{ core.core_name || 'N/A' }}</td>
               <td class="px-6 py-4 whitespace-nowrap">{{ core.base_clock ? core.base_clock + ' GHz' : 'N/A' }}</td>
               <td class="px-6 py-4 whitespace-nowrap">{{ core.max_turbo_clock ? core.max_turbo_clock + ' GHz' : 'N/A' }}</td>
-              <td v-if="!readOnly && editMode" class="px-6 py-4 whitespace-nowrap text-right">
+              <td v-if="!readOnly" class="px-6 py-4 whitespace-nowrap text-right">
                 <button @click="editCore(core)" class="text-[#A32035] hover:underline mr-2">Edit</button>
-                <button @click="deleteCore(core.core_id)" class="text-red-600 hover:underline">Delete</button>
+                <button @click="deleteCore(core.core_id || index)" class="text-red-600 hover:underline">Delete</button>
               </td>
             </tr>
           </tbody>
@@ -566,6 +744,7 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-white">Changed by</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-white">Comment</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-white">Date</th>
+                <th v-if="userRole === 'admin'" class="px-6 py-3 text-left text-xs font-medium text-white">Actions</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -577,6 +756,15 @@
                 <td class="px-6 py-4 whitespace-nowrap">{{ history.changed_by || 'Unknown' }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">{{ history.comment || '' }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">{{ formatDate(history.changed_at) || '' }}</td>
+                <td v-if="userRole === 'admin'" class="px-6 py-4 whitespace-nowrap">
+                  <button 
+                    @click="undoChange(history.version_id)"
+                    :disabled="undoing === history.version_id"
+                    class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm disabled:opacity-50"
+                  >
+                    {{ undoing === history.version_id ? 'Undoing...' : 'Undo' }}
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -593,6 +781,10 @@ import { useRuntimeConfig } from '#imports'
 import { getItemWithExpiry } from '@/lib/encrypter'
 import { getRole } from '@/lib/isLogged'
 import { submitSuggestion } from '@/lib/suggestionUtils'
+import FormFieldLabel from '@/components/FormFieldLabel.vue'
+import { handleApiError, handleNetworkError, handleJsonParseError, handleValidationError } from '@/lib/formErrorHandler'
+import { getSuccessMessage } from '@/lib/formSuccessHandler'
+import { undoChange as undoChangeApi } from '@/lib/versionHistoryService.js'
 // import { useRouter } from 'vue-router'
 
 // const router = useRouter()
@@ -626,11 +818,19 @@ const getAuthToken = () => {
 
 // Reactive states for messages
 const successMessage = ref('')
+const successMessageCode = ref('')
+const successActionType = ref('')
+const successEntityType = ref('')
+const successEntityId = ref('')
 const errorMessage = ref('')
+const errorMessageCode = ref('')
+const errorType = ref('')
+const errorFieldName = ref('')
 
 // User role and suggestion note
 const userRole = computed(() => getRole())
 const suggestionNote = ref('')
+const undoing = ref(null)
 const coreNote = ref('')
 
 function formatFieldName(fieldName) {
@@ -847,19 +1047,36 @@ const preparePostRequestBody = () => {
     },
     economics: {
       year: form.value.year
-    }
+    },
+    cores: newCores.value.length > 0 ? newCores.value : undefined
   }
 }
 
 const submitData = async () => {
   successMessage.value = ''
+  successMessageCode.value = ''
+  successActionType.value = ''
+  successEntityType.value = ''
+  successEntityId.value = ''
   errorMessage.value = ''
+  errorMessageCode.value = ''
+  errorType.value = ''
+  errorFieldName.value = ''
 
   // Basic validation
   if (!form.value.manufacturer || !form.value.family || !form.value.model) {
-    errorMessage.value = 'Please fill in all required fields'
+    const error = handleValidationError(
+      props.editMode ? 'CPU_UPDATE_VALIDATION_REQUIRED_FIELDS' : 'CPU_CREATE_VALIDATION_REQUIRED_FIELDS'
+    )
+    errorMessage.value = error.message
+    errorMessageCode.value = error.code
+    errorType.value = error.type
+    errorFieldName.value = error.field
     setTimeout(() => {
       errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
     }, 5000)
     return
   }
@@ -880,9 +1097,16 @@ const submitData = async () => {
     if (isSuggestion) {
       // Validate note is provided for suggestors
       if (!suggestionNote.value || suggestionNote.value.trim() === '') {
-        errorMessage.value = 'Note is required for suggestions. Please provide an explanation for your suggestion.'
+        const error = handleValidationError('SUGGESTION_NOTE_REQUIRED')
+        errorMessage.value = error.message
+        errorMessageCode.value = error.code
+        errorType.value = error.type
+        errorFieldName.value = error.field
         setTimeout(() => {
           errorMessage.value = ''
+          errorMessageCode.value = ''
+          errorType.value = ''
+          errorFieldName.value = ''
         }, 5000)
         return
       }
@@ -898,7 +1122,11 @@ const submitData = async () => {
           isSuggestion: true 
         })
         
-        successMessage.value = 'Suggestion submitted successfully! It will be reviewed by an admin or editor.'
+        const success = getSuccessMessage('suggestion', 'create')
+        successMessage.value = success.message
+        successMessageCode.value = success.code
+        successActionType.value = success.type
+        successEntityType.value = success.entity
         
         // Redirect to CPU list or detail page after delay
         setTimeout(() => {
@@ -914,9 +1142,16 @@ const submitData = async () => {
           role: currentRole, 
           error: suggestionError.message 
         })
-        errorMessage.value = suggestionError.message || 'Failed to submit suggestion. Please try again.'
+        const error = handleNetworkError(suggestionError, 'cpu', 'create')
+        errorMessage.value = error.message
+        errorMessageCode.value = error.code
+        errorType.value = error.type
+        errorFieldName.value = error.field
         setTimeout(() => {
           errorMessage.value = ''
+          errorMessageCode.value = ''
+          errorType.value = ''
+          errorFieldName.value = ''
         }, 5000)
       }
       return
@@ -942,9 +1177,16 @@ const submitData = async () => {
       serverData = await response.json()
     } catch (jsonError) {
       console.error('Error parsing JSON response:', jsonError)
-      errorMessage.value = 'Invalid response from server. Please try again.'
+      const error = handleJsonParseError('cpu', props.editMode ? 'update' : 'create')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
       setTimeout(() => {
         errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
       }, 5000)
       return
     }
@@ -956,17 +1198,29 @@ const submitData = async () => {
     })
 
     if (response.ok) {
-      successMessage.value = `CPU ${props.editMode ? 'updated' : 'created'} successfully!`
-      // Handle both wrapped and direct response formats
       const responseData = serverData.data || serverData
+      const cpuId = props.editMode ? props.cpuData?.cpu?.cpu_id : (responseData?.cpu?.cpu_id || responseData?.cpu_id)
+      const success = getSuccessMessage('cpu', props.editMode ? 'update' : 'create', { id: cpuId })
+      successMessage.value = success.message
+      successMessageCode.value = success.code
+      successActionType.value = success.type
+      successEntityType.value = success.entity
+      successEntityId.value = cpuId || ''
       // Show success message for 2 seconds before redirecting
       setTimeout(() => {
         redirectPage(responseData)
       }, 2000)
     } else {
-      errorMessage.value = serverData.error || 'An error occurred during submission.'
+      const error = await handleApiError(response, 'cpu', props.editMode ? 'update' : 'create')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
       setTimeout(() => {
         errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
       }, 5000)
     }
   } catch (error) {
@@ -975,9 +1229,16 @@ const submitData = async () => {
       role: currentRole, 
       error: error.message 
     })
-    errorMessage.value = error.message || 'An unexpected error occurred.'
+    const errorObj = handleNetworkError(error, 'cpu', props.editMode ? 'update' : 'create')
+    errorMessage.value = errorObj.message
+    errorMessageCode.value = errorObj.code
+    errorType.value = errorObj.type
+    errorFieldName.value = errorObj.field
     setTimeout(() => {
       errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
     }, 5000)
   }
 }
@@ -1024,18 +1285,21 @@ const toggleHistory = () => {
 }
 
 // Cores functionality
+// Local array to store cores during creation (before CPU is saved)
+const newCores = ref([])
+
 const cores = computed(() => {
-  const coresData = props.cpuData?.cores || []
-  // #region agent log
-  if (typeof fetch !== 'undefined') {
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CpuForm.vue:891',message:'Cores computed',data:{hasCpuData:!!props.cpuData,coresCount:coresData.length,coresIsArray:Array.isArray(coresData),coresData:coresData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+  // If editing existing CPU, use existing cores
+  if (props.editMode && props.cpuData?.cores) {
+    return props.cpuData.cores
   }
-  // #endregion
-  return coresData
+  // If creating new CPU, use newCores array
+  return newCores.value
 })
 
 const showAddCoreForm = ref(false)
 const editingCore = ref(null)
+const editingCoreIndex = ref(-1)
 const coreForm = ref({
   core_name: '',
   base_clock: '',
@@ -1052,6 +1316,7 @@ const toggleAddCoreForm = () => {
 
 const cancelCoreForm = () => {
   editingCore.value = null
+  editingCoreIndex.value = -1
   coreForm.value = {
     core_name: '',
     base_clock: '',
@@ -1064,6 +1329,12 @@ const cancelCoreForm = () => {
 
 const editCore = (core) => {
   editingCore.value = core
+  // If creating new CPU, find index in newCores array
+  if (!props.editMode || !props.cpuData?.cpu?.cpu_id) {
+    editingCoreIndex.value = newCores.value.findIndex(c => c === core)
+  } else {
+    editingCoreIndex.value = -1
+  }
   coreForm.value = {
     core_name: core.core_name || '',
     base_clock: core.base_clock || '',
@@ -1075,10 +1346,39 @@ const editCore = (core) => {
 
 const submitCore = async () => {
   if (!coreForm.value.core_name) {
-    errorMessage.value = 'Core name is required'
+    const error = handleValidationError('CORE_CREATE_VALIDATION_NAME_REQUIRED')
+    errorMessage.value = error.message
+    errorMessageCode.value = error.code
+    errorType.value = error.type
+    errorFieldName.value = error.field
     setTimeout(() => {
       errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
     }, 5000)
+    return
+  }
+
+  // If creating new CPU (not editing existing), add to local array
+  const isCreatingNew = !props.editMode || !props.cpuData?.cpu?.cpu_id
+  if (isCreatingNew) {
+    const coreData = {
+      core_name: coreForm.value.core_name,
+      base_clock: coreForm.value.base_clock ? parseFloat(coreForm.value.base_clock) : null,
+      max_turbo_clock: coreForm.value.max_turbo_clock ? parseFloat(coreForm.value.max_turbo_clock) : null,
+      notes: coreForm.value.notes || null
+    }
+    
+    if (editingCoreIndex.value >= 0) {
+      // Update existing core in array
+      newCores.value[editingCoreIndex.value] = coreData
+    } else {
+      // Add new core to array
+      newCores.value.push(coreData)
+    }
+    
+    cancelCoreForm()
     return
   }
 
@@ -1088,9 +1388,16 @@ const submitCore = async () => {
   // If user is a suggestor, validate note and submit as suggestion
   if (isSuggestion) {
     if (!coreNote.value || coreNote.value.trim() === '') {
-      errorMessage.value = 'Note is required for suggestions. Please provide an explanation for your core suggestion.'
+      const error = handleValidationError('SUGGESTION_CORE_NOTE_REQUIRED')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
       setTimeout(() => {
         errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
       }, 5000)
       return
     }
@@ -1098,9 +1405,16 @@ const submitCore = async () => {
     try {
       const cpuId = props.cpuData?.cpu?.cpu_id
       if (!cpuId) {
-        errorMessage.value = 'CPU ID not found'
+        const error = handleValidationError('CORE_CPU_ID_NOT_FOUND')
+        errorMessage.value = error.message
+        errorMessageCode.value = error.code
+        errorType.value = error.type
+        errorFieldName.value = error.field
         setTimeout(() => {
           errorMessage.value = ''
+          errorMessageCode.value = ''
+          errorType.value = ''
+          errorFieldName.value = ''
         }, 5000)
         return
       }
@@ -1126,11 +1440,18 @@ const submitCore = async () => {
       // Submit as suggestion
       const result = await submitSuggestion('cpu', cpuId, coreData, coreNote.value)
       
-      successMessage.value = 'Core suggestion submitted successfully! It will be reviewed by an admin or editor.'
+      const success = getSuccessMessage('suggestion', 'create', { suggestionType: 'core' })
+      successMessage.value = success.message
+      successMessageCode.value = success.code
+      successActionType.value = success.type
+      successEntityType.value = success.entity
       cancelCoreForm()
       coreNote.value = ''
       setTimeout(() => {
         successMessage.value = ''
+        successMessageCode.value = ''
+        successActionType.value = ''
+        successEntityType.value = ''
       }, 3000)
       // Emit event to refresh data without page reload
       emit('data-refreshed')
@@ -1138,9 +1459,16 @@ const submitCore = async () => {
       console.error('[Form] Core suggestion submission failed', { 
         error: suggestionError.message 
       })
-      errorMessage.value = suggestionError.message || 'Failed to submit core suggestion. Please try again.'
+      const error = handleNetworkError(suggestionError, 'core', 'create')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
       setTimeout(() => {
         errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
       }, 5000)
     }
     return
@@ -1150,9 +1478,16 @@ const submitCore = async () => {
   try {
     const cpuId = props.cpuData?.cpu?.cpu_id
     if (!cpuId) {
-      errorMessage.value = 'CPU ID not found'
+      const error = handleValidationError('CORE_CPU_ID_NOT_FOUND')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
       setTimeout(() => {
         errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
       }, 5000)
       return
     }
@@ -1191,18 +1526,31 @@ const submitCore = async () => {
     // #endregion
 
     if (response.ok) {
-      successMessage.value = `Core ${editingCore.value ? 'updated' : 'added'} successfully!`
+      const success = getSuccessMessage('core', editingCore.value ? 'update' : 'create')
+      successMessage.value = success.message
+      successMessageCode.value = success.code
+      successActionType.value = success.type
+      successEntityType.value = success.entity
       cancelCoreForm()
       setTimeout(() => {
         successMessage.value = ''
+        successMessageCode.value = ''
+        successActionType.value = ''
+        successEntityType.value = ''
       }, 3000)
       // Emit event to refresh data without page reload
       emit('data-refreshed')
     } else {
-      const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }))
-      errorMessage.value = errorData.error || 'Failed to save core'
+      const error = await handleApiError(response, 'core', editingCore.value ? 'update' : 'create')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
       setTimeout(() => {
         errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
       }, 5000)
       
       // #region agent log
@@ -1213,9 +1561,16 @@ const submitCore = async () => {
     }
   } catch (error) {
     console.error('Error submitting core:', error)
-    errorMessage.value = 'Error submitting core'
+    const errorObj = handleNetworkError(error, 'core', editingCore.value ? 'update' : 'create')
+    errorMessage.value = errorObj.message
+    errorMessageCode.value = errorObj.code
+    errorType.value = errorObj.type
+    errorFieldName.value = errorObj.field
     setTimeout(() => {
       errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
     }, 5000)
     
     // #region agent log
@@ -1227,6 +1582,18 @@ const submitCore = async () => {
 }
 
 const deleteCore = async (coreId) => {
+  // If creating new CPU (not editing existing), remove from local array
+  const isCreatingNew = !props.editMode || !props.cpuData?.cpu?.cpu_id
+  if (isCreatingNew) {
+    // coreId is actually the index in this case
+    if (typeof coreId === 'number' && coreId >= 0 && coreId < newCores.value.length) {
+      if (confirm('Are you sure you want to remove this core?')) {
+        newCores.value.splice(coreId, 1)
+      }
+    }
+    return
+  }
+
   if (!confirm('Are you sure you want to delete this core?')) return
 
   const currentRole = userRole.value
@@ -1237,17 +1604,33 @@ const deleteCore = async (coreId) => {
     // Get note from user
     const note = prompt('Please provide a note explaining why this core should be deleted:')
     if (!note || note.trim() === '') {
-      errorMessage.value = 'Note is required for deletion suggestions.'
-      setTimeout(() => { errorMessage.value = '' }, 3000)
+      const error = handleValidationError('SUGGESTION_DELETE_NOTE_REQUIRED')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
+      setTimeout(() => { 
+        errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
+      }, 3000)
       return
     }
 
     try {
       const cpuId = props.cpuData?.cpu?.cpu_id
       if (!cpuId) {
-        errorMessage.value = 'CPU ID not found'
+        const error = handleValidationError('CORE_CPU_ID_NOT_FOUND')
+        errorMessage.value = error.message
+        errorMessageCode.value = error.code
+        errorType.value = error.type
+        errorFieldName.value = error.field
         setTimeout(() => {
           errorMessage.value = ''
+          errorMessageCode.value = ''
+          errorType.value = ''
+          errorFieldName.value = ''
         }, 5000)
         return
       }
@@ -1283,18 +1666,32 @@ const deleteCore = async (coreId) => {
       // Submit as suggestion
       const result = await submitSuggestion('cpu', cpuId, coreData, note)
       
-      successMessage.value = 'Core deletion suggestion submitted successfully! It will be reviewed by an admin or editor.'
+      const success = getSuccessMessage('suggestion', 'delete', { suggestionType: 'core' })
+      successMessage.value = success.message
+      successMessageCode.value = success.code
+      successActionType.value = success.type
+      successEntityType.value = success.entity
       setTimeout(() => {
         successMessage.value = ''
+        successMessageCode.value = ''
+        successActionType.value = ''
+        successEntityType.value = ''
       }, 3000)
       emit('data-refreshed')
     } catch (suggestionError) {
       console.error('[Form] Core deletion suggestion submission failed', { 
         error: suggestionError.message 
       })
-      errorMessage.value = suggestionError.message || 'Failed to submit core deletion suggestion. Please try again.'
+      const error = handleNetworkError(suggestionError, 'core', 'delete')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
       setTimeout(() => {
         errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
       }, 5000)
     }
     return
@@ -1319,25 +1716,73 @@ const deleteCore = async (coreId) => {
     })
 
     if (response.ok) {
-      successMessage.value = 'Core deleted successfully!'
+      const success = getSuccessMessage('core', 'delete')
+      successMessage.value = success.message
+      successMessageCode.value = success.code
+      successActionType.value = success.type
+      successEntityType.value = success.entity
       setTimeout(() => {
         successMessage.value = ''
+        successMessageCode.value = ''
+        successActionType.value = ''
+        successEntityType.value = ''
       }, 3000)
       // Emit event to refresh data without page reload
       emit('data-refreshed')
     } else {
-      const errorData = await response.json()
-      errorMessage.value = errorData.error || 'Failed to delete core'
+      const error = await handleApiError(response, 'core', 'delete')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
       setTimeout(() => {
         errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
       }, 5000)
     }
   } catch (error) {
     console.error('Error deleting core:', error)
-    errorMessage.value = 'Error deleting core'
+    const errorObj = handleNetworkError(error, 'core', 'delete')
+    errorMessage.value = errorObj.message
+    errorMessageCode.value = errorObj.code
+    errorType.value = errorObj.type
+    errorFieldName.value = errorObj.field
     setTimeout(() => {
       errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
     }, 5000)
+  }
+}
+
+// Undo change function
+const undoChange = async (versionId) => {
+  if (!confirm('Are you sure you want to undo this change? This action cannot be undone.')) {
+    return;
+  }
+
+  undoing.value = versionId;
+  errorMessage.value = '';
+
+  try {
+    await undoChangeApi(versionId);
+    // Emit event to refresh data
+    emit('data-refreshed');
+    successMessage.value = 'Change undone successfully';
+    setTimeout(() => {
+      successMessage.value = '';
+    }, 5000);
+  } catch (err) {
+    console.error('[CpuForm] Error undoing change:', err);
+    errorMessage.value = err.message || 'Failed to undo change.';
+    setTimeout(() => {
+      errorMessage.value = '';
+    }, 5000);
+  } finally {
+    undoing.value = null;
   }
 }
 

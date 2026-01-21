@@ -24,31 +24,87 @@
           <template #default>
             <form v-if="!registered" @submit.prevent="register" class="space-y-4">
               <!-- Username -->
-              <input v-model="username" type="text" placeholder="Username" required
-                class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <div>
+                <FormFieldLabel 
+                  label="Username" 
+                  field-id="username"
+                  :required="true"
+                  tooltip="Choose a unique username for your account. This will be used to identify you in the system. This is a required field."
+                />
+                <input 
+                  id="username"
+                  v-model="username" 
+                  type="text" 
+                  placeholder="Example: johndoe"
+                  required
+                  class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
+                />
+              </div>
 
               <!-- Email -->
-              <input v-model="email" type="email" placeholder="Email" required
-                class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <div>
+                <FormFieldLabel 
+                  label="Email" 
+                  field-id="email"
+                  :required="true"
+                  tooltip="Enter your email address (e.g., user@example.com). This will be used for account verification and notifications. This is a required field."
+                />
+                <input 
+                  id="email"
+                  v-model="email" 
+                  type="email" 
+                  placeholder="Example: user@example.com"
+                  required
+                  class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
+                />
+              </div>
 
               <!-- Password with show/hide toggle -->
-              <div class="relative">
-                <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="Password" required
-                  class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-3" @click="togglePassword">
-                  <div v-if="showPassword">
-                    <v-icon name="bi-eye-slash" />
-                  </div>
-                  <div v-else>
-                    <v-icon name="bi-eye" />
-                  </div>
-                </button>
+              <div>
+                <FormFieldLabel 
+                  label="Password" 
+                  field-id="password"
+                  :required="true"
+                  tooltip="Create a password with at least 6 characters. Use a combination of letters, numbers, and symbols for better security. This is a required field."
+                />
+                <div class="relative">
+                  <input 
+                    id="password"
+                    v-model="password" 
+                    :type="showPassword ? 'text' : 'password'" 
+                    placeholder="Example: MySecure123!"
+                    required
+                    class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
+                  />
+                  <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-3" @click="togglePassword">
+                    <div v-if="showPassword">
+                      <v-icon name="bi-eye-slash" />
+                    </div>
+                    <div v-else>
+                      <v-icon name="bi-eye" />
+                    </div>
+                  </button>
+                </div>
               </div>
 
               <!-- Confirm Password -->
-              <div class="relative">
-                <input v-model="confirmPassword" :type="showPassword ? 'text' : 'password'" placeholder="Confirm Password" required
-                  class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <div>
+                <FormFieldLabel 
+                  label="Confirm Password" 
+                  field-id="confirmPassword"
+                  :required="true"
+                  tooltip="Re-enter your password to confirm it matches. This is a required field."
+                />
+                <div class="relative">
+                  <input 
+                    id="confirmPassword"
+                    v-model="confirmPassword" 
+                    :type="showPassword ? 'text' : 'password'" 
+                    placeholder="Re-enter your password"
+                    required
+                    class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
+                  />
+                </div>
               </div>
 
               <!-- Submit -->
@@ -58,15 +114,28 @@
             </form>
 
             <!-- Success Message -->
-            <div v-else class="text-center space-y-4">
-              <p class="text-green-600 font-semibold">Registration successful!</p>
-              <p class="text-sm text-gray-600">Redirecting to login page...</p>
+            <div 
+              v-else 
+              data-testid="form-success"
+              :data-message-code="successMessageCode"
+              :data-action-type="successActionType"
+              :data-entity-type="successEntityType"
+              class="text-center space-y-4 p-4 bg-green-50 border border-green-200 rounded-lg"
+            >
+              <p class="text-green-600 font-semibold">{{ successMessage }}</p>
             </div>
 
             <!-- Error -->
-            <p v-if="error" class="text-center text-red-600 text-sm">
+            <div 
+              v-if="error" 
+              data-testid="form-error"
+              :data-message-code="errorMessageCode"
+              :data-error-type="errorType"
+              :data-field-name="errorFieldName"
+              class="text-center text-red-600 text-sm p-3 bg-red-50 border border-red-200 rounded-lg"
+            >
               {{ errorMessage }}
-            </p>
+            </div>
           </template>
         </ClientOnly>
 
@@ -85,6 +154,9 @@
 <script setup>
 import { ref } from 'vue';
 import { isLogged } from '../lib/isLogged';
+import FormFieldLabel from '@/components/FormFieldLabel.vue';
+import { handleApiError, handleNetworkError, handleValidationError } from '@/lib/formErrorHandler';
+import { getSuccessMessage } from '@/lib/formSuccessHandler';
 
 const username = ref('');
 const email = ref('');
@@ -93,6 +165,13 @@ const confirmPassword = ref('');
 const registered = ref(false);
 const error = ref(false);
 const errorMessage = ref('');
+const errorMessageCode = ref('');
+const errorType = ref('');
+const errorFieldName = ref('');
+const successMessage = ref('');
+const successMessageCode = ref('');
+const successActionType = ref('');
+const successEntityType = ref('');
 const loading = ref(false);
 const showPassword = ref(false);
 
@@ -110,14 +189,22 @@ async function register() {
   // Validation
   if (password.value !== confirmPassword.value) {
     error.value = true;
-    errorMessage.value = 'Passwords do not match';
+    const errorObj = handleValidationError('REGISTRATION_PASSWORD_MISMATCH');
+    errorMessage.value = errorObj.message;
+    errorMessageCode.value = errorObj.code;
+    errorType.value = errorObj.type;
+    errorFieldName.value = errorObj.field;
     loading.value = false;
     return;
   }
 
   if (password.value.length < 6) {
     error.value = true;
-    errorMessage.value = 'Password must be at least 6 characters';
+    const errorObj = handleValidationError('REGISTRATION_PASSWORD_MIN_LENGTH', { min: 6 });
+    errorMessage.value = errorObj.message;
+    errorMessageCode.value = errorObj.code;
+    errorType.value = errorObj.type;
+    errorFieldName.value = errorObj.field;
     loading.value = false;
     return;
   }

@@ -1,7 +1,15 @@
 <template>
   <div class="min-h-screen max-w-7xl mx-auto py-2 px-4">
     <!-- Success & Error Messages -->
-    <div v-if="successMessage" class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded shadow-md">
+    <div 
+      v-if="successMessage" 
+      data-testid="form-success"
+      :data-message-code="successMessageCode"
+      :data-action-type="successActionType"
+      :data-entity-type="successEntityType"
+      :data-entity-id="successEntityId"
+      class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded shadow-md"
+    >
       <div class="flex items-center">
         <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
@@ -9,7 +17,14 @@
         <strong>Success:</strong> <span class="ml-2">{{ successMessage }}</span>
       </div>
     </div>
-    <div v-if="errorMessage" class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded shadow-md">
+    <div 
+      v-if="errorMessage" 
+      data-testid="form-error"
+      :data-message-code="errorMessageCode"
+      :data-error-type="errorType"
+      :data-field-name="errorFieldName"
+      class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded shadow-md"
+    >
       <div class="flex items-center">
         <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
@@ -22,25 +37,65 @@
     <h3 class="text-xl font-medium mt-6">General Information</h3>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700">Manufacturer</label>
-        <input v-model="form.manufacturer" :disabled="readOnly" type="text"
-          class="mt-1 block w-full h-10 border-0 border-b border-gray-200 focus:ring-0 bg-transparent" />
+        <FormFieldLabel 
+          label="Manufacturer" 
+          field-id="fpga_manufacturer"
+          :required="true"
+          tooltip="The company that manufactures the FPGA (e.g., Xilinx, Intel, Lattice). This is a required field."
+        />
+        <input 
+          id="fpga_manufacturer"
+          v-model="form.manufacturer" 
+          :disabled="readOnly" 
+          type="text"
+          placeholder="Example: Xilinx"
+          class="mt-1 block w-full h-10 border-0 border-b border-gray-200 focus:ring-0 bg-transparent" 
+        />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700">SoC Name</label>
-        <input v-model="form.socName" :disabled="readOnly" type="text"
-          class="mt-1 block w-full h-10 border-0 border-b border-gray-200 focus:ring-0 bg-transparent" />
+        <FormFieldLabel 
+          label="SoC Name" 
+          field-id="fpga_socName"
+          tooltip="The System-on-Chip name for the FPGA (e.g., Zynq UltraScale+, Versal)."
+        />
+        <input 
+          id="fpga_socName"
+          v-model="form.socName" 
+          :disabled="readOnly" 
+          type="text"
+          placeholder="Example: Zynq UltraScale+"
+          class="mt-1 block w-full h-10 border-0 border-b border-gray-200 focus:ring-0 bg-transparent" 
+        />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700">Release Date</label>
-        <input v-model="form.releaseDate" :disabled="readOnly" type="date"
-          class="mt-1 block w-full h-10 border-0 border-b border-gray-200 focus:ring-0 bg-transparent" />
+        <FormFieldLabel 
+          label="Release Date" 
+          field-id="fpga_releaseDate"
+          tooltip="The release date of the FPGA (format: YYYY-MM-DD)."
+        />
+        <input 
+          id="fpga_releaseDate"
+          v-model="form.releaseDate" 
+          :disabled="readOnly" 
+          type="date"
+          class="mt-1 block w-full h-10 border-0 border-b border-gray-200 focus:ring-0 bg-transparent" 
+        />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700">Process Node</label>
+        <FormFieldLabel 
+          label="Process Node" 
+          field-id="fpga_processNode"
+          tooltip="Process node size in nanometers (e.g., 7, 16, 28). Smaller numbers indicate more advanced manufacturing process."
+        />
         <div class="input-container">
-          <input v-model="form.processNode" :disabled="readOnly" type="number"
-            class="mt-1 block w-full h-10 border-0 border-b border-gray-200 focus:ring-0 bg-transparent" />
+          <input 
+            id="fpga_processNode"
+            v-model="form.processNode" 
+            :disabled="readOnly" 
+            type="number"
+            placeholder="Example: 7"
+            class="mt-1 block w-full h-10 border-0 border-b border-gray-200 focus:ring-0 bg-transparent" 
+          />
           <span class="unit-label">nm</span>
         </div>
       </div>
@@ -61,19 +116,51 @@
     <Transition name="collapse">
       <div v-if="isLogicResourcesExpanded" class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700">Generation</label>
-          <input v-model="form.generation" :disabled="readOnly" type="text"
-            class="mt-1 block w-full h-10 border-b border-gray-200 focus:ring-0 bg-transparent" />
+          <FormFieldLabel 
+            label="Generation" 
+            field-id="fpga_generation"
+            :required="true"
+            tooltip="The FPGA generation or architecture series (e.g., UltraScale+, Versal, Artix-7). This is a required field."
+          />
+          <input 
+            id="fpga_generation"
+            v-model="form.generation" 
+            :disabled="readOnly" 
+            type="text"
+            placeholder="Example: UltraScale+"
+            class="mt-1 block w-full h-10 border-b border-gray-200 focus:ring-0 bg-transparent" 
+          />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700">Family/Subfamily</label>
-          <input v-model="form.familySubfamily" :disabled="readOnly" type="text"
-            class="mt-1 block w-full h-10 border-b border-gray-200 focus:ring-0 bg-transparent" />
+          <FormFieldLabel 
+            label="Family/Subfamily" 
+            field-id="fpga_familySubfamily"
+            tooltip="The FPGA family or subfamily name (e.g., Kintex, Virtex, Zynq)."
+          />
+          <input 
+            id="fpga_familySubfamily"
+            v-model="form.familySubfamily" 
+            :disabled="readOnly" 
+            type="text"
+            placeholder="Example: Kintex"
+            class="mt-1 block w-full h-10 border-b border-gray-200 focus:ring-0 bg-transparent" 
+          />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700">Model</label>
-          <input v-model="form.model" :disabled="readOnly" type="text"
-            class="mt-1 block w-full h-10 border-b border-gray-200 focus:ring-0 bg-transparent" />
+          <FormFieldLabel 
+            label="Model" 
+            field-id="fpga_model"
+            :required="true"
+            tooltip="The specific FPGA model number (e.g., XC7K325T, XCZU9EG). This is a required field."
+          />
+          <input 
+            id="fpga_model"
+            v-model="form.model" 
+            :disabled="readOnly" 
+            type="text"
+            placeholder="Example: XC7K325T"
+            class="mt-1 block w-full h-10 border-b border-gray-200 focus:ring-0 bg-transparent" 
+          />
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">CLBs</label>
@@ -285,6 +372,9 @@ import { useRuntimeConfig } from '#imports'
 import { getItemWithExpiry } from '@/lib/encrypter'
 import { getRole } from '@/lib/isLogged'
 import { submitSuggestion } from '@/lib/suggestionUtils'
+import FormFieldLabel from '@/components/FormFieldLabel.vue'
+import { handleApiError, handleNetworkError, handleJsonParseError, handleValidationError } from '@/lib/formErrorHandler'
+import { getSuccessMessage } from '@/lib/formSuccessHandler'
 
 const props = defineProps({
   fpgaData: { type: Object, required: true },
@@ -293,7 +383,14 @@ const props = defineProps({
 })
 
 const successMessage = ref('')
+const successMessageCode = ref('')
+const successActionType = ref('')
+const successEntityType = ref('')
+const successEntityId = ref('')
 const errorMessage = ref('')
+const errorMessageCode = ref('')
+const errorType = ref('')
+const errorFieldName = ref('')
 
 // User role and suggestion note
 const userRole = computed(() => getRole())
@@ -471,13 +568,29 @@ const preparePostRequestBody = () => ({
 
 const submitData = async () => {
   successMessage.value = ''
+  successMessageCode.value = ''
+  successActionType.value = ''
+  successEntityType.value = ''
+  successEntityId.value = ''
   errorMessage.value = ''
+  errorMessageCode.value = ''
+  errorType.value = ''
+  errorFieldName.value = ''
 
   // Basic validation
   if (!form.value.manufacturer || !form.value.generation || !form.value.model) {
-    errorMessage.value = 'Please fill in all required fields (Manufacturer, Generation, Model)'
+    const error = handleValidationError(
+      props.editMode ? 'FPGA_UPDATE_VALIDATION_REQUIRED_FIELDS' : 'FPGA_CREATE_VALIDATION_REQUIRED_FIELDS'
+    )
+    errorMessage.value = error.message
+    errorMessageCode.value = error.code
+    errorType.value = error.type
+    errorFieldName.value = error.field
     setTimeout(() => {
       errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
     }, 5000)
     return
   }
@@ -498,9 +611,16 @@ const submitData = async () => {
     if (isSuggestion) {
       // Validate note is provided for suggestors
       if (!suggestionNote.value || suggestionNote.value.trim() === '') {
-        errorMessage.value = 'Note is required for suggestions. Please provide an explanation for your suggestion.'
+        const error = handleValidationError('SUGGESTION_NOTE_REQUIRED')
+        errorMessage.value = error.message
+        errorMessageCode.value = error.code
+        errorType.value = error.type
+        errorFieldName.value = error.field
         setTimeout(() => {
           errorMessage.value = ''
+          errorMessageCode.value = ''
+          errorType.value = ''
+          errorFieldName.value = ''
         }, 5000)
         return
       }
@@ -516,7 +636,11 @@ const submitData = async () => {
           isSuggestion: true 
         })
         
-        successMessage.value = 'Suggestion submitted successfully! It will be reviewed by an admin or editor.'
+        const success = getSuccessMessage('suggestion', 'create')
+        successMessage.value = success.message
+        successMessageCode.value = success.code
+        successActionType.value = success.type
+        successEntityType.value = success.entity
         
         // Redirect after delay
         setTimeout(() => {
@@ -532,9 +656,16 @@ const submitData = async () => {
           role: currentRole, 
           error: suggestionError.message 
         })
-        errorMessage.value = suggestionError.message || 'Failed to submit suggestion. Please try again.'
+        const error = handleNetworkError(suggestionError, 'fpga', 'create')
+        errorMessage.value = error.message
+        errorMessageCode.value = error.code
+        errorType.value = error.type
+        errorFieldName.value = error.field
         setTimeout(() => {
           errorMessage.value = ''
+          errorMessageCode.value = ''
+          errorType.value = ''
+          errorFieldName.value = ''
         }, 5000)
       }
       return
@@ -559,9 +690,16 @@ const submitData = async () => {
       data = await res.json()
     } catch (jsonError) {
       console.error('Error parsing JSON response:', jsonError)
-      errorMessage.value = 'Invalid response from server. Please try again.'
+      const error = handleJsonParseError('fpga', props.editMode ? 'update' : 'create')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
       setTimeout(() => {
         errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
       }, 5000)
       return
     }
@@ -573,18 +711,29 @@ const submitData = async () => {
     })
     
     if (res.ok) {
-      successMessage.value = `FPGA ${props.editMode ? 'updated' : 'created'} successfully!`
-      // Handle both wrapped and direct response formats
       const responseData = data.data || data
       const fpgaId = responseData.fpga?.fpga_id || responseData.fpga_id
+      const success = getSuccessMessage('fpga', props.editMode ? 'update' : 'create', { id: fpgaId })
+      successMessage.value = success.message
+      successMessageCode.value = success.code
+      successActionType.value = success.type
+      successEntityType.value = success.entity
+      successEntityId.value = fpgaId || ''
       // Show success message for 2 seconds before redirecting
       setTimeout(() => {
         window.location.href = `/fpga/${fpgaId}`
       }, 2000)
     } else {
-      errorMessage.value = data.error || 'An error occurred during submission.'
+      const error = await handleApiError(res, 'fpga', props.editMode ? 'update' : 'create')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
       setTimeout(() => {
         errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
       }, 5000)
     }
   } catch (err) {
@@ -593,9 +742,16 @@ const submitData = async () => {
       role: currentRole, 
       error: err.message 
     })
-    errorMessage.value = err.message || 'An unexpected error occurred.'
+    const errorObj = handleNetworkError(err, 'fpga', props.editMode ? 'update' : 'create')
+    errorMessage.value = errorObj.message
+    errorMessageCode.value = errorObj.code
+    errorType.value = errorObj.type
+    errorFieldName.value = errorObj.field
     setTimeout(() => {
       errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
     }, 5000)
   }
 }

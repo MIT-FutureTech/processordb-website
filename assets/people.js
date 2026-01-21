@@ -57,6 +57,9 @@ University of California, Berkeley.</p>
         name: 'Zachary Schmidt',
         affiliation: 'Koomey Analytics',
         image: '/schmidt.png',
+        description: `
+            <p class="mt-2"> Zachary Schmidt has over a decade of experience working as a researcher and analyst for Koomey Analytics. He has a BA from UC Berkeley with a major in English Literature and a minor in Energy and Resources, and has completed the Certificate Program in Data Science from UC Berkeley Extension. He builds software and analyzes data to help understand and solve energy-related problems.</p>
+            `
     },
     {
         name: 'Rebecca Wenjing Lyu',

@@ -1,7 +1,15 @@
 <template>
   <div class="min-h-screen max-w-7xl mx-auto py-2 px-4 justify-start md:justify-between items-center">
     <!-- Message Area -->
-    <div v-if="successMessage" class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded shadow-md">
+    <div 
+      v-if="successMessage" 
+      data-testid="form-success"
+      :data-message-code="successMessageCode"
+      :data-action-type="successActionType"
+      :data-entity-type="successEntityType"
+      :data-entity-id="successEntityId"
+      class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded shadow-md"
+    >
       <div class="flex items-center">
         <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
@@ -9,7 +17,14 @@
         <strong>Success:</strong> <span class="ml-2">{{ successMessage }}</span>
       </div>
     </div>
-    <div v-if="errorMessage" class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded shadow-md">
+    <div 
+      v-if="errorMessage" 
+      data-testid="form-error"
+      :data-message-code="errorMessageCode"
+      :data-error-type="errorType"
+      :data-field-name="errorFieldName"
+      class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded shadow-md"
+    >
       <div class="flex items-center">
         <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
@@ -23,9 +38,18 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
       <!-- Manufacturer -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">Manufacturer</label>
-        <select v-model="form.manufacturer" :disabled="readOnly"
-          class="pl-2 mt-2 h-10 block w-full border-1 border-gray-200 rounded-md drop-shadow focus:ring-[#A32035] focus:border-[#A32035] sm:text-sm">
+        <FormFieldLabel 
+          label="Manufacturer" 
+          field-id="soc_manufacturer"
+          :required="true"
+          tooltip="The company that manufactures the SoC (e.g., Intel, AMD, ARM, NVIDIA, Qualcomm). This is a required field."
+        />
+        <select 
+          id="soc_manufacturer"
+          v-model="form.manufacturer" 
+          :disabled="readOnly"
+          class="pl-2 mt-2 h-10 block w-full border-1 border-gray-200 rounded-md drop-shadow focus:ring-[#A32035] focus:border-[#A32035] sm:text-sm"
+        >
           <option value="">Select Manufacturer</option>
           <option value="Intel">Intel</option>
           <option value="AMD">AMD</option>
@@ -37,9 +61,20 @@
 
       <!-- Code Name -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">Code Name</label>
-        <input v-model="form.codeName" type="text" :disabled="readOnly"
-          class="pl-2 mt-1 h-10 block w-full border-1 border-gray-200 rounded-md drop-shadow focus:ring-[#A32035] focus:border-[#A32035] sm:text-sm">
+        <FormFieldLabel 
+          label="Code Name" 
+          field-id="soc_codeName"
+          :required="true"
+          tooltip="The SoC code name or model name (e.g., Snapdragon 8 Gen 2, Apple M2, Exynos 2200). This is a required field."
+        />
+        <input 
+          id="soc_codeName"
+          v-model="form.codeName" 
+          type="text" 
+          :disabled="readOnly"
+          placeholder="Example: Snapdragon 8 Gen 2"
+          class="pl-2 mt-1 h-10 block w-full border-1 border-gray-200 rounded-md drop-shadow focus:ring-[#A32035] focus:border-[#A32035] sm:text-sm"
+        />
       </div>
 
       <!-- Year -->
@@ -505,29 +540,83 @@
           <h3 class="text-lg font-medium mb-4">{{ editingEconomic ? 'Edit Economic Data' : 'Add Economic Data' }}</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Year *</label>
-              <input v-model="economicsForm.year" type="number" min="1900" max="2100"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+              <FormFieldLabel 
+                label="Year" 
+                field-id="economic_year"
+                :required="true"
+                tooltip="The year for this economic data entry (e.g., 2023, 2024). This is a required field."
+              />
+              <input 
+                id="economic_year"
+                v-model="economicsForm.year" 
+                type="number" 
+                min="1900" 
+                max="2100"
+                placeholder="Example: 2023"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]"
+              />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Price *</label>
-              <input v-model="economicsForm.price" type="number" step="0.01" min="0"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+              <FormFieldLabel 
+                label="Price" 
+                field-id="economic_price"
+                :required="true"
+                tooltip="The price in USD (e.g., 299.99, 1299.00). This is a required field."
+              />
+              <input 
+                id="economic_price"
+                v-model="economicsForm.price" 
+                type="number" 
+                step="0.01" 
+                min="0"
+                placeholder="Example: 299.99"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]"
+              />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Sales (units)</label>
-              <input v-model="economicsForm.sales_in_units" type="number" min="0"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+              <FormFieldLabel 
+                label="Sales (units)" 
+                field-id="economic_sales"
+                tooltip="Number of units sold (e.g., 1000000, 500000)."
+              />
+              <input 
+                id="economic_sales"
+                v-model="economicsForm.sales_in_units" 
+                type="number" 
+                min="0"
+                placeholder="Example: 1000000"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]"
+              />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Revenue</label>
-              <input v-model="economicsForm.revenue" type="number" step="0.01" min="0"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]">
+              <FormFieldLabel 
+                label="Revenue" 
+                field-id="economic_revenue"
+                tooltip="Total revenue in USD (e.g., 299990000.00)."
+              />
+              <input 
+                id="economic_revenue"
+                v-model="economicsForm.revenue" 
+                type="number" 
+                step="0.01" 
+                min="0"
+                placeholder="Example: 299990000.00"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]"
+              />
             </div>
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-              <textarea v-model="economicsForm.notes" rows="2"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]"></textarea>
+              <FormFieldLabel 
+                label="Notes" 
+                field-id="economic_notes"
+                tooltip="Additional notes about the economic data (optional)."
+              />
+              <textarea 
+                id="economic_notes"
+                v-model="economicsForm.notes" 
+                rows="2"
+                placeholder="Example: Launch price, includes tax"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#A32035] focus:border-[#A32035]"
+              ></textarea>
             </div>
           </div>
           <!-- Suggestion Note (for suggestors only) -->
@@ -624,6 +713,9 @@ import { useRuntimeConfig, useFetch, navigateTo } from '#imports'
 import { isLogged, getRole } from '@/lib/isLogged'
 import { getItemWithExpiry } from '@/lib/encrypter'
 import { submitSuggestion } from '@/lib/suggestionUtils'
+import FormFieldLabel from '@/components/FormFieldLabel.vue'
+import { handleApiError, handleNetworkError, handleJsonParseError, handleValidationError } from '@/lib/formErrorHandler'
+import { getSuccessMessage } from '@/lib/formSuccessHandler'
 
 const props = defineProps({
   socData: {
@@ -653,7 +745,28 @@ const getAuthToken = () => {
 
 // Reactive states for messages
 const successMessage = ref('')
+const successMessageCode = ref('')
+const successActionType = ref('')
+const successEntityType = ref('')
+const successEntityId = ref('')
 const errorMessage = ref('')
+const errorMessageCode = ref('')
+const errorType = ref('')
+const errorFieldName = ref('')
+
+// #region agent log
+// Log initial state immediately after declaration
+fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:752',message:'Error message state initialized',data:{errorMessage:errorMessage.value,hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,editMode:props.editMode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+// #endregion
+
+// Watch errorMessage to track when it's set
+watch(errorMessage, (newVal, oldVal) => {
+  // #region agent log
+  if (newVal && (newVal.includes('SoC ID not found') || newVal.includes('soc_id') || newVal.includes('socId'))) {
+    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:765',message:'errorMessage changed',data:{newVal,oldVal,hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,editMode:props.editMode,stackTrace:new Error().stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  }
+  // #endregion
+}, { immediate: true })
 
 // User role and suggestion note
 const userRole = computed(() => getRole())
@@ -665,7 +778,17 @@ const processorNote = ref('')
 // Check if user is logged in
 const isLoggedIn = ref(false)
 onMounted(() => {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:766',message:'Component mounted',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,socKeys:props.socData?.soc?Object.keys(props.socData.soc):[],socDataKeys:props.socData?Object.keys(props.socData):[],editMode:props.editMode,readOnly:props.readOnly,errorMessage:errorMessage.value,errorMessageCode:errorMessageCode.value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   isLoggedIn.value = isLogged()
+  
+  // #region agent log
+  // Check if error appears after a delay
+  setTimeout(() => {
+    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:772',message:'After mount delay check',data:{errorMessage:errorMessage.value,errorMessageCode:errorMessageCode.value,hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  }, 100);
+  // #endregion
 })
 
 // Form data
@@ -921,8 +1044,17 @@ const searchProcessors = async (resetPage = false) => {
     processorSearchPagination.value = data.pagination || null
   } catch (error) {
     console.error('Error searching processors:', error)
-    errorMessage.value = 'Error loading processors'
-    setTimeout(() => { errorMessage.value = '' }, 5000)
+    const handledError = handleNetworkError(error, 'processor', 'read')
+    errorMessage.value = handledError.message
+    errorMessageCode.value = handledError.code
+    errorType.value = handledError.type
+    errorFieldName.value = handledError.field
+    setTimeout(() => { 
+      errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
+    }, 5000)
   } finally {
     loadingProcessors.value = false
   }
@@ -949,13 +1081,28 @@ onUnmounted(() => {
 })
 
 const associateProcessor = async (processor) => {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1071',message:'associateProcessor called',data:{hasProcessor:!!processor,processorId:processor?.id,hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,editMode:props.editMode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+  // #endregion
   console.log('[SocForm] associateProcessor called', { processor, socData: props.socData })
   const socId = props.socData?.soc?.soc_id
   console.log('[SocForm] socId:', socId)
   if (!socId) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1075',message:'Setting error in associateProcessor: SOC_SAVE_FIRST_FOR_PROCESSORS',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,errorMessageBefore:errorMessage.value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+    // #endregion
     console.log('[SocForm] No socId - showing error message')
-    errorMessage.value = 'Please save the SOC first before adding processors'
-    setTimeout(() => { errorMessage.value = '' }, 5000)
+    const error = handleValidationError('SOC_SAVE_FIRST_FOR_PROCESSORS')
+    errorMessage.value = error.message
+    errorMessageCode.value = error.code
+    errorType.value = error.type
+    errorFieldName.value = error.field
+    setTimeout(() => { 
+      errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
+    }, 5000)
     return
   }
   
@@ -965,8 +1112,17 @@ const associateProcessor = async (processor) => {
   // If suggestor, validate note and submit as suggestion
   if (isSuggestion) {
     if (!processorNote.value || processorNote.value.trim() === '') {
-      errorMessage.value = 'Note is required for suggestions. Please provide an explanation for associating this processor.'
-      setTimeout(() => { errorMessage.value = '' }, 5000)
+      const error = handleValidationError('SUGGESTION_PROCESSOR_NOTE_REQUIRED')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
+      setTimeout(() => { 
+        errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
+      }, 5000)
       return
     }
     
@@ -987,9 +1143,18 @@ const associateProcessor = async (processor) => {
       // Submit as suggestion for the processor entity
       const result = await submitSuggestion(processorEntityType, processor.id, suggestionData, processorNote.value)
       
-      successMessage.value = 'Processor association suggestion submitted successfully! It will be reviewed by an admin or editor.'
+      const success = getSuccessMessage('suggestion', 'create', { suggestionType: 'processor_association' })
+      successMessage.value = success.message
+      successMessageCode.value = success.code
+      successActionType.value = success.type
+      successEntityType.value = success.entity
       processorNote.value = ''
-      setTimeout(() => { successMessage.value = '' }, 5000)
+      setTimeout(() => { 
+        successMessage.value = ''
+        successMessageCode.value = ''
+        successActionType.value = ''
+        successEntityType.value = ''
+      }, 5000)
       
       // Close processor selector
       toggleProcessorSelector()
@@ -999,8 +1164,17 @@ const associateProcessor = async (processor) => {
       console.error('[SocForm] Processor association suggestion submission failed', { 
         error: suggestionError.message 
       })
-      errorMessage.value = suggestionError.message || 'Failed to submit processor association suggestion. Please try again.'
-      setTimeout(() => { errorMessage.value = '' }, 5000)
+      const error = handleNetworkError(suggestionError, 'processor', 'create')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
+      setTimeout(() => { 
+        errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
+      }, 5000)
       return
     }
   }
@@ -1091,8 +1265,17 @@ const associateProcessor = async (processor) => {
     
     if (updateResponse.ok) {
       console.log('[SocForm] Processor association successful')
-      successMessage.value = `Processor ${processor.name} associated successfully!`
-      setTimeout(() => { successMessage.value = '' }, 5000)
+      const success = getSuccessMessage('processor', 'create', { name: processor.name })
+      successMessage.value = success.message
+      successMessageCode.value = success.code
+      successActionType.value = success.type
+      successEntityType.value = success.entity
+      setTimeout(() => { 
+        successMessage.value = ''
+        successMessageCode.value = ''
+        successActionType.value = ''
+        successEntityType.value = ''
+      }, 5000)
       
       console.log('[SocForm] Closing processor selector and emitting data-refreshed')
       toggleProcessorSelector()
@@ -1111,21 +1294,54 @@ const associateProcessor = async (processor) => {
     } else {
       const errorData = await updateResponse.json()
       console.error('Failed to associate processor:', errorData)
-      errorMessage.value = `Failed to associate processor: ${errorData.error || 'Unknown error'}`
-      setTimeout(() => { errorMessage.value = '' }, 5000)
+      const error = await handleApiError(updateResponse, 'processor', 'create')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
+      setTimeout(() => { 
+        errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
+      }, 5000)
     }
   } catch (error) {
     console.error('Error associating processor:', error)
-    errorMessage.value = 'Error associating processor'
-    setTimeout(() => { errorMessage.value = '' }, 5000)
+    const errorObj = handleNetworkError(error, 'processor', 'create')
+    errorMessage.value = errorObj.message
+    errorMessageCode.value = errorObj.code
+    errorType.value = errorObj.type
+    errorFieldName.value = errorObj.field
+    setTimeout(() => { 
+      errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
+    }, 5000)
   }
 }
 
 const removeProcessor = async (processor) => {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1295',message:'removeProcessor called',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,processorId:processor?.id,processorType:processor?.type},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   const socId = props.socData?.soc?.soc_id
   if (!socId) {
-    errorMessage.value = 'SoC ID not found'
-    setTimeout(() => { errorMessage.value = '' }, 5000)
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1298',message:'Setting error: SoC ID not found in removeProcessor',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    const error = handleValidationError('PROCESSOR_ASSOCIATION_SOC_ID_NOT_FOUND')
+    errorMessage.value = error.message
+    errorMessageCode.value = error.code
+    errorType.value = error.type
+    errorFieldName.value = error.field
+    setTimeout(() => { 
+      errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
+    }, 5000)
     return
   }
   
@@ -1159,16 +1375,34 @@ const removeProcessor = async (processor) => {
       // Submit as suggestion for the soc entity
       const result = await submitSuggestion('soc', socId, suggestionData, note)
       
-      successMessage.value = 'Processor disassociation suggestion submitted successfully! It will be reviewed by an admin or editor.'
-      setTimeout(() => { successMessage.value = '' }, 5000)
+      const success = getSuccessMessage('suggestion', 'delete', { suggestionType: 'processor_disassociation', type: processor.type })
+      successMessage.value = success.message
+      successMessageCode.value = success.code
+      successActionType.value = success.type
+      successEntityType.value = success.entity
+      setTimeout(() => { 
+        successMessage.value = ''
+        successMessageCode.value = ''
+        successActionType.value = ''
+        successEntityType.value = ''
+      }, 5000)
       emit('data-refreshed')
       return
     } catch (suggestionError) {
       console.error('[SocForm] Processor disassociation suggestion submission failed', { 
         error: suggestionError.message 
       })
-      errorMessage.value = suggestionError.message || 'Failed to submit processor disassociation suggestion. Please try again.'
-      setTimeout(() => { errorMessage.value = '' }, 5000)
+      const error = handleNetworkError(suggestionError, 'processor', 'delete')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
+      setTimeout(() => { 
+        errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
+      }, 5000)
       return
     }
   }
@@ -1206,19 +1440,46 @@ const removeProcessor = async (processor) => {
     })
     
     if (response.ok) {
-      successMessage.value = `${processor.type} removed from SoC successfully!`
-      setTimeout(() => { successMessage.value = '' }, 3000)
+      const success = getSuccessMessage('processor', 'delete', { type: processor.type })
+      successMessage.value = success.message
+      successMessageCode.value = success.code
+      successActionType.value = success.type
+      successEntityType.value = success.entity
+      setTimeout(() => { 
+        successMessage.value = ''
+        successMessageCode.value = ''
+        successActionType.value = ''
+        successEntityType.value = ''
+      }, 3000)
       emit('data-refreshed')
     } else {
       const errorData = await response.json()
       console.error('Failed to remove processor:', errorData)
-      errorMessage.value = `Failed to remove processor: ${errorData.error || 'Unknown error'}`
-      setTimeout(() => { errorMessage.value = '' }, 5000)
+      const error = await handleApiError(response, 'processor', 'delete')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
+      setTimeout(() => { 
+        errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
+      }, 5000)
     }
   } catch (error) {
     console.error('Error removing processor:', error)
-    errorMessage.value = 'Error removing processor'
-    setTimeout(() => { errorMessage.value = '' }, 5000)
+    const errorObj = handleNetworkError(error, 'processor', 'delete')
+    errorMessage.value = errorObj.message
+    errorMessageCode.value = errorObj.code
+    errorType.value = errorObj.type
+    errorFieldName.value = errorObj.field
+    setTimeout(() => { 
+      errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
+    }, 5000)
   }
 }
 
@@ -1283,8 +1544,19 @@ const refreshSocData = async () => {
 
 const submitBenchmark = async () => {
   if (!benchmarkForm.value.benchmark_name || !benchmarkForm.value.score) {
-    errorMessage.value = 'Please fill in required fields: Benchmark Name and Score'
-    setTimeout(() => { errorMessage.value = '' }, 5000)
+    const error = handleValidationError(
+      editingBenchmark.value ? 'BENCHMARK_UPDATE_VALIDATION_REQUIRED_FIELDS' : 'BENCHMARK_CREATE_VALIDATION_REQUIRED_FIELDS'
+    )
+    errorMessage.value = error.message
+    errorMessageCode.value = error.code
+    errorType.value = error.type
+    errorFieldName.value = error.field
+    setTimeout(() => { 
+      errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
+    }, 5000)
     return
   }
 
@@ -1405,6 +1677,9 @@ const submitBenchmark = async () => {
 }
 
 const deleteBenchmark = async (benchmarkId) => {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1652',message:'deleteBenchmark called',data:{benchmarkId,hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,editMode:props.editMode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+  // #endregion
   if (!confirm('Are you sure you want to delete this benchmark?')) return
 
   const currentRole = userRole.value
@@ -1423,8 +1698,20 @@ const deleteBenchmark = async (benchmarkId) => {
     try {
       const socId = props.socData?.soc?.soc_id
       if (!socId) {
-        errorMessage.value = 'SoC ID not found'
-        setTimeout(() => { errorMessage.value = '' }, 5000)
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1695',message:'Setting error: SoC ID not found in deleteBenchmark suggestion path',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,benchmarkId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+        const error = handleValidationError('PROCESSOR_ASSOCIATION_SOC_ID_NOT_FOUND')
+        errorMessage.value = error.message
+        errorMessageCode.value = error.code
+        errorType.value = error.type
+        errorFieldName.value = error.field
+        setTimeout(() => { 
+          errorMessage.value = ''
+          errorMessageCode.value = ''
+          errorType.value = ''
+          errorFieldName.value = ''
+        }, 5000)
         return
       }
 
@@ -1477,8 +1764,20 @@ const deleteBenchmark = async (benchmarkId) => {
     const config = useRuntimeConfig()
     const socId = props.socData?.soc?.soc_id
     if (!socId) {
-      errorMessage.value = 'SoC ID not found'
-      setTimeout(() => { errorMessage.value = '' }, 5000)
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1761',message:'Setting error: SoC ID not found in deleteBenchmark direct path',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,benchmarkId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
+      const error = handleValidationError('PROCESSOR_ASSOCIATION_SOC_ID_NOT_FOUND')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
+      setTimeout(() => { 
+        errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
+      }, 5000)
       return
     }
 
@@ -1562,8 +1861,19 @@ const editEconomic = (economic) => {
 
 const submitEconomic = async () => {
   if (!economicsForm.value.year || !economicsForm.value.price) {
-    errorMessage.value = 'Please fill in required fields: Year and Price'
-    setTimeout(() => { errorMessage.value = '' }, 5000)
+    const error = handleValidationError(
+      editingEconomic.value ? 'ECONOMIC_UPDATE_VALIDATION_REQUIRED_FIELDS' : 'ECONOMIC_CREATE_VALIDATION_REQUIRED_FIELDS'
+    )
+    errorMessage.value = error.message
+    errorMessageCode.value = error.code
+    errorType.value = error.type
+    errorFieldName.value = error.field
+    setTimeout(() => { 
+      errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
+    }, 5000)
     return
   }
 
@@ -1684,6 +1994,9 @@ const submitEconomic = async () => {
 }
 
 const deleteEconomic = async (economicId) => {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1945',message:'deleteEconomic called',data:{economicId,hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,editMode:props.editMode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+  // #endregion
   if (!confirm('Are you sure you want to delete this economic data?')) return
 
   const currentRole = userRole.value
@@ -1702,8 +2015,20 @@ const deleteEconomic = async (economicId) => {
     try {
       const socId = props.socData?.soc?.soc_id
       if (!socId) {
-        errorMessage.value = 'SoC ID not found'
-        setTimeout(() => { errorMessage.value = '' }, 5000)
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1991',message:'Setting error: SoC ID not found in deleteEconomic suggestion path',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,economicId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
+        const error = handleValidationError('PROCESSOR_ASSOCIATION_SOC_ID_NOT_FOUND')
+        errorMessage.value = error.message
+        errorMessageCode.value = error.code
+        errorType.value = error.type
+        errorFieldName.value = error.field
+        setTimeout(() => { 
+          errorMessage.value = ''
+          errorMessageCode.value = ''
+          errorType.value = ''
+          errorFieldName.value = ''
+        }, 5000)
         return
       }
 
@@ -1756,8 +2081,20 @@ const deleteEconomic = async (economicId) => {
     const config = useRuntimeConfig()
     const socId = props.socData?.soc?.soc_id
     if (!socId) {
-      errorMessage.value = 'SoC ID not found'
-      setTimeout(() => { errorMessage.value = '' }, 5000)
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:2078',message:'Setting error: SoC ID not found in deleteEconomic direct path',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,economicId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+      const error = handleValidationError('PROCESSOR_ASSOCIATION_SOC_ID_NOT_FOUND')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
+      setTimeout(() => { 
+        errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
+      }, 5000)
       return
     }
 
@@ -1841,12 +2178,30 @@ const getOrCreateManufacturer = async (manufacturerName) => {
 // Form submission
 const submitData = async () => {
   successMessage.value = ''
+  successMessageCode.value = ''
+  successActionType.value = ''
+  successEntityType.value = ''
+  successEntityId.value = ''
   errorMessage.value = ''
+  errorMessageCode.value = ''
+  errorType.value = ''
+  errorFieldName.value = ''
 
   // Basic validation
   if (!form.value.manufacturer || !form.value.codeName) {
-    errorMessage.value = 'Please fill in required fields: Manufacturer and Code Name'
-    setTimeout(() => { errorMessage.value = '' }, 5000)
+    const error = handleValidationError(
+      props.editMode ? 'SOC_UPDATE_VALIDATION_REQUIRED_FIELDS' : 'SOC_CREATE_VALIDATION_REQUIRED_FIELDS'
+    )
+    errorMessage.value = error.message
+    errorMessageCode.value = error.code
+    errorType.value = error.type
+    errorFieldName.value = error.field
+    setTimeout(() => { 
+      errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
+    }, 5000)
     return
   }
 
@@ -1899,8 +2254,17 @@ const submitData = async () => {
     if (isSuggestion) {
       // Validate note is provided for suggestors
       if (!suggestionNote.value || suggestionNote.value.trim() === '') {
-        errorMessage.value = 'Note is required for suggestions. Please provide an explanation for your suggestion.'
-        setTimeout(() => { errorMessage.value = '' }, 5000)
+        const error = handleValidationError('SUGGESTION_NOTE_REQUIRED')
+        errorMessage.value = error.message
+        errorMessageCode.value = error.code
+        errorType.value = error.type
+        errorFieldName.value = error.field
+        setTimeout(() => { 
+          errorMessage.value = ''
+          errorMessageCode.value = ''
+          errorType.value = ''
+          errorFieldName.value = ''
+        }, 5000)
         return
       }
 
@@ -1913,7 +2277,11 @@ const submitData = async () => {
           isSuggestion: true 
         })
         
-        successMessage.value = 'Suggestion submitted successfully! It will be reviewed by an admin or editor.'
+        const success = getSuccessMessage('suggestion', 'create')
+        successMessage.value = success.message
+        successMessageCode.value = success.code
+        successActionType.value = success.type
+        successEntityType.value = success.entity
         
         // Redirect after delay
         setTimeout(() => {
@@ -1929,8 +2297,17 @@ const submitData = async () => {
           role: currentRole, 
           error: suggestionError.message 
         })
-        errorMessage.value = suggestionError.message || 'Failed to submit suggestion. Please try again.'
-        setTimeout(() => { errorMessage.value = '' }, 5000)
+        const error = handleNetworkError(suggestionError, 'soc', 'create')
+        errorMessage.value = error.message
+        errorMessageCode.value = error.code
+        errorType.value = error.type
+        errorFieldName.value = error.field
+        setTimeout(() => { 
+          errorMessage.value = ''
+          errorMessageCode.value = ''
+          errorType.value = ''
+          errorFieldName.value = ''
+        }, 5000)
       }
       return
     }
@@ -1956,8 +2333,17 @@ const submitData = async () => {
       serverData = await response.json()
     } catch (jsonError) {
       console.error('Error parsing JSON response:', jsonError)
-      errorMessage.value = 'Invalid response from server. Please try again.'
-      setTimeout(() => { errorMessage.value = '' }, 5000)
+      const error = handleJsonParseError('soc', props.editMode ? 'update' : 'create')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
+      setTimeout(() => { 
+        errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
+      }, 5000)
       return
     }
     
@@ -1968,10 +2354,15 @@ const submitData = async () => {
     })
 
     if (response.ok) {
-      successMessage.value = `SoC ${props.editMode ? 'updated' : 'created'} successfully!`
       // Handle both wrapped and direct response formats
       const responseData = serverData.data || serverData
       const newSocId = props.editMode ? socId : (responseData?.soc?.soc_id || responseData?.soc_id)
+      const success = getSuccessMessage('soc', props.editMode ? 'update' : 'create', { id: newSocId })
+      successMessage.value = success.message
+      successMessageCode.value = success.code
+      successActionType.value = success.type
+      successEntityType.value = success.entity
+      successEntityId.value = newSocId || ''
       
       console.log('[SocForm] SoC saved successfully', { newSocId, editMode: props.editMode, responseData })
       
@@ -1990,11 +2381,24 @@ const submitData = async () => {
         // Keep success message visible for 5 seconds
         setTimeout(() => {
           successMessage.value = ''
+          successMessageCode.value = ''
+          successActionType.value = ''
+          successEntityType.value = ''
+          successEntityId.value = ''
         }, 5000)
       }
     } else {
-      errorMessage.value = serverData.error || 'An error occurred during submission.'
-      setTimeout(() => { errorMessage.value = '' }, 5000)
+      const error = await handleApiError(response, 'soc', props.editMode ? 'update' : 'create')
+      errorMessage.value = error.message
+      errorMessageCode.value = error.code
+      errorType.value = error.type
+      errorFieldName.value = error.field
+      setTimeout(() => { 
+        errorMessage.value = ''
+        errorMessageCode.value = ''
+        errorType.value = ''
+        errorFieldName.value = ''
+      }, 5000)
     }
   } catch (error) {
     console.error('[Form] Submission failed', { 
@@ -2002,8 +2406,17 @@ const submitData = async () => {
       role: currentRole, 
       error: error.message 
     })
-    errorMessage.value = error.message || 'An unexpected error occurred.'
-    setTimeout(() => { errorMessage.value = '' }, 5000)
+    const errorObj = handleNetworkError(error, 'soc', props.editMode ? 'update' : 'create')
+    errorMessage.value = errorObj.message
+    errorMessageCode.value = errorObj.code
+    errorType.value = errorObj.type
+    errorFieldName.value = errorObj.field
+    setTimeout(() => { 
+      errorMessage.value = ''
+      errorMessageCode.value = ''
+      errorType.value = ''
+      errorFieldName.value = ''
+    }, 5000)
   }
 }
 

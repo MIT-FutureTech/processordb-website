@@ -16,7 +16,7 @@
             </DropdownMenuTrigger>
             <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
               <DropdownMenuItem v-for="option in numericOptions" :key="option.value + '-' + option.source"
-                class="cursor-pointer" @click="xAxis = option">
+                class="cursor-pointer" @click="handleXAxisChange(option)">
                 {{ option.label }}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -39,7 +39,7 @@
             </DropdownMenuTrigger>
             <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
               <DropdownMenuItem v-for="option in numericOptions" :key="option.value + '-' + option.source"
-                class="cursor-pointer" @click="yAxis = option">
+                class="cursor-pointer" @click="handleYAxisChange(option)">
                 {{ option.label }}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -104,6 +104,7 @@ import {
   createHeatmap,
   detectDenseRegions 
 } from '@/lib/chartUtils';
+import { getNumericOptions, getCategoricalOptions, generateNumericOptionsFromData } from '@/lib/chartFieldMaps';
 
 // Error handling for chart component
 const chartError = ref(null);
@@ -143,47 +144,81 @@ const convertString = (str) => {
 //   })));
 // };
 
-// Dynamically generate numeric options for X and Y axes.
-// It scans the first CPU data object and its nested SoC object, excluding IDs and timestamps.
+// Comprehensive numeric options for X and Y axes from field map
+// Falls back to dynamic generation if data structure differs
 const numericOptions = computed(() => {
-  if (!props.data || !props.data.length) return [];
-
-  const sample = props.data[0];
-  const options = [];
-  const cpuExcludes = new Set(['cpu_id', 'soc_id', 'createdAt', 'updatedAt']);
-
-  for (const key in sample) {
-    if (cpuExcludes.has(key)) continue;
-    if (typeof sample[key] === 'number') {
-      options.push({ label: convertString(key), value: key, source: 'cpu' });
-    }
-  }
-
-  if (sample.SoC) {
-    const socExcludes = new Set(['soc_id', 'manufacturer_id', 'createdAt', 'updatedAt']);
-    for (const key in sample.SoC) {
-      if (socExcludes.has(key)) continue;
-      if (typeof sample.SoC[key] === 'number' || key === 'release_date') {
-        options.push({ label: `${convertString(key)}`, value: key, source: 'soc' });
+  // Use comprehensive field map first
+  const fieldMapOptions = getNumericOptions('cpu');
+  
+  // If we have data, verify fields exist and filter to available ones
+  if (props.data && props.data.length > 0) {
+    const sample = props.data[0];
+    const availableFields = new Set();
+    
+    // Check top-level fields
+    for (const key in sample) {
+      if (typeof sample[key] === 'number' || key === 'release_date') {
+        availableFields.add(key);
       }
     }
+    
+    // Check nested SoC fields
+    if (sample.SoC) {
+      for (const key in sample.SoC) {
+        if (typeof sample.SoC[key] === 'number' || key === 'release_date') {
+          availableFields.add(key);
+        }
+      }
+    }
+    
+    // Filter field map options to only include available fields
+    return fieldMapOptions.filter(opt => {
+      // For soc source, check both flattened and nested
+      if (opt.source === 'soc') {
+        return availableFields.has(opt.value) || 
+               (sample.SoC && sample.SoC.hasOwnProperty(opt.value)) ||
+               sample.hasOwnProperty(opt.value);
+      }
+      return availableFields.has(opt.value) || sample.hasOwnProperty(opt.value);
+    });
   }
-  return options;
+  
+  return fieldMapOptions;
 });
 
-// Static Group By options for CPU data.
-const groupOptions = [
-  { label: 'Manufacturer', value: 'manufacturer_name', source: 'soc' },
-  { label: 'Family', value: 'family', source: 'cpu' },
-  { label: 'Microarchitecture', value: 'microarchitecture', source: 'cpu' }
-];
+// Comprehensive Group By options for CPU data from field map
+const groupOptions = getCategoricalOptions('cpu');
 
-const filteredGroupOptions = computed(() => groupOptions);
+const filteredGroupOptions = computed(() => {
+  // Filter to only include fields that exist in the data
+  if (props.data && props.data.length > 0) {
+    const sample = props.data[0];
+    return groupOptions.filter(opt => {
+      if (opt.source === 'soc') {
+        // Check both flattened and nested structures
+        return sample.hasOwnProperty(opt.value) || 
+               (sample.SoC && sample.SoC.hasOwnProperty(opt.value)) ||
+               (opt.value === 'manufacturer_name' && (sample.manufacturer_name || sample.SoC?.Manufacturer));
+      }
+      return sample.hasOwnProperty(opt.value);
+    });
+  }
+  return groupOptions;
+});
 
 // Initialize axes with first available options, with fallbacks
 const xAxis = ref(numericOptions.value.find(opt => opt.value === 'release_date') || numericOptions.value[0] || { label: 'X-Axis', value: '', source: '' });
 const yAxis = ref(numericOptions.value.find(opt => opt.value === 'core_count') || numericOptions.value[1] || { label: 'Y-Axis', value: '', source: '' });
 const groupBy = ref(filteredGroupOptions.value[0]);
+
+// Axis change handlers
+const handleXAxisChange = (option) => {
+  xAxis.value = option;
+};
+
+const handleYAxisChange = (option) => {
+  yAxis.value = option;
+};
 
 // Utility: Get the proper value from a CPU data item based on the axis source.
 // Handles both nested structure (from regular API) and flattened structure (from chart-data endpoint)
@@ -193,9 +228,13 @@ const getAxisData = (item, axis) => {
       // Try flattened structure first (chart-data endpoint), then nested structure
       return item.manufacturer_name ?? item.SoC?.Manufacturer?.name ?? null;
     }
+    if (axis.value === 'platform') {
+      return item.platform ?? item.SoC?.platform ?? null;
+    }
     // Try flattened structure first (chart-data endpoint), then nested structure
     return item[axis.value] ?? item.SoC?.[axis.value] ?? null;
   }
+  // Handle CPU fields
   return item[axis.value] ?? null;
 };
 
@@ -204,25 +243,31 @@ const seabornColors = {
   family: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3'],
   microarchitecture: ['#4c72b0', '#dd8452', '#55a868', '#c44e52'],
   manufacturer: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3'],
+  code_name: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3', '#937860'],
+  model: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3', '#937860', '#da8bc3'],
+  lithography: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3'],
+  memory_type: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3'],
+  graphics: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3'],
+  platform: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3'],
+  default: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3', '#937860', '#da8bc3', '#8c8c8c'],
 };
-
 
 // Determine the color for a given grouping category.
 const getColorForCategory = (colorCategory) => {
-  if (groupBy.value.value === 'family') {
-    const categories = [...new Set(props.data.map(item => getAxisData(item, { value: 'family', source: 'cpu' })))];
-    const colorIndex = categories.indexOf(colorCategory) % seabornColors.family.length;
-    return seabornColors.family[colorIndex];
-  } else if (groupBy.value.value === 'microarchitecture') {
-    const categories = [...new Set(props.data.map(item => getAxisData(item, { value: 'microarchitecture', source: 'cpu' })))];
-    const colorIndex = categories.indexOf(colorCategory) % seabornColors.microarchitecture.length;
-    return seabornColors.microarchitecture[colorIndex];
-  } else if (groupBy.value.value === 'manufacturer_name') {
-    const categories = [...new Set(props.data.map(item => getAxisData(item, { value: 'manufacturer_name', source: 'soc' })))];
-    const colorIndex = categories.indexOf(colorCategory) % seabornColors.manufacturer.length;
-    return seabornColors.manufacturer[colorIndex];
-  }
-  return 'gray';
+  if (!colorCategory) return 'gray';
+  
+  const groupByValue = groupBy.value.value;
+  const colorPalette = seabornColors[groupByValue] || seabornColors.default;
+  
+  // Get all unique categories for the current groupBy field
+  const categories = [...new Set(
+    props.data
+      .map(item => getAxisData(item, groupBy.value))
+      .filter(Boolean)
+  )];
+  
+  const colorIndex = categories.indexOf(colorCategory) % colorPalette.length;
+  return colorPalette[colorIndex];
 };
 
 // Memoize chart data processing
@@ -259,8 +304,9 @@ const chartOptions = computed(() => {
       if (xValue === null || yValue === null) return false;
       
       const x = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
+      const y = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
       return x >= zoom.xMin && x <= zoom.xMax && 
-             yValue >= zoom.yMin && yValue <= zoom.yMax;
+             y >= zoom.yMin && y <= zoom.yMax;
     });
     
     if (visibleData.length > 0) {
@@ -268,21 +314,29 @@ const chartOptions = computed(() => {
       
       if (density > 100) {
         // Very dense - use binning
-        const pointData = visibleData.map(item => ({
-          x: xAxis.value.value === 'release_date' ? Date.parse(getAxisData(item, xAxis.value)) : getAxisData(item, xAxis.value),
-          y: getAxisData(item, yAxis.value),
-          data: item
-        })).filter(p => p.x !== null && p.y !== null && !isNaN(p.x) && !isNaN(p.y));
+        const pointData = visibleData.map(item => {
+          const xValue = getAxisData(item, xAxis.value);
+          const yValue = getAxisData(item, yAxis.value);
+          return {
+            x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
+            y: yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue,
+            data: item
+          };
+        }).filter(p => p.x !== null && p.y !== null && !isNaN(p.x) && !isNaN(p.y));
         
         const binned = binData(pointData, 50);
         dataToProcess = binned.map(bin => bin.data || bin);
       } else if (density > 10) {
         // Medium density - use clustering
-        const pointData = visibleData.map(item => ({
-          x: xAxis.value.value === 'release_date' ? Date.parse(getAxisData(item, xAxis.value)) : getAxisData(item, xAxis.value),
-          y: getAxisData(item, yAxis.value),
-          data: item
-        })).filter(p => p.x !== null && p.y !== null && !isNaN(p.x) && !isNaN(p.y));
+        const pointData = visibleData.map(item => {
+          const xValue = getAxisData(item, xAxis.value);
+          const yValue = getAxisData(item, yAxis.value);
+          return {
+            x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
+            y: yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue,
+            data: item
+          };
+        }).filter(p => p.x !== null && p.y !== null && !isNaN(p.x) && !isNaN(p.y));
         
         const clustered = clusterData(pointData, 100);
         dataToProcess = clustered.map(cluster => cluster.data || cluster);
@@ -293,7 +347,7 @@ const chartOptions = computed(() => {
   }
   
   // Create cache key based on data length, axis selections, and groupBy
-  const cacheKey = `${dataSize}-${xAxis.value.value}-${yAxis.value.value}-${groupBy.value.value}`
+  const cacheKey = `${dataSize}-${xAxis.value?.value || 'null'}-${yAxis.value?.value || 'null'}-${groupBy.value?.value || 'null'}`
   
   // Check if we have cached data
   if (chartDataCache.value.has(cacheKey)) {
@@ -312,9 +366,10 @@ const chartOptions = computed(() => {
     if (xValue === null || yValue === null || colorCategory === null) return acc;
 
     const xFormattedValue = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
+    const yFormattedValue = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
     const point = {
       x: xFormattedValue,
-      y: yValue,
+      y: yFormattedValue,
       name: `${item.family || '-'} ${item.code_name || '-'} ${item.model || '-'}`,
       color: getColorForCategory(colorCategory),
       data: item,
@@ -349,11 +404,13 @@ const chartOptions = computed(() => {
     if (firstItem) {
       const xValue = getAxisData(firstItem, xAxis.value);
       const yValue = getAxisData(firstItem, yAxis.value);
+      const xFormattedValue = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
+      const yFormattedValue = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
       series = [{
         name: 'Data',
         data: [{
-          x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
-          y: yValue,
+          x: xFormattedValue,
+          y: yFormattedValue,
           name: `${firstItem.family || '-'} ${firstItem.code_name || '-'} ${firstItem.model || '-'}`,
           data: firstItem
         }],
@@ -370,9 +427,11 @@ const chartOptions = computed(() => {
       const xValue = getAxisData(item, xAxis.value);
       const yValue = getAxisData(item, yAxis.value);
       if (xValue === null || yValue === null) return null;
+      const xFormattedValue = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
+      const yFormattedValue = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
       return {
-        x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
-        y: yValue,
+        x: xFormattedValue,
+        y: yFormattedValue,
         data: item
       };
     }).filter(p => p !== null && !isNaN(p.x) && !isNaN(p.y));
@@ -445,25 +504,34 @@ const chartOptions = computed(() => {
     credits: false,
     title: false,
     xAxis: {
-      title: { text: xAxis.value.label },
-      type: xAxis.value.value === 'release_date' ? 'datetime' : 'linear',
+      title: { text: xAxis.value?.label || 'X-Axis' },
+      type: (xAxis.value?.value === 'release_date') ? 'datetime' : 'linear',
       labels: {
         formatter: function () {
-          if (xAxis.value.value === 'release_date') {
+          if (xAxis.value?.value === 'release_date') {
             return new Date(this.value).getFullYear();
           }
           return this.value;
         }
       },
-      tickInterval: xAxis.value.value === 'release_date' ? null : 'auto',
+      tickInterval: (xAxis.value?.value === 'release_date') ? null : 'auto',
       gridLineWidth: 1,
-      min: xAxis.value.value === 'release_date' ? undefined : 1,
+      min: (xAxis.value?.value === 'release_date') ? undefined : 1,
       startOnTick: true,
       endOnTick: true,
     },
     yAxis: {
-      title: { text: yAxis.value.label },
-      type: 'linear',
+      title: { text: yAxis.value?.label || 'Y-Axis' },
+      type: (yAxis.value?.value === 'release_date') ? 'datetime' : 'linear',
+      labels: {
+        formatter: function () {
+          if (yAxis.value?.value === 'release_date') {
+            return new Date(this.value).getFullYear();
+          }
+          return this.value;
+        }
+      },
+      tickInterval: (yAxis.value?.value === 'release_date') ? null : 'auto',
       startOnTick: false,
     },
     tooltip: {

@@ -2,38 +2,67 @@
   <div class="mt-14">
     <div
       v-if="successMessage"
-      class="mb-4 p-2 bg-green-200 text-green-800 rounded"
+      data-testid="form-success"
+      :data-message-code="successMessageCode"
+      :data-action-type="successActionType"
+      :data-entity-type="successEntityType"
+      class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded shadow-md"
     >
       {{ successMessage }}
     </div>
     <div
       v-if="errorMessage"
-      class="mb-4 p-2 bg-red-200 text-red-800 rounded"
+      data-testid="form-error"
+      :data-message-code="errorMessageCode"
+      :data-error-type="errorType"
+      :data-field-name="errorFieldName"
+      class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded shadow-md"
     >
       {{ errorMessage }}
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-gray-700 pl-2">Name</label>
+      <FormFieldLabel 
+        label="Name" 
+        field-id="admin_name"
+        :required="true"
+        tooltip="Enter the username for the new user account (e.g., johndoe). This is a required field."
+      />
       <input
+        id="admin_name"
         type="text"
         v-model="name"
+        placeholder="Example: johndoe"
         class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
       >
     </div>
     <div>
-      <label class="block text-sm font-medium text-gray-700 pl-2">Email</label>
+      <FormFieldLabel 
+        label="Email" 
+        field-id="admin_email"
+        :required="true"
+        tooltip="Enter the email address for the new user account (e.g., user@example.com). This is a required field."
+      />
       <input
+        id="admin_email"
         type="email"
         v-model="email"
+        placeholder="Example: user@example.com"
         class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
       >
     </div>
     <div>
-      <label class="block text-sm font-medium text-gray-700 pl-2">Password</label>
+      <FormFieldLabel 
+        label="Password" 
+        field-id="admin_password"
+        :required="true"
+        tooltip="Enter a password for the new user account. Must be at least 6 characters. This is a required field."
+      />
       <input
+        id="admin_password"
         type="password"
         v-model="password"
+        placeholder="Example: SecurePass123!"
         class="pl-2 mt-1 block w-full h-10 sm:text-sm border-0 border-b border-gray-200 focus:ring-0 focus:border-gray-400 transition-colors bg-transparent"
       >
     </div>
@@ -49,12 +78,21 @@
 
 <script setup lang="js">
 import { ref } from 'vue';
+import FormFieldLabel from '@/components/FormFieldLabel.vue';
+import { handleApiError, handleNetworkError } from '@/lib/formErrorHandler';
+import { getSuccessMessage } from '@/lib/formSuccessHandler';
 
 const password = ref('');
 const email = ref('');
 const name = ref('');
 const successMessage = ref('');
+const successMessageCode = ref('');
+const successActionType = ref('');
+const successEntityType = ref('');
 const errorMessage = ref('');
+const errorMessageCode = ref('');
+const errorType = ref('');
+const errorFieldName = ref('');
 
 async function submitForm() {
   try {
@@ -67,16 +105,29 @@ async function submitForm() {
     })
 
     if (response.ok) {
-      successMessage.value = 'Registration successful!'
+      const success = getSuccessMessage('user', 'create');
+      successMessage.value = success.message;
+      successMessageCode.value = success.code;
+      successActionType.value = success.type;
+      successEntityType.value = success.entity;
       setTimeout(() => {
         window.location.reload();
       }, 3500);
     } else {
-      errorMessage.value = 'Registration unsuccessful!'
+      const error = await handleApiError(response, 'user', 'create');
+      errorMessage.value = error.message;
+      errorMessageCode.value = error.code;
+      errorType.value = error.type;
+      errorFieldName.value = error.field;
     }
 
   } catch (err) {
-    console.log(err)
+    console.log(err);
+    const errorObj = handleNetworkError(err, 'user', 'create');
+    errorMessage.value = errorObj.message;
+    errorMessageCode.value = errorObj.code;
+    errorType.value = errorObj.type;
+    errorFieldName.value = errorObj.field;
   }
 }
 

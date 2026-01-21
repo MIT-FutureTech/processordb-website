@@ -93,7 +93,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onErrorCaptured, onMounted } from 'vue';
+import { computed, ref, onErrorCaptured, onMounted, watch } from 'vue';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -107,6 +107,7 @@ import {
   createHeatmap,
   detectDenseRegions 
 } from '@/lib/chartUtils';
+import { getNumericOptions, getCategoricalOptions } from '@/lib/chartFieldMaps';
 
 // Props: Expect an array of SoC data objects
 const props = defineProps({
@@ -123,30 +124,70 @@ onErrorCaptured((err) => {
   return false;
 });
 
-// Define X-Axis options for SoC data
-const xAxisOptions = [
-  { label: 'Release Date', value: 'release_date' },
-  { label: 'Process Node (nm)', value: 'process_node' },
-  { label: 'Die Size (mm²)', value: 'die_sizes' },
-  { label: 'Total Transistor Count', value: 'total_transistor_count' },
-  { label: 'Transistor Density', value: 'transistor_density' },
-  { label: 'Package Size', value: 'package_size' },
-  { label: 'Number of Die', value: 'number_of_die' },
-];
+// Comprehensive X-Axis options for SoC data from field map
+const xAxisOptions = computed(() => {
+  const fieldMapOptions = getNumericOptions('soc');
+  
+  // If we have data, verify fields exist and filter to available ones
+  if (props.data && props.data.length > 0) {
+    const sample = props.data[0];
+    const availableFields = new Set();
+    
+    // Check all fields in sample
+    for (const key in sample) {
+      if (typeof sample[key] === 'number' || key === 'release_date') {
+        availableFields.add(key);
+      }
+    }
+    
+    // Filter field map options to only include available fields
+    return fieldMapOptions.filter(opt => availableFields.has(opt.value) || sample.hasOwnProperty(opt.value));
+  }
+  
+  return fieldMapOptions;
+});
 
-const yAxisOptions = xAxisOptions.filter(option => option.value !== 'release_date');
+// Y-Axis options exclude release_date
+const yAxisOptions = computed(() => {
+  return xAxisOptions.value.filter(option => option.value !== 'release_date');
+});
 
-// Define Group By options
-const groupOptions = [
-  { label: 'Manufacturer', value: 'manufacturer_name' },
-  { label: 'Processor Type', value: 'processor_type' },
-];
+// Comprehensive Group By options for SoC data from field map
+const groupOptions = getCategoricalOptions('soc');
 
-const filteredGroupOptions = computed(() => groupOptions);
+const filteredGroupOptions = computed(() => {
+  // Filter to only include fields that exist in the data
+  if (props.data && props.data.length > 0) {
+    const sample = props.data[0];
+    return groupOptions.filter(opt => {
+      if (opt.value === 'processor_type') {
+        // Processor type is always available from nested processors array
+        return true;
+      }
+      return sample.hasOwnProperty(opt.value) || 
+             (opt.value === 'manufacturer_name' && (sample.manufacturer_name || sample.manufacturer));
+    });
+  }
+  return groupOptions;
+});
 
-const xAxis = ref(xAxisOptions[0]);
-const yAxis = ref(yAxisOptions[0]);
-const groupBy = ref(filteredGroupOptions.value[0]);
+// Initialize axes with computed defaults
+const xAxis = ref(null);
+const yAxis = ref(null);
+const groupBy = ref(null);
+
+// Set initial values when options are available
+watch([xAxisOptions, yAxisOptions, filteredGroupOptions], ([xOpts, yOpts, groupOpts]) => {
+  if (!xAxis.value && xOpts.length > 0) {
+    xAxis.value = xOpts.find(opt => opt.value === 'release_date') || xOpts[0];
+  }
+  if (!yAxis.value && yOpts.length > 0) {
+    yAxis.value = yOpts.find(opt => opt.value === 'process_node') || yOpts[0];
+  }
+  if (!groupBy.value && groupOpts.length > 0) {
+    groupBy.value = groupOpts[0];
+  }
+}, { immediate: true });
 
 // Utility: Get the appropriate value from an item
 const getAxisData = (item, axis) => {
@@ -161,13 +202,18 @@ const getAxisData = (item, axis) => {
     }
     return null;
   }
+  if (axis.value === 'platform') {
+    return item.platform || null;
+  }
   return item[axis.value] ?? null;
 };
 
 // Seaborn-inspired color schemes for grouping
 const seabornColors = {
-  manufacturer: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3', '#937860', '#da8bc3', '#8c8c8c'],
-  processorType: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3'],
+  manufacturer_name: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3', '#937860', '#da8bc3', '#8c8c8c'],
+  processor_type: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3'],
+  platform: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3', '#937860'],
+  default: ['#4c72b0', '#dd8452', '#55a868', '#c44e52', '#8172b3', '#937860', '#da8bc3', '#8c8c8c'],
 };
 
 // Memoize category colors to avoid recalculating on every call
@@ -175,21 +221,25 @@ const categoryColorMap = ref(new Map());
 
 // Determine color based on the current group option (optimized with memoization)
 const getColorForCategory = (colorCategory) => {
+  if (!colorCategory) return 'gray';
+  
   // Use memoized map if available
   if (categoryColorMap.value.has(colorCategory)) {
     return categoryColorMap.value.get(colorCategory);
   }
   
-  let color = 'gray';
-  if (groupBy.value.value === 'manufacturer_name') {
-    const manufacturers = [...new Set(props.data.map(item => getAxisData(item, groupBy.value)).filter(Boolean))];
-    const colorIndex = manufacturers.indexOf(colorCategory) % seabornColors.manufacturer.length;
-    color = seabornColors.manufacturer[colorIndex];
-  } else if (groupBy.value.value === 'processor_type') {
-    const types = [...new Set(props.data.map(item => getAxisData(item, groupBy.value)).filter(Boolean))];
-    const colorIndex = types.indexOf(colorCategory) % seabornColors.processorType.length;
-    color = seabornColors.processorType[colorIndex];
-  }
+  const groupByValue = groupBy.value.value;
+  const colorPalette = seabornColors[groupByValue] || seabornColors.default;
+  
+  // Get all unique categories for the current groupBy field
+  const categories = [...new Set(
+    props.data
+      .map(item => getAxisData(item, groupBy.value))
+      .filter(Boolean)
+  )];
+  
+  const colorIndex = categories.indexOf(colorCategory) % colorPalette.length;
+  const color = colorPalette[colorIndex];
   
   // Cache the color
   categoryColorMap.value.set(colorCategory, color);
@@ -228,28 +278,37 @@ const chartOptions = computed(() => {
       if (xValue === null || yValue === null) return false;
       
       const x = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
+      const y = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
       return x >= zoom.xMin && x <= zoom.xMax && 
-             yValue >= zoom.yMin && yValue <= zoom.yMax;
+             y >= zoom.yMin && y <= zoom.yMax;
     });
     
     if (visibleData.length > 0) {
       const density = calculateDataDensity(visibleData, xAxis.value, yAxis.value);
       
       if (density > 100) {
-        const pointData = visibleData.map(item => ({
-          x: xAxis.value.value === 'release_date' ? Date.parse(getAxisData(item, xAxis.value)) : getAxisData(item, xAxis.value),
-          y: getAxisData(item, yAxis.value),
-          data: item
-        })).filter(p => p.x !== null && p.y !== null && !isNaN(p.x) && !isNaN(p.y));
+        const pointData = visibleData.map(item => {
+          const xValue = getAxisData(item, xAxis.value);
+          const yValue = getAxisData(item, yAxis.value);
+          return {
+            x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
+            y: yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue,
+            data: item
+          };
+        }).filter(p => p.x !== null && p.y !== null && !isNaN(p.x) && !isNaN(p.y));
         
         const binned = binData(pointData, 50);
         dataToProcess = binned.map(bin => bin.data || bin);
       } else if (density > 10) {
-        const pointData = visibleData.map(item => ({
-          x: xAxis.value.value === 'release_date' ? Date.parse(getAxisData(item, xAxis.value)) : getAxisData(item, xAxis.value),
-          y: getAxisData(item, yAxis.value),
-          data: item
-        })).filter(p => p.x !== null && p.y !== null && !isNaN(p.x) && !isNaN(p.y));
+        const pointData = visibleData.map(item => {
+          const xValue = getAxisData(item, xAxis.value);
+          const yValue = getAxisData(item, yAxis.value);
+          return {
+            x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
+            y: yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue,
+            data: item
+          };
+        }).filter(p => p.x !== null && p.y !== null && !isNaN(p.x) && !isNaN(p.y));
         
         const clustered = clusterData(pointData, 100);
         dataToProcess = clustered.map(cluster => cluster.data || cluster);
@@ -271,9 +330,10 @@ const chartOptions = computed(() => {
     if (xValue === null || yValue === null || colorCategory === null) return acc;
 
     const xFormattedValue = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
+    const yFormattedValue = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
     const point = {
       x: xFormattedValue,
-      y: yValue,
+      y: yFormattedValue,
       name: item.soc_name || item.name || `SoC ${item.soc_id}`,
       color: getColorForCategory(colorCategory),
       data: item,
@@ -303,9 +363,11 @@ const chartOptions = computed(() => {
       const xValue = getAxisData(item, xAxis.value);
       const yValue = getAxisData(item, yAxis.value);
       if (xValue === null || yValue === null) return null;
+      const xFormattedValue = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
+      const yFormattedValue = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
       return {
-        x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
-        y: yValue,
+        x: xFormattedValue,
+        y: yFormattedValue,
         data: item
       };
     }).filter(p => p !== null && !isNaN(p.x) && !isNaN(p.y));
@@ -354,7 +416,16 @@ const chartOptions = computed(() => {
     },
     yAxis: {
       title: { text: yAxis.value.label },
-      type: 'linear',
+      type: (yAxis.value?.value === 'release_date') ? 'datetime' : 'linear',
+      labels: {
+        formatter: function () {
+          if (yAxis.value?.value === 'release_date') {
+            return new Date(this.value).getFullYear();
+          }
+          return this.value;
+        }
+      },
+      tickInterval: (yAxis.value?.value === 'release_date') ? null : 'auto',
       startOnTick: false,
     },
     tooltip: {
