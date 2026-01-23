@@ -6,10 +6,13 @@
           to="/"
           class="inline-block"
         >
-          <h1 class="text-lg md:text-2xl font-bold font-logo text-gray-50">
+          <h1 class="text-lg md:text-2xl font-bold font-logo text-gray-50 flex items-center gap-2">
             <span class="text-[#A32035] inline ml-2">MIT</span> <span class="text-nowrap">
               PROCESSOR DB
             </span>
+            <div class="bg-white p-1 rounded inline-flex items-center">
+              <img alt="processor db logo" class="h-[1.125rem] md:h-[1.5rem]" src="/logo-trans-cropped.png">
+            </div>
           </h1>
         </NuxtLink>
       </div>
