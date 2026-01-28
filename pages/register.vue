@@ -187,6 +187,19 @@ async function register() {
   loading.value = true;
 
   // Validation
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email.value || !emailRegex.test(email.value)) {
+    error.value = true;
+    const errorObj = handleValidationError('VALIDATION_EMAIL_FORMAT');
+    errorMessage.value = errorObj.message;
+    errorMessageCode.value = errorObj.code;
+    errorType.value = errorObj.type;
+    errorFieldName.value = errorObj.field;
+    loading.value = false;
+    return;
+  }
+
   if (password.value !== confirmPassword.value) {
     error.value = true;
     const errorObj = handleValidationError('REGISTRATION_PASSWORD_MISMATCH');
@@ -210,9 +223,6 @@ async function register() {
   }
 
   try {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pages/register.vue:213',message:'Before fetch to /api/register',data:{email:email.value,username:username.value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     const response = await fetch('/api/register', {
       method: 'POST',
       headers: {
@@ -226,9 +236,6 @@ async function register() {
       }),
     });
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pages/register.vue:227',message:'Response received from /api/register',data:{status:response.status,ok:response.ok,statusText:response.statusText,url:response.url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     console.log('[Register Page] Registration response status:', response.status);
 
     if (!response.ok) {

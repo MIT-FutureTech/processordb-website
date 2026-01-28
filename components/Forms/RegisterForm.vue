@@ -79,7 +79,7 @@
 <script setup lang="js">
 import { ref } from 'vue';
 import FormFieldLabel from '@/components/FormFieldLabel.vue';
-import { handleApiError, handleNetworkError } from '@/lib/formErrorHandler';
+import { handleApiError, handleNetworkError, handleValidationError } from '@/lib/formErrorHandler';
 import { getSuccessMessage } from '@/lib/formSuccessHandler';
 
 const password = ref('');
@@ -95,6 +95,23 @@ const errorType = ref('');
 const errorFieldName = ref('');
 
 async function submitForm() {
+  // Clear previous errors
+  errorMessage.value = '';
+  errorMessageCode.value = '';
+  errorType.value = '';
+  errorFieldName.value = '';
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email.value || !emailRegex.test(email.value)) {
+    const errorObj = handleValidationError('VALIDATION_EMAIL_FORMAT');
+    errorMessage.value = errorObj.message;
+    errorMessageCode.value = errorObj.code;
+    errorType.value = errorObj.type;
+    errorFieldName.value = errorObj.field;
+    return;
+  }
+
   try {
     let response = await fetch(`${useRuntimeConfig().public.backendUrl}/auth/register`, {
       method: 'POST',

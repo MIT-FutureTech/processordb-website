@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
         // Get query parameters for pagination and search
         const query = getQuery(event)
         const page = parseInt(query.page) || 1
-        const limit = parseInt(query.limit) || 100
+        const limit = parseInt(query.limit) || parseInt(query.pageSize) || 100
         const search = query.search || null
 
         // Check for cache-busting parameter (useful for tests)

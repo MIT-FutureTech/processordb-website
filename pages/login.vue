@@ -132,7 +132,7 @@ import { ref, onMounted } from 'vue';
 import { setItemWithExpiry } from '../lib/encrypter';
 import { isLogged } from '../lib/isLogged';
 import FormFieldLabel from '@/components/FormFieldLabel.vue';
-import { handleApiError, handleNetworkError } from '@/lib/formErrorHandler';
+import { handleApiError, handleNetworkError, handleValidationError } from '@/lib/formErrorHandler';
 
 const password = ref('');
 const email = ref('');
@@ -175,6 +175,23 @@ function togglePassword() {
 async function login() {
   // Add logging to verify function is being called
   console.log('Login function called', { email: email.value ? 'present' : 'missing', password: password.value ? 'present' : 'missing' });
+  
+  // Clear previous errors
+  error.value = false;
+  errorMessage.value = '';
+  errorMessageCode.value = '';
+  errorType.value = '';
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email.value || !emailRegex.test(email.value)) {
+    error.value = true;
+    const errorObj = handleValidationError('VALIDATION_EMAIL_FORMAT');
+    errorMessage.value = errorObj.message;
+    errorMessageCode.value = errorObj.code;
+    errorType.value = errorObj.type;
+    return;
+  }
   
   // Use the Nuxt server API endpoint instead of calling backend directly
   // This avoids CORS issues and ensures consistent error handling

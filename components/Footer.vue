@@ -19,7 +19,7 @@
             <li><a class="hover:underline py-2" href="https://futuretech.mit.edu/" target="_blank"
                 aria-label="MIT Futuretech">MIT
                 Futuretech</a></li>
-            <li><a class="hover:underline py-2" href="https://www.koomey.com/analyticspage.html" target="_blank"
+            <li><a class="hover:underline py-2" href="https://www.koomey.com" target="_blank"
                 aria-label="Koomey Analytics">Koomey Analytics</a></li>
           </ul>
         </div>
