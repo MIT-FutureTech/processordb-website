@@ -70,6 +70,17 @@ if [ ! -d "node_modules/@nuxtjs/tailwindcss" ]; then
     npm install @nuxtjs/tailwindcss --save-dev
 fi
 
+# Clean up previous build artifacts
+echo "Cleaning up previous build artifacts..."
+if [ -d ".output" ]; then
+    echo "Removing .output directory..."
+    rm -rf .output
+fi
+if [ -d ".nuxt" ]; then
+    echo "Removing .nuxt directory..."
+    rm -rf .nuxt
+fi
+
 # Prepare Nuxt modules (ensure this runs after all packages are installed)
 echo "Preparing Nuxt modules..."
 npx nuxt prepare || {

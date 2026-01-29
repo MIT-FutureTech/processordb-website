@@ -91,7 +91,8 @@ module.exports = {
     name: "ProcessorDB-website-staging",
     port: "3000",
     exec_mode: "cluster",
-    instances: "max",
+    instances: 2, // Limited to 2 instances to prevent memory issues on systems with limited RAM
+    max_memory_restart: "500M", // Restart if memory exceeds 500MB per instance
     script: "./.output/server/index.mjs",
     env: {
       NODE_ENV: "production",
