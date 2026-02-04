@@ -40,9 +40,7 @@ export default defineEventHandler(async (event) => {
         const searchParam = search ? `&search=${encodeURIComponent(search)}` : ''
         const url = `${backendUrl}${apiPrefix}/cpus?page=${page}&pageSize=${limit}${searchParam}`
         
-        // #region agent log
         console.log(`[CPU API] Fetching from backend: ${url}`, { page, limit, search });
-        // #endregion
         
         // Performance timing
         const fetchStartTime = Date.now()

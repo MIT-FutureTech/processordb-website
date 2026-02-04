@@ -400,10 +400,88 @@ The deployment script (`scripts/deploy.sh`) uses `#!/bin/bash` and:
 - Fixes line endings (CRLF to LF)
 - Loads nvm if available
 - Installs dependencies with `npm ci` (development mode)
+- **Automatically checks for outdated packages** (informational, non-blocking)
+- **Automatically audits packages for security vulnerabilities** (warnings only, non-blocking)
 - Prepares Nuxt modules
 - Builds application
 - Verifies build output
 - Restarts PM2 application using environment-specific ecosystem config if available
+
+### Package Maintenance
+
+The deployment process includes automated package health checks that run on every deployment. These checks are **non-blocking** and provide visibility into package status without interrupting deployments.
+
+#### Automated Checks (During Deployment)
+
+Every deployment automatically runs:
+- **`npm outdated`**: Checks for packages with newer versions available (informational only)
+- **`npm audit`**: Scans for security vulnerabilities (warnings only, deployment continues)
+- **`npm fund`**: Checks package funding information (informational, non-critical)
+
+These checks appear in deployment logs and will show warnings if issues are found, but **will not block or fail deployments**.
+
+#### Manual Package Updates
+
+For updating packages and fixing vulnerabilities, use the maintenance script during scheduled maintenance windows:
+
+```bash
+# Run maintenance script for staging
+cd ~/processordb-website-staging
+bash scripts/maintain-packages.sh staging
+
+# Run maintenance script for production
+cd ~/processordb-website
+bash scripts/maintain-packages.sh production
+```
+
+**What the maintenance script does:**
+1. Shows current package status (outdated packages and vulnerabilities)
+2. Prompts for confirmation before making changes
+3. Updates packages to latest compatible versions (`npm update`)
+4. Fixes automatically fixable vulnerabilities (`npm audit fix`)
+5. Shows updated status after changes
+
+**Important Notes:**
+- **Always test updates in staging first** before applying to production
+- Review the changes before committing
+- The script updates `package-lock.json` - commit this file after testing
+- Some vulnerabilities may require manual intervention (the script will warn you)
+- Run during scheduled maintenance windows to allow time for testing
+
+**After running maintenance:**
+```bash
+# 1. Test the application thoroughly
+npm run build
+npm run dev  # Test locally if possible
+
+# 2. Review changes
+git diff package-lock.json
+
+# 3. Commit and push (after testing)
+git add package-lock.json
+git commit -m "chore: update npm packages and fix vulnerabilities"
+git push origin dev  # or main for production
+
+# 4. Deploy to staging first, then production
+```
+
+**Manual package commands:**
+```bash
+# Check for outdated packages
+npm outdated
+
+# Check for vulnerabilities
+npm audit
+
+# Update packages (manual)
+npm update
+
+# Fix vulnerabilities (automatic fixes only)
+npm audit fix
+
+# Fix vulnerabilities (including breaking changes - use with caution)
+npm audit fix --force
+```
 
 ## Reverse Proxy (Nginx)
 

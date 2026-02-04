@@ -64,6 +64,26 @@ echo "Installing dependencies..."
 # Ensure devDependencies are installed (npm ci installs them by default unless NODE_ENV=production)
 NODE_ENV=development npm ci
 
+# Check for outdated packages (informational only, non-blocking)
+echo "Checking for outdated packages..."
+npm outdated || {
+    echo "Note: Some packages may be outdated (this is informational only)"
+}
+
+# Audit packages for security vulnerabilities (non-blocking)
+echo "Auditing packages for security vulnerabilities..."
+npm audit --audit-level=moderate || {
+    echo "⚠ WARNING: npm audit found vulnerabilities. Review the output above."
+    echo "⚠ Run 'npm audit fix' manually after reviewing changes, or use scripts/maintain-packages.sh"
+    echo "⚠ Deployment will continue, but please address vulnerabilities in a future update."
+}
+
+# Check package funding information (informational, non-critical)
+echo "Checking package funding information..."
+npm fund --json > /dev/null 2>&1 || {
+    echo "Note: Could not retrieve funding information (non-critical)"
+}
+
 # Verify critical dependency is installed
 if [ ! -d "node_modules/@nuxtjs/tailwindcss" ]; then
     echo "Warning: @nuxtjs/tailwindcss not found, installing it explicitly..."
