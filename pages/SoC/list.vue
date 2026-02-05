@@ -33,15 +33,19 @@
       <Suspense>
         <template #default>
           <div>
-            <InteractiveGraph v-if="chartDataRef && chartDataRef.length > 0" :data="chartDataRef" />
-            <div v-else-if="pending" class="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
-              <div class="flex flex-col items-center space-y-4">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#A32035]"></div>
-                <div class="text-gray-500">Loading chart...</div>
-              </div>
-            </div>
+            <InteractiveGraph v-if="chartData && chartData.length > 0" :data="chartData" />
             <div v-else class="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
               <div class="text-gray-500">No chart data available</div>
+            </div>
+            
+            <!-- Chart Data Status -->
+            <div v-if="chartData && chartData.length > 0" class="mt-4 flex justify-center">
+              <div class="text-sm text-gray-500">
+                {{ chartDataRef.length }} records visualized
+                <span v-if="chartDataRef.length > 10000" class="text-xs block mt-1 opacity-75">
+                  (Using data grouping for optimal performance)
+                </span>
+              </div>
             </div>
           </div>
         </template>
@@ -56,6 +60,24 @@
       </Suspense>
     </div>
 
+    <!-- Error State -->
+    <div v-if="error" class="my-8 p-4 bg-red-50 border border-red-200 rounded-lg">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+          <div>
+            <span class="text-red-800 font-medium">Failed to load data.</span>
+            <p class="text-red-600 text-sm mt-1">{{ error.message || 'Unknown error occurred' }}</p>
+          </div>
+        </div>
+        <button @click="handleRefresh" class="px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200 transition-colors">
+          Retry
+        </button>
+      </div>
+    </div>
+
     <!-- Table Container -->
     <div class="mt-8 bg-white mb-16">
       <div v-if="pending" class="flex items-center justify-center h-32">
@@ -64,35 +86,32 @@
           <div class="text-gray-500 text-sm">Loading data...</div>
         </div>
       </div>
-      <div v-else-if="error" class="p-4 bg-red-50 border border-red-200 rounded-lg">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-            </svg>
-            <div>
-              <span class="text-red-800 font-medium">Failed to load data.</span>
-              <p class="text-red-600 text-sm mt-1">{{ error.message || 'Unknown error occurred' }}</p>
-            </div>
+      <div v-else>
+        <!-- Empty State -->
+        <div v-if="!error && tableData.length === 0" class="flex items-center justify-center h-64 bg-gray-50 rounded-lg border border-gray-200">
+          <div class="text-center">
+            <p class="text-gray-600 font-medium mb-2">No SoC data available</p>
+            <p class="text-gray-500 text-sm">The database is empty. Add a SoC to get started.</p>
           </div>
-          <button @click="fetchSocsData(true)" class="px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200 transition-colors">
-            Retry
-          </button>
         </div>
-      </div>
-      <div v-else class="overflow-x-auto">
-        <PrivateTable
-          :data="filterData"
-          class-name="soc"
-          :total-count="pagination?.totalRecords || 0"
-          :current-page="currentPage"
-          :page-size="pageSize"
-          :has-previous-page="pagination?.currentPage > 1 || false"
-          :has-next-page="pagination?.currentPage < pagination?.totalPages || false"
-          :total-pages="pagination?.totalPages || 0"
-          @update:current-page="currentPage = $event"
-          @update:page-size="handlePageSizeChange($event)"
-        />
+        
+        <!-- Data Table -->
+        <template v-else-if="!error && tableData.length > 0">
+          <div class="overflow-x-auto">
+            <PrivateTable
+              :data="tableData"
+              class-name="soc"
+              :total-count="pagination?.totalRecords || 0"
+              :current-page="currentPage"
+              :page-size="pageSize"
+              :has-previous-page="pagination?.currentPage > 1 || false"
+              :has-next-page="pagination?.currentPage < pagination?.totalPages || false"
+              :total-pages="pagination?.totalPages || 0"
+              @update:current-page="currentPage = $event"
+              @update:page-size="handlePageSizeChange($event)"
+            />
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -282,19 +301,11 @@ onMounted(async () => {
   }
 });
 
-const filterData = computed(() => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/list.vue:77',message:'filterData computed - data.value check',data:{dataValue:data.value,dataValueType:typeof data.value,dataValueIsNull:data.value === null,dataValueIsUndefined:data.value === undefined,dataValueIsArray:Array.isArray(data.value)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
+// Table data - ensure it's always an array for the template
+const tableData = computed(() => {
   if (!data.value || !Array.isArray(data.value)) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/list.vue:79',message:'filterData returning empty array - data.value invalid',data:{dataValue:data.value,dataValueType:typeof data.value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     return [];
   }
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/list.vue:84',message:'filterData calling filter - data.value is valid array',data:{dataValueLength:data.value.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   return data.value.filter(item => {
     const matchesManufacturer =
       !manufacturerNameFilter.value ||
@@ -338,6 +349,14 @@ const filterData = computed(() => {
   })
 })
 
+// Chart data - use chartDataRef directly
+const chartData = computed(() => {
+  if (!chartDataRef.value || !Array.isArray(chartDataRef.value)) {
+    return [];
+  }
+  return chartDataRef.value;
+})
+
 // Helper function to slugify strings for filtering
 function slugify(str) {
   if (!str) return ''
@@ -353,6 +372,18 @@ function handlePageSizeChange(newPageSize) {
   currentPage.value = 1;
   fetchSocsData();
 }
+
+// Error handling
+const handleRefresh = async () => {
+  try {
+    console.log('Refreshing SoC data...');
+    // Force refresh with cache bypass
+    await fetchSocsData(true);
+    console.log('SoC data refreshed successfully');
+  } catch (err) {
+    console.error('Failed to refresh data:', err);
+  }
+};
 
 // Watch pagination and refetch when it changes
 // Watch for pagination changes - only after initial load

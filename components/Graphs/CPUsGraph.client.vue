@@ -15,7 +15,7 @@
               </svg>
             </DropdownMenuTrigger>
             <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
-              <DropdownMenuItem v-for="option in numericOptions" :key="option.value + '-' + option.source"
+              <DropdownMenuItem v-for="option in xAxisOptions" :key="option.value + '-' + option.source"
                 class="cursor-pointer" @click="handleXAxisChange(option)">
                 {{ option.label }}
               </DropdownMenuItem>
@@ -38,7 +38,7 @@
               </svg>
             </DropdownMenuTrigger>
             <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
-              <DropdownMenuItem v-for="option in numericOptions" :key="option.value + '-' + option.source"
+              <DropdownMenuItem v-for="option in yAxisOptions" :key="option.value + '-' + option.source"
                 class="cursor-pointer" @click="handleYAxisChange(option)">
                 {{ option.label }}
               </DropdownMenuItem>
@@ -104,7 +104,7 @@ import {
   createHeatmap,
   detectDenseRegions 
 } from '@/lib/chartUtils';
-import { getNumericOptions, getCategoricalOptions, generateNumericOptionsFromData } from '@/lib/chartFieldMaps';
+import { getNumericOptions, getCategoricalOptions, generateNumericOptionsFromData, generateCategoricalOptionsFromData, validateFieldMaps } from '@/lib/chartFieldMaps';
 
 // Error handling for chart component
 const chartError = ref(null);
@@ -152,6 +152,9 @@ const numericOptions = computed(() => {
   
   // If we have data, verify fields exist and filter to available ones
   if (props.data && props.data.length > 0) {
+    // Validate field maps against actual data
+    validateFieldMaps(fieldMapOptions, props.data, 'cpu');
+    
     const sample = props.data[0];
     const availableFields = new Set();
     
@@ -172,7 +175,7 @@ const numericOptions = computed(() => {
     }
     
     // Filter field map options to only include available fields
-    return fieldMapOptions.filter(opt => {
+    const filtered = fieldMapOptions.filter(opt => {
       // For soc source, check both flattened and nested
       if (opt.source === 'soc') {
         return availableFields.has(opt.value) || 
@@ -181,9 +184,40 @@ const numericOptions = computed(() => {
       }
       return availableFields.has(opt.value) || sample.hasOwnProperty(opt.value);
     });
+    
+    // If filtered list is empty or very small, fall back to dynamic generation
+    if (filtered.length < 3 && props.data.length > 0) {
+      const dynamicOptions = generateNumericOptionsFromData(props.data, 'cpu');
+      if (dynamicOptions.length > filtered.length) {
+        console.warn('[CPUsGraph] Field map incomplete, using dynamic field detection');
+        return dynamicOptions;
+      }
+    }
+    
+    return filtered;
   }
   
   return fieldMapOptions;
+});
+
+// X-Axis options exclude the selected Y-axis value
+const xAxisOptions = computed(() => {
+  let options = numericOptions.value;
+  // Exclude the selected Y-axis value from X-axis options
+  if (yAxis.value && yAxis.value.value) {
+    options = options.filter(opt => opt.value !== yAxis.value.value);
+  }
+  return options;
+});
+
+// Y-Axis options exclude release_date and the selected X-axis value
+const yAxisOptions = computed(() => {
+  let options = numericOptions.value.filter(option => option.value !== 'release_date');
+  // Exclude the selected X-axis value from Y-axis options
+  if (xAxis.value && xAxis.value.value) {
+    options = options.filter(opt => opt.value !== xAxis.value.value);
+  }
+  return options;
 });
 
 // Comprehensive Group By options for CPU data from field map
@@ -193,7 +227,7 @@ const filteredGroupOptions = computed(() => {
   // Filter to only include fields that exist in the data
   if (props.data && props.data.length > 0) {
     const sample = props.data[0];
-    return groupOptions.filter(opt => {
+    const filtered = groupOptions.filter(opt => {
       if (opt.source === 'soc') {
         // Check both flattened and nested structures
         return sample.hasOwnProperty(opt.value) || 
@@ -202,6 +236,17 @@ const filteredGroupOptions = computed(() => {
       }
       return sample.hasOwnProperty(opt.value);
     });
+    
+    // If filtered list is empty, fall back to dynamic generation
+    if (filtered.length === 0 && props.data.length > 0) {
+      const dynamicOptions = generateCategoricalOptionsFromData(props.data, 'cpu');
+      if (dynamicOptions.length > 0) {
+        console.warn('[CPUsGraph] Group options incomplete, using dynamic field detection');
+        return dynamicOptions;
+      }
+    }
+    
+    return filtered;
   }
   return groupOptions;
 });
@@ -594,7 +639,7 @@ const chartOptions = computed(() => {
         },
         
         marker: {
-          radius: dataSize > 10000 ? 1 : (dataSize > 5000 ? 2 : 4), // Smaller markers for large datasets
+          radius: dataSize > 10000 ? 1 : 4, // Smaller markers only for very large datasets (>10k)
           symbol: 'circle',
           enabledThreshold: 20000, // Hide markers if >20k points (use grouping instead)
           states: { 

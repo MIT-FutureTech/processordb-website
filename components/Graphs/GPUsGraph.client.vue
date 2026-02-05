@@ -15,7 +15,7 @@
               </svg>
             </DropdownMenuTrigger>
             <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
-              <DropdownMenuItem v-for="option in numericOptions" :key="option.value + '-' + option.source"
+              <DropdownMenuItem v-for="option in xAxisOptions" :key="option.value + '-' + option.source"
                 class="cursor-pointer" @click="xAxis = option">
                 {{ option.label }}
               </DropdownMenuItem>
@@ -36,7 +36,7 @@
               </svg>
             </DropdownMenuTrigger>
             <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
-              <DropdownMenuItem v-for="option in numericOptions" :key="option.value + '-' + option.source"
+              <DropdownMenuItem v-for="option in yAxisOptions" :key="option.value + '-' + option.source"
                 class="cursor-pointer" @click="yAxis = option">
                 {{ option.label }}
               </DropdownMenuItem>
@@ -96,7 +96,7 @@ import {
   createHeatmap,
   detectDenseRegions 
 } from '@/lib/chartUtils';
-import { getNumericOptions, getCategoricalOptions } from '@/lib/chartFieldMaps';
+import { getNumericOptions, getCategoricalOptions, generateNumericOptionsFromData, generateCategoricalOptionsFromData, validateFieldMaps } from '@/lib/chartFieldMaps';
 // import { useRoute } from 'vue-router';
 import {
   DropdownMenu,
@@ -150,6 +150,9 @@ const numericOptions = computed(() => {
   
   // If we have data, verify fields exist and filter to available ones
   if (props.data && props.data.length > 0) {
+    // Validate field maps against actual data
+    validateFieldMaps(fieldMapOptions, props.data, 'gpu');
+    
     const sample = props.data[0];
     const availableFields = new Set();
     
@@ -170,7 +173,7 @@ const numericOptions = computed(() => {
     }
     
     // Filter field map options to only include available fields
-    return fieldMapOptions.filter(opt => {
+    const filtered = fieldMapOptions.filter(opt => {
       // For soc source, check both flattened and nested
       if (opt.source === 'soc') {
         return availableFields.has(opt.value) || 
@@ -179,9 +182,40 @@ const numericOptions = computed(() => {
       }
       return availableFields.has(opt.value) || sample.hasOwnProperty(opt.value);
     });
+    
+    // If filtered list is empty or very small, fall back to dynamic generation
+    if (filtered.length < 3 && props.data.length > 0) {
+      const dynamicOptions = generateNumericOptionsFromData(props.data, 'gpu');
+      if (dynamicOptions.length > filtered.length) {
+        console.warn('[GPUsGraph] Field map incomplete, using dynamic field detection');
+        return dynamicOptions;
+      }
+    }
+    
+    return filtered;
   }
   
   return fieldMapOptions;
+});
+
+// X-Axis options exclude the selected Y-axis value
+const xAxisOptions = computed(() => {
+  let options = numericOptions.value;
+  // Exclude the selected Y-axis value from X-axis options
+  if (yAxis.value && yAxis.value.value) {
+    options = options.filter(opt => opt.value !== yAxis.value.value);
+  }
+  return options;
+});
+
+// Y-Axis options exclude release_date and the selected X-axis value
+const yAxisOptions = computed(() => {
+  let options = numericOptions.value.filter(option => option.value !== 'release_date');
+  // Exclude the selected X-axis value from Y-axis options
+  if (xAxis.value && xAxis.value.value) {
+    options = options.filter(opt => opt.value !== xAxis.value.value);
+  }
+  return options;
 });
 
 // Comprehensive Group By options for GPU data from field map
@@ -191,7 +225,7 @@ const filteredGroupOptions = computed(() => {
   // Filter to only include fields that exist in the data
   if (props.data && props.data.length > 0) {
     const sample = props.data[0];
-    return groupOptions.filter(opt => {
+    const filtered = groupOptions.filter(opt => {
       if (opt.source === 'soc') {
         // Check both flattened and nested structures
         return sample.hasOwnProperty(opt.value) || 
@@ -200,6 +234,17 @@ const filteredGroupOptions = computed(() => {
       }
       return sample.hasOwnProperty(opt.value);
     });
+    
+    // If filtered list is empty, fall back to dynamic generation
+    if (filtered.length === 0 && props.data.length > 0) {
+      const dynamicOptions = generateCategoricalOptionsFromData(props.data, 'gpu');
+      if (dynamicOptions.length > 0) {
+        console.warn('[GPUsGraph] Group options incomplete, using dynamic field detection');
+        return dynamicOptions;
+      }
+    }
+    
+    return filtered;
   }
   return groupOptions;
 });
@@ -246,7 +291,14 @@ const seabornColors = {
 };
 
 // Determine the color for a given grouping category.
+let getColorForCategoryCallCount = 0;
+let getColorForCategoryTotalTime = 0;
 const getColorForCategory = (colorCategory) => {
+  // #region agent log
+  const startTime = performance.now();
+  getColorForCategoryCallCount++;
+  // #endregion
+  
   if (!colorCategory) return 'gray';
   
   const groupByValue = groupBy.value.value;
@@ -260,14 +312,32 @@ const getColorForCategory = (colorCategory) => {
   )];
   
   const colorIndex = categories.indexOf(colorCategory) % colorPalette.length;
+  
+  // #region agent log
+  const endTime = performance.now();
+  const duration = endTime - startTime;
+  getColorForCategoryTotalTime += duration;
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GPUsGraph.client.vue:getColorForCategory',message:'getColorForCategory called',data:{callCount:getColorForCategoryCallCount,totalTime:getColorForCategoryTotalTime,duration:duration,dataSize:props.data?.length||0,category:colorCategory},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  
   return colorPalette[colorIndex];
 };
+
+// Memoize chart data processing (similar to CPU graph)
+const chartDataCache = ref(new Map());
 
 // Phase 2: Zoom level tracking
 const currentZoomLevel = ref({ xMin: null, xMax: null, yMin: null, yMax: null });
 const chartInstance = ref(null);
 
 const chartOptions = computed(() => {
+  // #region agent log
+  const chartOptionsStartTime = performance.now();
+  getColorForCategoryCallCount = 0;
+  getColorForCategoryTotalTime = 0;
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GPUsGraph.client.vue:chartOptions',message:'chartOptions computation started',data:{dataSize:props.data?.length||0,xAxis:xAxis.value?.value||'null',yAxis:yAxis.value?.value||'null',groupBy:groupBy.value?.value||'null'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
+  
   // Handle undefined or empty data
   if (!props.data || !props.data.length) {
     return {
@@ -278,8 +348,96 @@ const chartOptions = computed(() => {
   }
   
   // Use all data - Highcharts turbo mode and data grouping handle performance
-  const dataToProcess = props.data;
+  let dataToProcess = props.data;
   const dataSize = props.data.length;
+  
+  // Phase 2: Level-of-Detail (LOD) Rendering (same as CPU graph)
+  // Apply adaptive rendering based on data density to reduce Highcharts rendering load
+  if (dataSize > 1000 && currentZoomLevel.value.xMin !== null) {
+    const zoom = currentZoomLevel.value;
+    const visibleData = dataToProcess.filter(item => {
+      const xValue = getAxisData(item, xAxis.value);
+      const yValue = getAxisData(item, yAxis.value);
+      if (xValue === null || yValue === null) return false;
+      
+      const x = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
+      const y = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
+      return x >= zoom.xMin && x <= zoom.xMax && 
+             y >= zoom.yMin && y <= zoom.yMax;
+    });
+    
+    if (visibleData.length > 0) {
+      const density = calculateDataDensity(visibleData, xAxis.value, yAxis.value);
+      
+      if (density > 100) {
+        // Very dense - use binning
+        const pointData = visibleData.map(item => {
+          const xValue = getAxisData(item, xAxis.value);
+          const yValue = getAxisData(item, yAxis.value);
+          return {
+            x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
+            y: yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue,
+            data: item
+          };
+        }).filter(p => p.x !== null && p.y !== null && !isNaN(p.x) && !isNaN(p.y));
+        
+        const binned = binData(pointData, 50);
+        dataToProcess = binned.map(bin => bin.data || bin);
+      } else if (density > 10) {
+        // Medium density - use clustering
+        const pointData = visibleData.map(item => {
+          const xValue = getAxisData(item, xAxis.value);
+          const yValue = getAxisData(item, yAxis.value);
+          return {
+            x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
+            y: yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue,
+            data: item
+          };
+        }).filter(p => p.x !== null && p.y !== null && !isNaN(p.x) && !isNaN(p.y));
+        
+        const clustered = clusterData(pointData, 100);
+        dataToProcess = clustered.map(cluster => cluster.data || cluster);
+      } else {
+        dataToProcess = visibleData;
+      }
+    }
+  }
+
+  // PERFORMANCE FIX: Calculate unique categories ONCE instead of recalculating in getColorForCategory
+  // This reduces complexity from O(N²) to O(N)
+  const groupByValue = groupBy.value.value;
+  const colorPalette = seabornColors[groupByValue] || seabornColors.default;
+  const categories = [...new Set(
+    dataToProcess
+      .map(item => getAxisData(item, groupBy.value))
+      .filter(Boolean)
+  )];
+  
+  // Create color map: category -> color (calculated once)
+  const colorMap = new Map();
+  categories.forEach((category, index) => {
+    colorMap.set(category, colorPalette[index % colorPalette.length]);
+  });
+  
+  // Fast color lookup function (no recalculation)
+  const getColorForCategoryFast = (colorCategory) => {
+    if (!colorCategory) return 'gray';
+    return colorMap.get(colorCategory) || 'gray';
+  };
+
+  // Create cache key based on data length, axis selections, and groupBy
+  // Include processed data length in cache key since LOD may reduce it
+  const cacheKey = `${dataToProcess.length}-${xAxis.value?.value || 'null'}-${yAxis.value?.value || 'null'}-${groupBy.value?.value || 'null'}`;
+  
+  // Check if we have cached data
+  if (chartDataCache.value.has(cacheKey)) {
+    // #region agent log
+    const cacheHitTime = performance.now();
+    const cacheHitDuration = cacheHitTime - chartOptionsStartTime;
+    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GPUsGraph.client.vue:chartOptions',message:'Cache hit',data:{cacheKey:cacheKey,cacheHitDuration:cacheHitDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
+    return chartDataCache.value.get(cacheKey);
+  }
 
   let groupedData = {};
   let series = [];
@@ -298,7 +456,7 @@ const chartOptions = computed(() => {
       x: xFormattedValue,
       y: yFormattedValue,
       name: item.name,
-      color: getColorForCategory(colorCategory),
+      color: getColorForCategoryFast(colorCategory),
       data: item,
     };
 
@@ -309,12 +467,18 @@ const chartOptions = computed(() => {
     return acc;
   }, {});
 
+  // #region agent log
+  const beforeSeriesTime = performance.now();
+  const reduceDuration = beforeSeriesTime - chartOptionsStartTime;
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GPUsGraph.client.vue:chartOptions',message:'After reduce, before series mapping',data:{reduceDuration:reduceDuration,getColorForCategoryCallCount:getColorForCategoryCallCount,getColorForCategoryTotalTime:getColorForCategoryTotalTime,groupedDataKeys:Object.keys(groupedData).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  
   series = Object.keys(groupedData)
     .sort((a, b) => groupedData[b].length - groupedData[a].length)
     .map(category => ({
       name: category,
       data: groupedData[category],
-      color: getColorForCategory(category),
+      color: getColorForCategoryFast(category),
       marker: { symbol: 'circle' },
       opacity: dataSize > 5000 ? 0.5 : 0.8,
     }));
@@ -346,7 +510,13 @@ const chartOptions = computed(() => {
     }
   }
 
-  return {
+  // #region agent log
+  const chartOptionsEndTime = performance.now();
+  const totalDuration = chartOptionsEndTime - chartOptionsStartTime;
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GPUsGraph.client.vue:chartOptions',message:'chartOptions computation completed',data:{totalDuration:totalDuration,getColorForCategoryCallCount:getColorForCategoryCallCount,getColorForCategoryTotalTime:getColorForCategoryTotalTime,getColorForCategoryAvgTime:getColorForCategoryCallCount>0?getColorForCategoryTotalTime/getColorForCategoryCallCount:0,seriesCount:series.length,dataSize:dataSize},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
+
+  const chartConfig = {
     chart: { 
       type: 'scatter', 
       zoomType: 'xy',
@@ -474,7 +644,7 @@ const chartOptions = computed(() => {
         },
         
         marker: {
-          radius: dataSize > 10000 ? 1 : (dataSize > 5000 ? 2 : 4), // Smaller markers for large datasets
+          radius: dataSize > 10000 ? 1 : 4, // Smaller markers only for very large datasets (>10k)
           symbol: 'circle',
           enabledThreshold: 20000, // Hide markers if >20k points (use grouping instead)
           states: { 
@@ -498,5 +668,16 @@ const chartOptions = computed(() => {
     },
     series,
   };
+  
+  // Cache the result
+  chartDataCache.value.set(cacheKey, chartConfig);
+  
+  // Limit cache size to prevent memory leaks
+  if (chartDataCache.value.size > 10) {
+    const firstKey = chartDataCache.value.keys().next().value;
+    chartDataCache.value.delete(firstKey);
+  }
+  
+  return chartConfig;
 });
 </script>

@@ -15,7 +15,7 @@
               </svg>
             </DropdownMenuTrigger>
             <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
-              <DropdownMenuItem v-for="option in xAxisOptions" :key="option.value" class="cursor-pointer"
+              <DropdownMenuItem v-for="option in xAxisOptions" :key="option.value + '-' + option.source" class="cursor-pointer"
                 @click="xAxis = option">
                 {{ option.label }}
               </DropdownMenuItem>
@@ -38,7 +38,7 @@
               </svg>
             </DropdownMenuTrigger>
             <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
-              <DropdownMenuItem v-for="option in yAxisOptions" :key="option.value" class="cursor-pointer"
+              <DropdownMenuItem v-for="option in yAxisOptions" :key="option.value + '-' + option.source" class="cursor-pointer"
                 @click="yAxis = option">
                 {{ option.label }}
               </DropdownMenuItem>
@@ -107,7 +107,7 @@ import {
   createHeatmap,
   detectDenseRegions 
 } from '@/lib/chartUtils';
-import { getNumericOptions, getCategoricalOptions } from '@/lib/chartFieldMaps';
+import { getNumericOptions, getCategoricalOptions, generateNumericOptionsFromData, generateCategoricalOptionsFromData, validateFieldMaps } from '@/lib/chartFieldMaps';
 
 // Props: Expect an array of SoC data objects
 const props = defineProps({
@@ -124,12 +124,19 @@ onErrorCaptured((err) => {
   return false;
 });
 
-// Comprehensive X-Axis options for SoC data from field map
-const xAxisOptions = computed(() => {
+// Base numeric options for SoC data (before axis exclusions)
+const baseNumericOptions = computed(() => {
   const fieldMapOptions = getNumericOptions('soc');
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'InteractiveGraph.client.vue:baseNumericOptions',message:'Computing base numeric options',data:{fieldMapOptionsCount:fieldMapOptions.length,hasData:!!props.data,dataLength:props.data?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   
   // If we have data, verify fields exist and filter to available ones
   if (props.data && props.data.length > 0) {
+    // Validate field maps against actual data
+    validateFieldMaps(fieldMapOptions, props.data, 'soc');
+    
     const sample = props.data[0];
     const availableFields = new Set();
     
@@ -140,16 +147,57 @@ const xAxisOptions = computed(() => {
       }
     }
     
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'InteractiveGraph.client.vue:baseNumericOptions',message:'Available fields detected',data:{availableFieldsCount:availableFields.size,availableFields:Array.from(availableFields),sampleKeys:Object.keys(sample)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
     // Filter field map options to only include available fields
-    return fieldMapOptions.filter(opt => availableFields.has(opt.value) || sample.hasOwnProperty(opt.value));
+    let filtered = fieldMapOptions.filter(opt => availableFields.has(opt.value) || sample.hasOwnProperty(opt.value));
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'InteractiveGraph.client.vue:baseNumericOptions',message:'After filtering field map',data:{filteredCount:filtered.length,filteredValues:filtered.map(f=>f.value)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
+    // If filtered list is empty or very small, fall back to dynamic generation
+    if (filtered.length < 3 && props.data.length > 0) {
+      const dynamicOptions = generateNumericOptionsFromData(props.data, 'soc');
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'InteractiveGraph.client.vue:baseNumericOptions',message:'Dynamic options generated',data:{dynamicOptionsCount:dynamicOptions.length,dynamicValues:dynamicOptions.map(f=>f.value)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      if (dynamicOptions.length > filtered.length) {
+        console.warn('[InteractiveGraph] Field map incomplete, using dynamic field detection');
+        filtered = dynamicOptions;
+      }
+    }
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'InteractiveGraph.client.vue:baseNumericOptions',message:'Final base options',data:{finalCount:filtered.length,finalValues:filtered.map(f=>f.value)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
+    return filtered;
   }
   
   return fieldMapOptions;
 });
 
-// Y-Axis options exclude release_date
+// X-Axis options exclude the selected Y-axis value
+const xAxisOptions = computed(() => {
+  let options = baseNumericOptions.value;
+  // Exclude the selected Y-axis value from X-axis options
+  if (yAxis.value && yAxis.value.value) {
+    options = options.filter(opt => opt.value !== yAxis.value.value);
+  }
+  return options;
+});
+
+// Y-Axis options exclude release_date and the selected X-axis value
 const yAxisOptions = computed(() => {
-  return xAxisOptions.value.filter(option => option.value !== 'release_date');
+  let options = baseNumericOptions.value.filter(option => option.value !== 'release_date');
+  // Exclude the selected X-axis value from Y-axis options
+  if (xAxis.value && xAxis.value.value) {
+    options = options.filter(opt => opt.value !== xAxis.value.value);
+  }
+  return options;
 });
 
 // Comprehensive Group By options for SoC data from field map
@@ -159,7 +207,7 @@ const filteredGroupOptions = computed(() => {
   // Filter to only include fields that exist in the data
   if (props.data && props.data.length > 0) {
     const sample = props.data[0];
-    return groupOptions.filter(opt => {
+    const filtered = groupOptions.filter(opt => {
       if (opt.value === 'processor_type') {
         // Processor type is always available from nested processors array
         return true;
@@ -167,6 +215,17 @@ const filteredGroupOptions = computed(() => {
       return sample.hasOwnProperty(opt.value) || 
              (opt.value === 'manufacturer_name' && (sample.manufacturer_name || sample.manufacturer));
     });
+    
+    // If filtered list is empty, fall back to dynamic generation
+    if (filtered.length === 0 && props.data.length > 0) {
+      const dynamicOptions = generateCategoricalOptionsFromData(props.data, 'soc');
+      if (dynamicOptions.length > 0) {
+        console.warn('[InteractiveGraph] Group options incomplete, using dynamic field detection');
+        return dynamicOptions;
+      }
+    }
+    
+    return filtered;
   }
   return groupOptions;
 });
@@ -177,17 +236,42 @@ const yAxis = ref(null);
 const groupBy = ref(null);
 
 // Set initial values when options are available
-watch([xAxisOptions, yAxisOptions, filteredGroupOptions], ([xOpts, yOpts, groupOpts]) => {
-  if (!xAxis.value && xOpts.length > 0) {
-    xAxis.value = xOpts.find(opt => opt.value === 'release_date') || xOpts[0];
+// Use baseNumericOptions for initial selection to avoid circular dependency
+watch([baseNumericOptions, filteredGroupOptions], ([baseOpts, groupOpts]) => {
+  if (!xAxis.value && baseOpts.length > 0) {
+    // Find release_date in base options (before exclusions)
+    const releaseDateOpt = baseOpts.find(opt => opt.value === 'release_date');
+    xAxis.value = releaseDateOpt || baseOpts[0];
   }
-  if (!yAxis.value && yOpts.length > 0) {
-    yAxis.value = yOpts.find(opt => opt.value === 'process_node') || yOpts[0];
+  if (!yAxis.value && baseOpts.length > 0) {
+    // Find process_node in base options, excluding release_date
+    const processNodeOpt = baseOpts.find(opt => opt.value === 'process_node' && opt.value !== 'release_date');
+    yAxis.value = processNodeOpt || baseOpts.find(opt => opt.value !== 'release_date') || baseOpts[0];
   }
   if (!groupBy.value && groupOpts.length > 0) {
     groupBy.value = groupOpts[0];
   }
 }, { immediate: true });
+
+// Also watch for axis changes to update the other axis's options
+watch([xAxis, yAxis], ([newXAxis, newYAxis]) => {
+  // When X-axis changes, ensure Y-axis is still valid (not the same as X)
+  if (newXAxis && newYAxis && newXAxis.value === newYAxis.value) {
+    // If they're the same, reset Y-axis to a different option
+    const availableYOptions = yAxisOptions.value;
+    if (availableYOptions.length > 0) {
+      yAxis.value = availableYOptions[0];
+    }
+  }
+  // When Y-axis changes, ensure X-axis is still valid (not the same as Y)
+  if (newXAxis && newYAxis && newXAxis.value === newYAxis.value) {
+    // If they're the same, reset X-axis to a different option
+    const availableXOptions = xAxisOptions.value;
+    if (availableXOptions.length > 0) {
+      xAxis.value = availableXOptions[0];
+    }
+  }
+});
 
 // Utility: Get the appropriate value from an item
 const getAxisData = (item, axis) => {
@@ -246,27 +330,39 @@ const getColorForCategory = (colorCategory) => {
   return color;
 };
 
-// Phase 2: Zoom level tracking
+// Memoize chart data processing
+const chartDataCache = ref(new Map())
+
+// Phase 2: Zoom level tracking for LOD rendering
 const currentZoomLevel = ref({ xMin: null, xMax: null, yMin: null, yMax: null });
 const chartInstance = ref(null);
 
 const chartOptions = computed(() => {
-  if (!props.data || props.data.length === 0) {
-    return null;
+  // Handle undefined or empty data
+  if (!props.data || !props.data.length) {
+    console.log('[InteractiveGraph] No data available, returning empty chart config');
+    return {
+      chart: { type: 'scatter' },
+      title: { text: 'No data available' },
+      series: []
+    }
   }
+  
+  console.log('[InteractiveGraph] Computing chartOptions with', props.data.length, 'data points');
 
   // Clear color cache when groupBy changes to force recalculation
   categoryColorMap.value.clear();
 
+  // Use all data - Highcharts turbo mode and data grouping handle performance
   let dataToProcess = props.data;
   const dataSize = props.data.length;
   
-  // For very large datasets without zoom, sample data initially to prevent UI blocking
-  // Highcharts will handle the rest with turbo mode and data grouping
-  if (dataSize > 5000 && currentZoomLevel.value.xMin === null) {
-    // Sample every Nth item for initial render (will show full data on zoom)
-    const sampleRate = Math.ceil(dataSize / 5000); // Target ~5000 points for initial render
-    dataToProcess = props.data.filter((_, index) => index % sampleRate === 0);
+  // Create cache key based on data length, axis selections, and groupBy
+  const cacheKey = `${dataSize}-${xAxis.value?.value || 'null'}-${yAxis.value?.value || 'null'}-${groupBy.value?.value || 'null'}`
+  
+  // Check if we have cached data
+  if (chartDataCache.value.has(cacheKey)) {
+    return chartDataCache.value.get(cacheKey)
   }
   
   // Phase 2: Level-of-Detail (LOD) Rendering
@@ -346,7 +442,7 @@ const chartOptions = computed(() => {
     return acc;
   }, {});
 
-  const series = Object.keys(groupedData)
+  let series = Object.keys(groupedData)
     .sort((a, b) => groupedData[b].length - groupedData[a].length)
     .map(category => ({
       name: category,
@@ -355,6 +451,34 @@ const chartOptions = computed(() => {
       marker: { symbol: 'circle' },
       opacity: dataSize > 5000 ? 0.5 : 0.8,
     }));
+  
+  // Ensure we have at least one series - if all data was filtered out, create a placeholder
+  if (series.length === 0 && dataToProcess.length > 0) {
+    console.warn('[InteractiveGraph] No valid data points after filtering, creating placeholder series');
+    // Try to create at least one point from the first valid item
+    const firstItem = dataToProcess.find(item => {
+      const xValue = getAxisData(item, xAxis.value);
+      const yValue = getAxisData(item, yAxis.value);
+      return xValue !== null && yValue !== null;
+    });
+    if (firstItem) {
+      const xValue = getAxisData(firstItem, xAxis.value);
+      const yValue = getAxisData(firstItem, yAxis.value);
+      const xFormattedValue = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
+      const yFormattedValue = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
+      series = [{
+        name: 'Data',
+        data: [{
+          x: xFormattedValue,
+          y: yFormattedValue,
+          name: firstItem.soc_name || firstItem.name || `SoC ${firstItem.soc_id}`,
+          data: firstItem
+        }],
+        marker: { symbol: 'circle' },
+        opacity: 0.8,
+      }];
+    }
+  }
   
   // Phase 2: Add heatmap overlay for very large datasets (>50k points)
   let heatmapSeries = null;
@@ -390,32 +514,74 @@ const chartOptions = computed(() => {
     }
   }
 
-  return {
+  const chartConfig = {
     chart: {
       type: 'scatter',
       zoomType: 'xy',
+      events: {
+        load: function() {
+          chartInstance.value = this;
+          const xAxis = this.xAxis[0];
+          const yAxis = this.yAxis[0];
+          
+          // Update zoom level on load
+          currentZoomLevel.value = {
+            xMin: xAxis.min,
+            xMax: xAxis.max,
+            yMin: yAxis.min,
+            yMax: yAxis.max
+          };
+          
+          // Track zoom changes
+          xAxis.update({
+            events: {
+              afterSetExtremes: function() {
+                currentZoomLevel.value = {
+                  xMin: this.min,
+                  xMax: this.max,
+                  yMin: yAxis.min,
+                  yMax: yAxis.max
+                };
+              }
+            }
+          });
+          
+          yAxis.update({
+            events: {
+              afterSetExtremes: function() {
+                currentZoomLevel.value = {
+                  xMin: xAxis.min,
+                  xMax: xAxis.max,
+                  yMin: this.min,
+                  yMax: this.max
+                };
+              }
+            }
+          });
+        }
+      }
     },
     credits: false,
     title: false,
     xAxis: {
-      title: { text: xAxis.value.label },
-      type: xAxis.value.value === 'release_date' ? 'datetime' : 'linear',
+      title: { text: xAxis.value?.label || 'X-Axis' },
+      type: (xAxis.value?.value === 'release_date') ? 'datetime' : 'linear',
       labels: {
         formatter: function () {
-          if (xAxis.value.value === 'release_date') {
+          if (xAxis.value?.value === 'release_date') {
             return new Date(this.value).getFullYear();
           }
           return this.value;
         }
       },
-      tickInterval: xAxis.value.value === 'release_date' ? null : 'auto',
+      tickInterval: (xAxis.value?.value === 'release_date') ? null : 'auto',
       gridLineWidth: 1,
-      min: xAxis.value.value === 'release_date' ? undefined : 1,
+      min: (xAxis.value?.value === 'release_date') ? undefined : 1,
       startOnTick: true,
       endOnTick: true,
     },
     yAxis: {
-      title: { text: yAxis.value.label },
+      title: { text: yAxis.value?.label || 'Y-Axis' },
       type: (yAxis.value?.value === 'release_date') ? 'datetime' : 'linear',
       labels: {
         formatter: function () {
@@ -481,27 +647,19 @@ const chartOptions = computed(() => {
         },
         
         marker: {
-          radius: dataSize > 10000 ? 1 : (dataSize > 5000 ? 2 : 4), // Smaller markers for large datasets
+          radius: dataSize > 10000 ? 1 : 4, // Smaller markers only for very large datasets (>10k)
           symbol: 'circle',
           enabledThreshold: 20000, // Hide markers if >20k points (use grouping instead)
-          states: {
-            hover: {
-              enabled: true,
+          states: { 
+            hover: { 
+              enabled: true, 
               radius: dataSize > 10000 ? 3 : 4,
-              lineColor: 'rgb(100,100,100)',
-            },
+              lineColor: 'rgb(100,100,100)' 
+            } 
           },
         },
-        states: {
-          hover: {
-            marker: {
-              enabled: false,
-            },
-          },
-        },
-        jitter: {
-          x: 0.005,
-        },
+        states: { hover: { marker: { enabled: false } } },
+        jitter: { x: 0.005 },
         // Adjust opacity for better visibility with large datasets
         opacity: dataSize > 5000 ? 0.5 : 0.8,
       },
@@ -513,6 +671,18 @@ const chartOptions = computed(() => {
     },
     series: heatmapSeries ? [heatmapSeries, ...series] : series,
   };
+  
+  // Cache the result
+  chartDataCache.value.set(cacheKey, chartConfig)
+  
+  // Limit cache size to prevent memory leaks
+  if (chartDataCache.value.size > 10) {
+    const firstKey = chartDataCache.value.keys().next().value
+    chartDataCache.value.delete(firstKey)
+  }
+  
+  console.log('[InteractiveGraph] Returning chartConfig with', series.length, 'series, heatmapSeries:', !!heatmapSeries);
+  return chartConfig
 });
 </script>
 

@@ -108,7 +108,7 @@ const showRegister = ref(false);
 // Default to "Profile"
 const selectedOption = ref('Profile');
 
-const addRoles = ['leader', 'rollbacker', 'admin'];
+const addRoles = ['leader', 'admin'];
 
 onMounted(() => {
   const storedUser = sessionStorage.getItem('PDB_U_NAME');

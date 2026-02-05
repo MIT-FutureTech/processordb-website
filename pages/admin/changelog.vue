@@ -62,30 +62,31 @@
     </div>
 
     <!-- Changes Table -->
-    <div v-if="!loading && !error" class="bg-white rounded-lg overflow-hidden border border-gray-200">
-      <table class="min-w-full divide-y divide-gray-200">
+    <div v-if="!loading && !error" class="bg-white rounded-lg border border-gray-200">
+      <div class="overflow-x-auto">
+      <table ref="tableRef" class="w-full divide-y divide-gray-200" style="min-width: 1000px;">
         <thead class="bg-black bg-opacity-80">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-white">Date</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-white">Entity Type</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-white">Entity ID</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-white">Field</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-white">Old Value</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-white">New Value</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-white">Changed By</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-white">Source</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-white">Actions</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-white whitespace-nowrap">Date</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-white whitespace-nowrap">Entity Type</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-white whitespace-nowrap">Entity ID</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-white whitespace-nowrap">Field</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-white whitespace-nowrap" style="max-width: 200px; width: 200px;">Old Value</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-white whitespace-nowrap" style="max-width: 200px; width: 200px;">New Value</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-white whitespace-nowrap">Changed By</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-white whitespace-nowrap">Source</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-white whitespace-nowrap">Actions</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <tr v-for="change in changes" :key="change.version_id">
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
               {{ formatDate(change.changed_at) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-4 py-4 whitespace-nowrap">
               {{ formatTableName(change.table_name) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-4 py-4 whitespace-nowrap">
               <a 
                 :href="getEntityLink(change.table_name, change.record_id)" 
                 class="text-blue-600 hover:underline"
@@ -94,19 +95,23 @@
                 {{ change.record_id }}
               </a>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-4 py-4 whitespace-nowrap">
               {{ formatFieldName(change.field_name) }}
             </td>
-            <td class="px-6 py-4 max-w-xs truncate" :title="change.old_value || ''">
-              {{ truncateValue(change.old_value) }}
+            <td class="px-4 py-4" style="max-width: 200px;">
+              <div class="truncate" :title="change.old_value || ''">
+                {{ truncateValue(change.old_value) }}
+              </div>
             </td>
-            <td class="px-6 py-4 max-w-xs truncate" :title="change.new_value || ''">
-              {{ truncateValue(change.new_value) }}
+            <td class="px-4 py-4" style="max-width: 200px;">
+              <div class="truncate" :title="change.new_value || ''">
+                {{ truncateValue(change.new_value) }}
+              </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-4 py-4 whitespace-nowrap">
               {{ change.User?.username || change.User?.email || 'Unknown' }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-4 py-4 whitespace-nowrap">
               <span v-if="change.suggestion_id" class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
                 Suggestion
                 <a 
@@ -121,20 +126,32 @@
                 Direct Edit
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <button 
-                v-if="userRole === 'admin'"
-                @click="undoChange(change.version_id)"
-                :disabled="undoing === change.version_id"
-                class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm disabled:opacity-50"
-              >
-                {{ undoing === change.version_id ? 'Undoing...' : 'Undo' }}
-              </button>
-              <span v-else class="text-gray-400 text-sm">Admin only</span>
+            <td class="px-4 py-4 whitespace-nowrap">
+              <div class="flex gap-2 items-center">
+                <button 
+                  @click="viewChange(change)"
+                  class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm whitespace-nowrap"
+                >
+                  View
+                </button>
+                <button 
+                  v-if="userRole === 'admin'"
+                  @click="undoChange(change.version_id)"
+                  :disabled="undoing === change.version_id"
+                  class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm disabled:opacity-50 whitespace-nowrap"
+                >
+                  {{ undoing === change.version_id ? 'Undoing...' : 'Undo' }}
+                </button>
+                <span v-if="userRole !== 'admin'" class="text-gray-400 text-sm">Admin only</span>
+              </div>
             </td>
           </tr>
         </tbody>
       </table>
+      </div>
+      <div class="px-4 sm:px-0 py-2 text-xs text-gray-500 text-center border-t border-gray-200">
+        Scroll horizontally to view all columns
+      </div>
     </div>
 
     <!-- Pagination -->
@@ -165,6 +182,78 @@
       </div>
     </div>
 
+    <!-- View Change Modal -->
+    <div v-if="selectedChange" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="selectedChange = null">
+      <div class="bg-white rounded-lg p-6 max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold">Change Details</h2>
+          <button @click="selectedChange = null" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <strong>Entity Type:</strong> {{ formatTableName(selectedChange.table_name) }}
+          </div>
+          <div>
+            <strong>Entity ID:</strong> 
+            <a 
+              :href="getEntityLink(selectedChange.table_name, selectedChange.record_id)" 
+              class="text-blue-600 hover:underline"
+              target="_blank"
+            >
+              {{ selectedChange.record_id }}
+            </a>
+          </div>
+          <div>
+            <strong>Field:</strong> {{ formatFieldName(selectedChange.field_name) }}
+          </div>
+          <div>
+            <strong>Changed At:</strong> {{ formatDate(selectedChange.changed_at) }}
+          </div>
+          <div>
+            <strong>Changed By:</strong> {{ selectedChange.User?.username || selectedChange.User?.email || 'Unknown' }}
+          </div>
+          <div>
+            <strong>Source:</strong> 
+            <span v-if="selectedChange.suggestion_id" class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+              Suggestion #{{ selectedChange.suggestion_id }}
+            </span>
+            <span v-else class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">
+              Direct Edit
+            </span>
+          </div>
+          <div v-if="selectedChange.comment">
+            <strong>Comment:</strong>
+            <div class="mt-1 p-3 bg-gray-50 rounded border border-gray-200">
+              {{ selectedChange.comment }}
+            </div>
+          </div>
+          <div>
+            <strong>Old Value:</strong>
+            <div class="mt-1 p-3 bg-red-50 rounded border border-red-200">
+              <pre class="whitespace-pre-wrap break-words text-sm">{{ formatChangeValue(selectedChange.old_value) }}</pre>
+            </div>
+          </div>
+          <div>
+            <strong>New Value:</strong>
+            <div class="mt-1 p-3 bg-green-50 rounded border border-green-200">
+              <pre class="whitespace-pre-wrap break-words text-sm">{{ formatChangeValue(selectedChange.new_value) }}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="userRole === 'admin'" class="mt-6 flex gap-4">
+          <button 
+            @click="undoChange(selectedChange.version_id)"
+            :disabled="undoing === selectedChange.version_id"
+            class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+          >
+            {{ undoing === selectedChange.version_id ? 'Undoing...' : 'Undo This Change' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="mb-16" />
   </div>
   <Footer />
@@ -192,6 +281,8 @@ const endDate = ref('');
 const userRole = ref('');
 const isLoggedIn = ref(false);
 const undoing = ref(null);
+const tableRef = ref(null);
+const selectedChange = ref(null);
 const pagination = ref({
   page: 1,
   pageSize: 50,
@@ -256,6 +347,25 @@ const getEntityLink = (tableName, recordId) => {
 const viewSuggestion = (suggestionId) => {
   navigateTo(`/admin/suggestions`);
   // Could open a modal or navigate to suggestion details
+};
+
+const viewChange = (change) => {
+  selectedChange.value = change;
+};
+
+const formatChangeValue = (value) => {
+  if (!value) return '(empty)';
+  if (typeof value === 'string') {
+    try {
+      // Try to parse as JSON and format it nicely
+      const parsed = JSON.parse(value);
+      return JSON.stringify(parsed, null, 2);
+    } catch {
+      // Not JSON, return as-is
+      return value;
+    }
+  }
+  return String(value);
 };
 
 const loadChanges = async () => {
@@ -328,7 +438,19 @@ const undoChange = async (versionId) => {
     alert('Change undone successfully');
   } catch (err) {
     console.error('[Change Log] Error undoing change:', err);
-    error.value = err.message || 'Failed to undo change.';
+    const errorMessage = err.message || 'Failed to undo change.';
+    
+    // Check if it's a deleted entity error
+    if (errorMessage.includes('no longer exists') || errorMessage.includes('Entity not found')) {
+      error.value = `Cannot undo: The entity has been deleted and no longer exists in the database. This change was made before the entity was removed.`;
+    } else if (errorMessage.includes('no longer exists in table')) {
+      error.value = `Cannot undo: The field '${errorMessage.match(/field '([^']+)'/)?.[1] || 'unknown'}' no longer exists. This change was made before a schema migration.`;
+    } else {
+      error.value = errorMessage;
+    }
+    
+    // Show alert for better visibility
+    alert(error.value);
   } finally {
     undoing.value = null;
   }

@@ -15,7 +15,7 @@
               </svg>
             </DropdownMenuTrigger>
             <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
-              <DropdownMenuItem v-for="option in xAxisOptions" :key="option.value" class="cursor-pointer"
+              <DropdownMenuItem v-for="option in xAxisOptions" :key="option.value + '-' + option.source" class="cursor-pointer"
                 @click="xAxis = option">
                 {{ option.label }}
               </DropdownMenuItem>
@@ -38,7 +38,7 @@
               </svg>
             </DropdownMenuTrigger>
             <DropdownMenuContent :side-offset="0" align="start" class="w-full left-0">
-              <DropdownMenuItem v-for="option in yAxisOptions" :key="option.value" class="cursor-pointer"
+              <DropdownMenuItem v-for="option in yAxisOptions" :key="option.value + '-' + option.source" class="cursor-pointer"
                 @click="yAxis = option">
                 {{ option.label }}
               </DropdownMenuItem>
@@ -90,7 +90,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onErrorCaptured, onMounted } from 'vue';
+import { computed, ref, onErrorCaptured, onMounted, watch } from 'vue';
 // import { useRoute } from 'vue-router';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu/dropdown-menu-index';
 import { 
@@ -100,6 +100,7 @@ import {
   createHeatmap,
   detectDenseRegions 
 } from '@/lib/chartUtils';
+import { getNumericOptions, getCategoricalOptions, generateNumericOptionsFromData, generateCategoricalOptionsFromData, validateFieldMaps } from '@/lib/chartFieldMaps';
 // import { color } from 'highcharts';
 
 // Error handling for chart component
@@ -133,36 +134,129 @@ const props = defineProps({
 //   })));
 // };
 
-// Define X-Axis options for FPGA data.
-const xAxisOptions = [
-  { label: 'Release Date', value: 'release_date', source: 'soc' },
-  { label: 'CLBs', value: 'clbs', source: 'fpga' },
-  { label: 'LUTs', value: 'luts', source: 'fpga' },
-  { label: 'Flip-Flops', value: 'ffs', source: 'fpga' },
-  { label: 'Block RAMs', value: 'block_rams', source: 'fpga' },
-  { label: 'DSP Blocks', value: 'multiplier_dsp_blocks', source: 'fpga' },
-  { label: 'PLLs', value: 'plls', source: 'fpga' },
-  { label: 'Process Node (nm)', value: 'process_node', source: 'soc' },
-];
+// Comprehensive numeric options for X and Y axes from field map
+// Falls back to dynamic generation if data structure differs
+const numericOptions = computed(() => {
+  // Use comprehensive field map first
+  const fieldMapOptions = getNumericOptions('fpga');
+  
+  // Validate field maps against actual data
+  if (props.data && props.data.length > 0) {
+    validateFieldMaps(fieldMapOptions, props.data, 'fpga');
+    
+    const sample = props.data[0];
+    const availableFields = new Set();
+    
+    // Check top-level fields
+    for (const key in sample) {
+      if (typeof sample[key] === 'number' || key === 'release_date') {
+        availableFields.add(key);
+      }
+    }
+    
+    // Check nested SoC fields
+    if (sample.SoC) {
+      for (const key in sample.SoC) {
+        if (typeof sample.SoC[key] === 'number' || key === 'release_date') {
+          availableFields.add(key);
+        }
+      }
+    }
+    
+    // Filter field map options to only include available fields
+    const filtered = fieldMapOptions.filter(opt => {
+      // For soc source, check both flattened and nested
+      if (opt.source === 'soc') {
+        return availableFields.has(opt.value) || 
+               (sample.SoC && sample.SoC.hasOwnProperty(opt.value)) ||
+               sample.hasOwnProperty(opt.value);
+      }
+      return availableFields.has(opt.value) || sample.hasOwnProperty(opt.value);
+    });
+    
+    // If filtered list is empty or very small, fall back to dynamic generation
+    if (filtered.length < 3 && props.data.length > 0) {
+      const dynamicOptions = generateNumericOptionsFromData(props.data, 'fpga');
+      if (dynamicOptions.length > filtered.length) {
+        console.warn('[FPGAsGraph] Field map incomplete, using dynamic field detection');
+        return dynamicOptions;
+      }
+    }
+    
+    return filtered;
+  }
+  
+  return fieldMapOptions;
+});
 
-const yAxisOptions = xAxisOptions.filter(option => option.value !== 'release_date');
+// X-Axis options exclude the selected Y-axis value
+const xAxisOptions = computed(() => {
+  let options = numericOptions.value;
+  // Exclude the selected Y-axis value from X-axis options
+  if (yAxis.value && yAxis.value.value) {
+    options = options.filter(opt => opt.value !== yAxis.value.value);
+  }
+  return options;
+});
 
-// Define Group By options
-const groupOptions = [
-  { label: 'Generation', value: 'generation', source: 'fpga' },
-  { label: 'Family/Subfamily', value: 'family_subfamily', source: 'fpga' },
-  { label: 'Process Node', value: 'process_node', source: 'soc' },
-];
+// Y-Axis options exclude release_date and the selected X-axis value
+const yAxisOptions = computed(() => {
+  let options = numericOptions.value.filter(option => option.value !== 'release_date');
+  // Exclude the selected X-axis value from Y-axis options
+  if (xAxis.value && xAxis.value.value) {
+    options = options.filter(opt => opt.value !== xAxis.value.value);
+  }
+  return options;
+});
 
-// const route = useRoute();
+// Comprehensive Group By options for FPGA data from field map
+const groupOptions = getCategoricalOptions('fpga');
+
 const filteredGroupOptions = computed(() => {
-  // (Optional) Filter group options based on route params if needed
+  // Filter to only include fields that exist in the data
+  if (props.data && props.data.length > 0) {
+    const sample = props.data[0];
+    const filtered = groupOptions.filter(opt => {
+      if (opt.source === 'soc') {
+        // Check both flattened and nested structures
+        return sample.hasOwnProperty(opt.value) || 
+               (sample.SoC && sample.SoC.hasOwnProperty(opt.value)) ||
+               (opt.value === 'manufacturer_name' && (sample.manufacturer_name || sample.SoC?.Manufacturer));
+      }
+      return sample.hasOwnProperty(opt.value);
+    });
+    
+    // If filtered list is empty, fall back to dynamic generation
+    if (filtered.length === 0 && props.data.length > 0) {
+      const dynamicOptions = generateCategoricalOptionsFromData(props.data, 'fpga');
+      if (dynamicOptions.length > 0) {
+        console.warn('[FPGAsGraph] Group options incomplete, using dynamic field detection');
+        return dynamicOptions;
+      }
+    }
+    
+    return filtered;
+  }
   return groupOptions;
 });
 
-const xAxis = ref(xAxisOptions[0]);
-const yAxis = ref(yAxisOptions[0]);
-const groupBy = ref(filteredGroupOptions.value[0]);
+// Initialize axes with first available options, with fallbacks
+const xAxis = ref(null);
+const yAxis = ref(null);
+const groupBy = ref(null);
+
+// Set initial values when options are available
+watch([xAxisOptions, yAxisOptions, filteredGroupOptions], ([xOpts, yOpts, groupOpts]) => {
+  if (!xAxis.value && xOpts.length > 0) {
+    xAxis.value = xOpts.find(opt => opt.value === 'release_date') || xOpts[0];
+  }
+  if (!yAxis.value && yOpts.length > 0) {
+    yAxis.value = yOpts.find(opt => opt.value === 'luts') || yOpts[0];
+  }
+  if (!groupBy.value && groupOpts.length > 0) {
+    groupBy.value = groupOpts.find(opt => opt.value === 'generation') || groupOpts[0];
+  }
+}, { immediate: true });
 
 // Chart instance and zoom tracking
 const chartInstance = ref(null);
@@ -171,10 +265,20 @@ const currentZoomLevel = ref({ xMin: null, xMax: null, yMin: null, yMax: null })
 // Utility: Get the appropriate value from an item based on the axis's source
 // Handles both nested structure (from regular API) and flattened structure (from chart-data endpoint)
 const getAxisData = (item, axis) => {
+  if (!item || !axis) return null;
+  
   if (axis.source === 'soc') {
+    if (axis.value === 'manufacturer_name') {
+      // Try flattened structure first (chart-data endpoint), then nested structure
+      return item.manufacturer_name ?? item.SoC?.Manufacturer?.name ?? null;
+    }
+    if (axis.value === 'platform') {
+      return item.platform ?? item.SoC?.platform ?? null;
+    }
     // Try flattened structure first (chart-data endpoint), then nested structure
     return item[axis.value] ?? item.SoC?.[axis.value] ?? null;
   }
+  // Handle FPGA fields
   return item[axis.value] ?? null;
 };
 
@@ -507,7 +611,7 @@ const chartOptions = computed(() => {
         },
         
         marker: {
-          radius: dataSize > 10000 ? 1 : (dataSize > 5000 ? 2 : 4), // Smaller markers for large datasets
+          radius: dataSize > 10000 ? 1 : 4, // Smaller markers only for very large datasets (>10k)
           symbol: 'circle',
           enabledThreshold: 20000, // Hide markers if >20k points (use grouping instead)
           states: {

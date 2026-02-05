@@ -212,10 +212,10 @@
             >
               <span class="text-black">
                 <template v-if="column.value === 'release_date'">
-                  {{ formatYear(row[column.value]) }}
+                  {{ formatYear(getFieldValue(row, column.value)) }}
                 </template>
                 <template v-else>
-                  {{ row[column.value] }}
+                  {{ getFieldValue(row, column.value) }}
                 </template>
               </span>
             </TableCell>
@@ -321,6 +321,38 @@ function formatColumnLabel(key) {
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
+}
+
+// --- Helper: Get field value with resilience to missing/renamed fields ---
+function getFieldValue(row, fieldName) {
+  if (!row || !fieldName) return '';
+  
+  // Direct field access
+  if (row.hasOwnProperty(fieldName)) {
+    const value = row[fieldName];
+    // Handle null/undefined gracefully
+    if (value === null || value === undefined) return '';
+    return value;
+  }
+  
+  // Try nested SoC access for common SoC fields
+  const socFields = ['release_date', 'die_sizes', 'number_of_die', 'package_size', 
+                     'platform', 'total_transistor_count', 'transistor_density',
+                     'voltage_range_high', 'voltage_range_low', 'process_node'];
+  if (socFields.includes(fieldName) && row.SoC) {
+    const value = row.SoC[fieldName];
+    if (value !== null && value !== undefined) return value;
+  }
+  
+  // Try manufacturer name from nested structure
+  if (fieldName === 'manufacturer' || fieldName === 'manufacturer_name') {
+    if (row.manufacturer_name) return row.manufacturer_name;
+    if (row.manufacturer) return typeof row.manufacturer === 'string' ? row.manufacturer : row.manufacturer.name;
+    if (row.SoC?.Manufacturer?.name) return row.SoC.Manufacturer.name;
+  }
+  
+  // Field not found - return empty string instead of undefined
+  return '';
 }
 
 // --- Flatten Data with Memoization ---
@@ -493,6 +525,8 @@ const additionalColumns = computed(() => {
   if (!dataArr.length) return []
 
   const firstItem = dataArr[0]
+  if (!firstItem || typeof firstItem !== 'object') return []
+  
   const keys = Object.keys(firstItem)
   const hidden = defaultHiddenKeys[props.className] || []
 
@@ -500,9 +534,11 @@ const additionalColumns = computed(() => {
     if (defaultColumnsOrderKeys.includes(key)) return false
     if (hidden.includes(key)) return false
     const value = firstItem[key]
+    // Skip complex objects but allow arrays (they'll be stringified)
     if (value !== null && typeof value === 'object' && !Array.isArray(value)) return false
     return true
   })
+  
   return filteredKeys.map(key => ({
     label: formatColumnLabel(key),
     value: key,
@@ -693,9 +729,21 @@ watch(allColumns, () => {
 })
 
 // --- Columns to Display ---
-const displayedColumns = computed(() =>
-  allColumns.value.filter(col => selectedColumns.value.includes(col.value))
-)
+// Filter to only show columns that exist in the data (resilience to schema changes)
+const displayedColumns = computed(() => {
+  const dataArr = flattenedData.value
+  if (!dataArr.length) return []
+  
+  const firstItem = dataArr[0]
+  const availableFields = new Set(Object.keys(firstItem))
+  
+  return allColumns.value.filter(col => {
+    // Only include if column is selected AND field exists in data
+    return selectedColumns.value.includes(col.value) && 
+           (availableFields.has(col.value) || 
+            getFieldValue(firstItem, col.value) !== '')
+  })
+})
 
 // --- Search, Sorting, and Pagination ---
 const searchQuery = ref('')
@@ -722,8 +770,8 @@ const filteredData = computed(() => {
   return flattenedData.value.filter(item => {
     // Early exit if any column matches
     for (const col of columns) {
-      const cellValue = item[col.value]
-      if (cellValue !== null && cellValue !== undefined) {
+      const cellValue = getFieldValue(item, col.value)
+      if (cellValue !== null && cellValue !== undefined && cellValue !== '') {
         if (cellValue.toString().toLowerCase().includes(query)) {
           return true
         }
@@ -737,14 +785,16 @@ const sortedData = computed(() => {
   let dataToSort = [...filteredData.value]
   if (!sortField.value) {
     return dataToSort.sort((a, b) => {
-      const aYear = a.release_date ? new Date(a.release_date).getFullYear() : -Infinity
-      const bYear = b.release_date ? new Date(b.release_date).getFullYear() : -Infinity
+      const aDate = getFieldValue(a, 'release_date')
+      const bDate = getFieldValue(b, 'release_date')
+      const aYear = aDate ? new Date(aDate).getFullYear() : -Infinity
+      const bYear = bDate ? new Date(bDate).getFullYear() : -Infinity
       return bYear - aYear
     })
   }
   return dataToSort.sort((a, b) => {
-    const aVal = a[sortField.value] || ''
-    const bVal = b[sortField.value] || ''
+    const aVal = getFieldValue(a, sortField.value) || ''
+    const bVal = getFieldValue(b, sortField.value) || ''
     if (aVal < bVal) return sortOrder.value === 'asc' ? -1 : 1
     if (aVal > bVal) return sortOrder.value === 'asc' ? 1 : -1
     return 0

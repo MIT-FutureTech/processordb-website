@@ -172,6 +172,18 @@
               {{ roleOption }}
             </option>
           </select>
+          <div class="mt-2 text-xs text-gray-600">
+            <p class="font-semibold mb-1">Role Descriptions:</p>
+            <ul class="list-disc list-inside space-y-1">
+              <li><strong>Admin:</strong> Full permissions - can create, update, delete entities, manage users, review suggestions, undo changes, and access all administrative features.</li>
+              <li><strong>Leader:</strong> Can edit users and manage user accounts. No backend API permissions.</li>
+              <li><strong>Editor:</strong> Can create and update entities (CPUs, GPUs, etc.), but cannot delete. Can review suggestions if granted permission via the checkbox below.</li>
+              <li><strong>Suggestor:</strong> Can create suggestions and view own suggestions, but cannot directly create, update, or delete entities. Default role for new users.</li>
+            </ul>
+            <p class="mt-2 text-xs italic text-gray-500">
+              Note: To grant an editor the ability to review suggestions, check the "Can Review Suggestions" checkbox that appears when their role is set to "editor".
+            </p>
+          </div>
         </div>
 
         <!-- Review Permission (only for editors) -->
@@ -248,13 +260,13 @@ const successMessage = ref('')
 const errorMessage = ref('')
 
 const canEdit = ref(false)
-const editRoles = ['admin', 'leader', 'rollbacker']
+const editRoles = ['admin', 'leader']
 
 onMounted(() => {
   canEdit.value = editRoles.includes(getRole());
 });
 
-const allRoles = ['leader', 'rollbacker', 'admin', 'editor']
+const allRoles = ['leader', 'admin', 'editor', 'suggestor']
 
 // Transform raw user data into a computed array for display
 // (Mapping user.username to a field called 'name', etc.)
