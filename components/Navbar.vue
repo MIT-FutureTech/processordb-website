@@ -101,91 +101,44 @@
           >
             Galaxy
           </NuxtLink>
-          <div v-if="isLoggedIn" class="menu-item has-dropdown relative group">
-            <a
-              href="#"
-              class="menu-item-link flex items-center gap-2"
-            >
-              <span class="menu-item-label text-white group-hover:text-[#A32035]">Profile</span>
-              <svg
-                width="13"
-                height="9"
-                class="chevron text-white group-hover:text-[#A32035] transition-transform duration-200 group-hover:rotate-180"
-                viewBox="0 0 13 9"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+          <ClientOnly>
+            <div v-if="isLoggedIn" class="menu-item has-dropdown relative group">
+              <a
+                href="#"
+                class="menu-item-link flex items-center gap-2"
               >
-                <path
-                  d="M0.5 1L6.5 7.5L12.5 1"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                />
-              </svg>
-            </a>
-            <div
-              class="dropdown-menu invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute top-full right-0 min-w-[180px] bg-white bg-opacity-95 rounded-md transition-all duration-200 transform translate-y-2 group-hover:translate-y-0"
-            >
-              <ul class="py-2">
-                <li class="group">
-                  <NuxtLink
-                    to="/admin/profile"
-                    class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
-                    :class="{ 'bg-gray-100': route.path === '/admin/profile' }"
-                  >
-                    <span
-                      class="mr-3 text-black ml-4 flex items-center"
-                      :class="{ 'text-[#A32035]': route.path === '/admin/profile' }"
-                    >
-                      <ClientOnly>
-                        <v-icon name="bi-person" class="w-4 h-4" />
-                        <template #fallback>
-                          <span class="w-4 h-4 inline-block" />
-                        </template>
-                      </ClientOnly>
-                    </span>
-                    <span
-                      class="mr-4"
-                      :class="{ 'text-[#A32035]': route.path === '/admin/profile' }"
-                    >Profile</span>
-                  </NuxtLink>
-                </li>
-                <li class="group">
-                  <NuxtLink
-                    to="/suggestions/my"
-                    class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
-                    :class="{ 'bg-gray-100': route.path === '/suggestions/my' }"
-                  >
-                    <span
-                      class="mr-3 text-black ml-4 flex items-center"
-                      :class="{ 'text-[#A32035]': route.path === '/suggestions/my' }"
-                    >
-                      <ClientOnly>
-                        <v-icon name="bi-clipboard" class="w-4 h-4" />
-                        <template #fallback>
-                          <span class="w-4 h-4 inline-block" />
-                        </template>
-                      </ClientOnly>
-                    </span>
-                    <span
-                      class="mr-4"
-                      :class="{ 'text-[#A32035]': route.path === '/suggestions/my' }"
-                    >My Suggestions</span>
-                  </NuxtLink>
-                </li>
-                <template v-if="isAdminOrEditor">
-                  <li class="border-t border-gray-200 my-1" />
-                  <li v-if="canReviewSuggestions" class="group">
+                <span class="menu-item-label text-white group-hover:text-[#A32035]">Profile</span>
+                <svg
+                  width="13"
+                  height="9"
+                  class="chevron text-white group-hover:text-[#A32035] transition-transform duration-200 group-hover:rotate-180"
+                  viewBox="0 0 13 9"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M0.5 1L6.5 7.5L12.5 1"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </a>
+              <div
+                class="dropdown-menu invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute top-full right-0 min-w-[180px] bg-white bg-opacity-95 rounded-md transition-all duration-200 transform translate-y-2 group-hover:translate-y-0"
+              >
+                <ul class="py-2">
+                  <li class="group">
                     <NuxtLink
-                      to="/admin/suggestions"
+                      to="/admin/profile"
                       class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
-                      :class="{ 'bg-gray-100': route.path === '/admin/suggestions' }"
+                      :class="{ 'bg-gray-100': route.path === '/admin/profile' }"
                     >
                       <span
                         class="mr-3 text-black ml-4 flex items-center"
-                        :class="{ 'text-[#A32035]': route.path === '/admin/suggestions' }"
+                        :class="{ 'text-[#A32035]': route.path === '/admin/profile' }"
                       >
                         <ClientOnly>
-                          <v-icon name="bi-clipboard-check" class="w-4 h-4" />
+                          <v-icon name="bi-person" class="w-4 h-4" />
                           <template #fallback>
                             <span class="w-4 h-4 inline-block" />
                           </template>
@@ -193,22 +146,22 @@
                       </span>
                       <span
                         class="mr-4"
-                        :class="{ 'text-[#A32035]': route.path === '/admin/suggestions' }"
-                      >Review Queue</span>
+                        :class="{ 'text-[#A32035]': route.path === '/admin/profile' }"
+                      >Profile</span>
                     </NuxtLink>
                   </li>
-                  <li v-if="userRole === 'admin'" class="group">
+                  <li class="group">
                     <NuxtLink
-                      to="/admin/changelog"
+                      to="/suggestions/my"
                       class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
-                      :class="{ 'bg-gray-100': route.path === '/admin/changelog' }"
+                      :class="{ 'bg-gray-100': route.path === '/suggestions/my' }"
                     >
                       <span
                         class="mr-3 text-black ml-4 flex items-center"
-                        :class="{ 'text-[#A32035]': route.path === '/admin/changelog' }"
+                        :class="{ 'text-[#A32035]': route.path === '/suggestions/my' }"
                       >
                         <ClientOnly>
-                          <v-icon name="bi-clock-history" class="w-4 h-4" />
+                          <v-icon name="bi-clipboard" class="w-4 h-4" />
                           <template #fallback>
                             <span class="w-4 h-4 inline-block" />
                           </template>
@@ -216,37 +169,86 @@
                       </span>
                       <span
                         class="mr-4"
-                        :class="{ 'text-[#A32035]': route.path === '/admin/changelog' }"
-                      >Change Log</span>
+                        :class="{ 'text-[#A32035]': route.path === '/suggestions/my' }"
+                      >My Suggestions</span>
                     </NuxtLink>
                   </li>
-                  <li v-if="userRole === 'admin'" class="group">
-                    <NuxtLink
-                      to="/admin/bug-reports"
-                      class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
-                      :class="{ 'bg-gray-100': route.path === '/admin/bug-reports' }"
-                    >
-                      <span
-                        class="mr-3 text-black ml-4 flex items-center"
-                        :class="{ 'text-[#A32035]': route.path === '/admin/bug-reports' }"
+                  <template v-if="isAdminOrEditor">
+                    <li class="border-t border-gray-200 my-1" />
+                    <li v-if="canReviewSuggestions" class="group">
+                      <NuxtLink
+                        to="/admin/suggestions"
+                        class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
+                        :class="{ 'bg-gray-100': route.path === '/admin/suggestions' }"
                       >
-                        <ClientOnly>
-                          <v-icon name="bi-bug" class="w-4 h-4" />
-                          <template #fallback>
-                            <span class="w-4 h-4 inline-block" />
-                          </template>
-                        </ClientOnly>
-                      </span>
-                      <span
-                        class="mr-4"
-                        :class="{ 'text-[#A32035]': route.path === '/admin/bug-reports' }"
-                      >Bug Reports</span>
-                    </NuxtLink>
-                  </li>
-                </template>
-              </ul>
+                        <span
+                          class="mr-3 text-black ml-4 flex items-center"
+                          :class="{ 'text-[#A32035]': route.path === '/admin/suggestions' }"
+                        >
+                          <ClientOnly>
+                            <v-icon name="bi-clipboard-check" class="w-4 h-4" />
+                            <template #fallback>
+                              <span class="w-4 h-4 inline-block" />
+                            </template>
+                          </ClientOnly>
+                        </span>
+                        <span
+                          class="mr-4"
+                          :class="{ 'text-[#A32035]': route.path === '/admin/suggestions' }"
+                        >Review Queue</span>
+                      </NuxtLink>
+                    </li>
+                    <li v-if="userRole === 'admin'" class="group">
+                      <NuxtLink
+                        to="/admin/changelog"
+                        class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
+                        :class="{ 'bg-gray-100': route.path === '/admin/changelog' }"
+                      >
+                        <span
+                          class="mr-3 text-black ml-4 flex items-center"
+                          :class="{ 'text-[#A32035]': route.path === '/admin/changelog' }"
+                        >
+                          <ClientOnly>
+                            <v-icon name="bi-clock-history" class="w-4 h-4" />
+                            <template #fallback>
+                              <span class="w-4 h-4 inline-block" />
+                            </template>
+                          </ClientOnly>
+                        </span>
+                        <span
+                          class="mr-4"
+                          :class="{ 'text-[#A32035]': route.path === '/admin/changelog' }"
+                        >Change Log</span>
+                      </NuxtLink>
+                    </li>
+                    <li v-if="userRole === 'admin'" class="group">
+                      <NuxtLink
+                        to="/admin/bug-reports"
+                        class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
+                        :class="{ 'bg-gray-100': route.path === '/admin/bug-reports' }"
+                      >
+                        <span
+                          class="mr-3 text-black ml-4 flex items-center"
+                          :class="{ 'text-[#A32035]': route.path === '/admin/bug-reports' }"
+                        >
+                          <ClientOnly>
+                            <v-icon name="bi-bug" class="w-4 h-4" />
+                            <template #fallback>
+                              <span class="w-4 h-4 inline-block" />
+                            </template>
+                          </ClientOnly>
+                        </span>
+                        <span
+                          class="mr-4"
+                          :class="{ 'text-[#A32035]': route.path === '/admin/bug-reports' }"
+                        >Bug Reports</span>
+                      </NuxtLink>
+                    </li>
+                  </template>
+                </ul>
+              </div>
             </div>
-          </div>
+          </ClientOnly>
         </div>
 
         <!-- Mobile Navigation -->
@@ -396,7 +398,8 @@
             </div>
           </div>
           <!-- Profile Dropdown (kept separate on mobile) -->
-          <div v-if="isLoggedIn" class="menu-item has-dropdown relative group">
+          <ClientOnly>
+            <div v-if="isLoggedIn" class="menu-item has-dropdown relative group">
             <a
               href="#"
               class="menu-item-link flex items-center gap-2"
@@ -542,6 +545,7 @@
               </ul>
             </div>
           </div>
+          </ClientOnly>
         </div>
       </div>
     </div>
@@ -549,7 +553,7 @@
 </template>
 
 <script setup lang="js">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import { useRuntimeConfig } from '#app';
 import { isLogged, getRole } from '../lib/isLogged';
@@ -558,6 +562,8 @@ import { getItemWithExpiry } from '../lib/encrypter';
 const config = useRuntimeConfig();
 const enableGalaxy = computed(() => config.public.enableGalaxy || false);
 
+// Initialize as false/null for consistent SSR rendering
+// These will update on client after hydration completes
 const isLoggedIn = ref(false);
 const userRole = ref(null);
 const route = useRoute();
@@ -574,9 +580,14 @@ const handleClickOutside = (event) => {
 };
 
 onMounted(() => {
-  isLoggedIn.value = isLogged();
-  userRole.value = getRole();
   document.addEventListener('click', handleClickOutside);
+  
+  // Update login state after mount to avoid hydration mismatches
+  // Use nextTick to ensure this happens after Vue's hydration completes
+  nextTick(() => {
+    isLoggedIn.value = isLogged();
+    userRole.value = getRole();
+  });
 });
 
 onUnmounted(() => {
