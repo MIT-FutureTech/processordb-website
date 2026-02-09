@@ -248,7 +248,6 @@
                 </ul>
               </div>
             </div>
-          </ClientOnly>
         </div>
 
         <!-- Mobile Navigation -->
