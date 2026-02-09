@@ -49,29 +49,52 @@
                   :key="link.text"
                   class="group"
                 >
-                  <div v-if="link.text !== 'Profile' || isLoggedIn">
-                    <NuxtLink
-                      v-if="link.to && link.to !== '/admin/null'"
-                      :to="link.to"
-                      class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
-                    >
-                      <span
-                        class="mr-3 text-black ml-4 flex items-center"
-                        :class="{ 'text-[#A32035]': route.path === link.to }"
+                  <ClientOnly>
+                    <div v-if="link.text !== 'Profile' || isLoggedIn">
+                      <NuxtLink
+                        v-if="link.to && link.to !== '/admin/null'"
+                        :to="link.to"
+                        class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
                       >
-                        <ClientOnly>
-                          <v-icon :name="link.icon" class="w-4 h-4" />
-                          <template #fallback>
+                        <span
+                          class="mr-3 text-black ml-4 flex items-center"
+                          :class="{ 'text-[#A32035]': route.path === link.to }"
+                        >
+                          <ClientOnly>
+                            <v-icon :name="link.icon" class="w-4 h-4" />
+                            <template #fallback>
+                              <span class="w-4 h-4 inline-block" />
+                            </template>
+                          </ClientOnly>
+                        </span>
+                        <span
+                          class="mr-4"
+                          :class="{ 'text-[#A32035]': route.path === link.to }"
+                        >{{ link.text }}</span>
+                      </NuxtLink>
+                    </div>
+                    <template #fallback>
+                      <!-- Show non-Profile links during SSR to avoid hydration mismatch -->
+                      <div v-if="link.text !== 'Profile'">
+                        <NuxtLink
+                          v-if="link.to && link.to !== '/admin/null'"
+                          :to="link.to"
+                          class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
+                        >
+                          <span
+                            class="mr-3 text-black ml-4 flex items-center"
+                            :class="{ 'text-[#A32035]': route.path === link.to }"
+                          >
                             <span class="w-4 h-4 inline-block" />
-                          </template>
-                        </ClientOnly>
-                      </span>
-                      <span
-                        class="mr-4"
-                        :class="{ 'text-[#A32035]': route.path === link.to }"
-                      >{{ link.text }}</span>
-                    </NuxtLink>
-                  </div>
+                          </span>
+                          <span
+                            class="mr-4"
+                            :class="{ 'text-[#A32035]': route.path === link.to }"
+                          >{{ link.text }}</span>
+                        </NuxtLink>
+                      </div>
+                    </template>
+                  </ClientOnly>
                 </li>
               </ul>
             </div>
@@ -287,29 +310,52 @@
                   :key="link.text"
                   class="group"
                 >
-                  <div v-if="link.text !== 'Profile' || isLoggedIn">
-                    <NuxtLink
-                      v-if="link.to && link.to !== '/admin/null'"
-                      :to="link.to"
-                      class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
-                    >
-                      <span
-                        class="mr-3 text-black ml-4 flex items-center"
-                        :class="{ 'text-[#A32035]': route.path === link.to }"
+                  <ClientOnly>
+                    <div v-if="link.text !== 'Profile' || isLoggedIn">
+                      <NuxtLink
+                        v-if="link.to && link.to !== '/admin/null'"
+                        :to="link.to"
+                        class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
                       >
-                        <ClientOnly>
-                          <v-icon :name="link.icon" class="w-4 h-4" />
-                          <template #fallback>
+                        <span
+                          class="mr-3 text-black ml-4 flex items-center"
+                          :class="{ 'text-[#A32035]': route.path === link.to }"
+                        >
+                          <ClientOnly>
+                            <v-icon :name="link.icon" class="w-4 h-4" />
+                            <template #fallback>
+                              <span class="w-4 h-4 inline-block" />
+                            </template>
+                          </ClientOnly>
+                        </span>
+                        <span
+                          class="mr-4"
+                          :class="{ 'text-[#A32035]': route.path === link.to }"
+                        >{{ link.text }}</span>
+                      </NuxtLink>
+                    </div>
+                    <template #fallback>
+                      <!-- Show non-Profile links during SSR to avoid hydration mismatch -->
+                      <div v-if="link.text !== 'Profile'">
+                        <NuxtLink
+                          v-if="link.to && link.to !== '/admin/null'"
+                          :to="link.to"
+                          class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
+                        >
+                          <span
+                            class="mr-3 text-black ml-4 flex items-center"
+                            :class="{ 'text-[#A32035]': route.path === link.to }"
+                          >
                             <span class="w-4 h-4 inline-block" />
-                          </template>
-                        </ClientOnly>
-                      </span>
-                      <span
-                        class="mr-4"
-                        :class="{ 'text-[#A32035]': route.path === link.to }"
-                      >{{ link.text }}</span>
-                    </NuxtLink>
-                  </div>
+                          </span>
+                          <span
+                            class="mr-4"
+                            :class="{ 'text-[#A32035]': route.path === link.to }"
+                          >{{ link.text }}</span>
+                        </NuxtLink>
+                      </div>
+                    </template>
+                  </ClientOnly>
                 </li>
               </ul>
             </div>
