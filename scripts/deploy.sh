@@ -176,9 +176,12 @@ else
     ECOSYSTEM_FILE="ecosystem.config.cjs"
 fi
 
+# Set PM2_ENV environment variable for ecosystem config to detect environment
+export PM2_ENV="$ENVIRONMENT"
+
 # Restart PM2 application
 echo "Restarting PM2 application..."
-pm2 restart "$PM2_APP_NAME" || pm2 start "$ECOSYSTEM_FILE"
+pm2 restart "$PM2_APP_NAME" || pm2 start "$ECOSYSTEM_FILE" --update-env
 
 # Save PM2 process list
 pm2 save --force

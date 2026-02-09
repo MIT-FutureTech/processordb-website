@@ -49,52 +49,30 @@
                   :key="link.text"
                   class="group"
                 >
-                  <ClientOnly>
-                    <div v-if="link.text !== 'Profile' || isLoggedIn">
-                      <NuxtLink
-                        v-if="link.to && link.to !== '/admin/null'"
-                        :to="link.to"
-                        class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
+                  <!-- Always show non-Profile links, conditionally show Profile link after mount -->
+                  <div v-if="link.text !== 'Profile' || (isMounted && isLoggedIn)">
+                    <NuxtLink
+                      v-if="link.to && link.to !== '/admin/null'"
+                      :to="link.to"
+                      class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
+                    >
+                      <span
+                        class="mr-3 text-black ml-4 flex items-center"
+                        :class="{ 'text-[#A32035]': route.path === link.to }"
                       >
-                        <span
-                          class="mr-3 text-black ml-4 flex items-center"
-                          :class="{ 'text-[#A32035]': route.path === link.to }"
-                        >
-                          <ClientOnly>
-                            <v-icon :name="link.icon" class="w-4 h-4" />
-                            <template #fallback>
-                              <span class="w-4 h-4 inline-block" />
-                            </template>
-                          </ClientOnly>
-                        </span>
-                        <span
-                          class="mr-4"
-                          :class="{ 'text-[#A32035]': route.path === link.to }"
-                        >{{ link.text }}</span>
-                      </NuxtLink>
-                    </div>
-                    <template #fallback>
-                      <!-- Show non-Profile links during SSR to avoid hydration mismatch -->
-                      <div v-if="link.text !== 'Profile'">
-                        <NuxtLink
-                          v-if="link.to && link.to !== '/admin/null'"
-                          :to="link.to"
-                          class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
-                        >
-                          <span
-                            class="mr-3 text-black ml-4 flex items-center"
-                            :class="{ 'text-[#A32035]': route.path === link.to }"
-                          >
+                        <ClientOnly>
+                          <v-icon :name="link.icon" class="w-4 h-4" />
+                          <template #fallback>
                             <span class="w-4 h-4 inline-block" />
-                          </span>
-                          <span
-                            class="mr-4"
-                            :class="{ 'text-[#A32035]': route.path === link.to }"
-                          >{{ link.text }}</span>
-                        </NuxtLink>
-                      </div>
-                    </template>
-                  </ClientOnly>
+                          </template>
+                        </ClientOnly>
+                      </span>
+                      <span
+                        class="mr-4"
+                        :class="{ 'text-[#A32035]': route.path === link.to }"
+                      >{{ link.text }}</span>
+                    </NuxtLink>
+                  </div>
                 </li>
               </ul>
             </div>
@@ -124,8 +102,7 @@
           >
             Galaxy
           </NuxtLink>
-          <ClientOnly>
-            <div v-if="isLoggedIn" class="menu-item has-dropdown relative group">
+          <div v-if="isMounted && isLoggedIn" class="menu-item has-dropdown relative group">
               <a
                 href="#"
                 class="menu-item-link flex items-center gap-2"
@@ -310,52 +287,30 @@
                   :key="link.text"
                   class="group"
                 >
-                  <ClientOnly>
-                    <div v-if="link.text !== 'Profile' || isLoggedIn">
-                      <NuxtLink
-                        v-if="link.to && link.to !== '/admin/null'"
-                        :to="link.to"
-                        class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
+                  <!-- Always show non-Profile links, conditionally show Profile link after mount -->
+                  <div v-if="link.text !== 'Profile' || (isMounted && isLoggedIn)">
+                    <NuxtLink
+                      v-if="link.to && link.to !== '/admin/null'"
+                      :to="link.to"
+                      class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
+                    >
+                      <span
+                        class="mr-3 text-black ml-4 flex items-center"
+                        :class="{ 'text-[#A32035]': route.path === link.to }"
                       >
-                        <span
-                          class="mr-3 text-black ml-4 flex items-center"
-                          :class="{ 'text-[#A32035]': route.path === link.to }"
-                        >
-                          <ClientOnly>
-                            <v-icon :name="link.icon" class="w-4 h-4" />
-                            <template #fallback>
-                              <span class="w-4 h-4 inline-block" />
-                            </template>
-                          </ClientOnly>
-                        </span>
-                        <span
-                          class="mr-4"
-                          :class="{ 'text-[#A32035]': route.path === link.to }"
-                        >{{ link.text }}</span>
-                      </NuxtLink>
-                    </div>
-                    <template #fallback>
-                      <!-- Show non-Profile links during SSR to avoid hydration mismatch -->
-                      <div v-if="link.text !== 'Profile'">
-                        <NuxtLink
-                          v-if="link.to && link.to !== '/admin/null'"
-                          :to="link.to"
-                          class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
-                        >
-                          <span
-                            class="mr-3 text-black ml-4 flex items-center"
-                            :class="{ 'text-[#A32035]': route.path === link.to }"
-                          >
+                        <ClientOnly>
+                          <v-icon :name="link.icon" class="w-4 h-4" />
+                          <template #fallback>
                             <span class="w-4 h-4 inline-block" />
-                          </span>
-                          <span
-                            class="mr-4"
-                            :class="{ 'text-[#A32035]': route.path === link.to }"
-                          >{{ link.text }}</span>
-                        </NuxtLink>
-                      </div>
-                    </template>
-                  </ClientOnly>
+                          </template>
+                        </ClientOnly>
+                      </span>
+                      <span
+                        class="mr-4"
+                        :class="{ 'text-[#A32035]': route.path === link.to }"
+                      >{{ link.text }}</span>
+                    </NuxtLink>
+                  </div>
                 </li>
               </ul>
             </div>
@@ -444,8 +399,7 @@
             </div>
           </div>
           <!-- Profile Dropdown (kept separate on mobile) -->
-          <ClientOnly>
-            <div v-if="isLoggedIn" class="menu-item has-dropdown relative group">
+          <div v-if="isMounted && isLoggedIn" class="menu-item has-dropdown relative group">
             <a
               href="#"
               class="menu-item-link flex items-center gap-2"
@@ -591,7 +545,6 @@
               </ul>
             </div>
           </div>
-          </ClientOnly>
         </div>
       </div>
     </div>
@@ -614,6 +567,7 @@ const isLoggedIn = ref(false);
 const userRole = ref(null);
 const route = useRoute();
 const mobileMenuOpen = ref(false);
+const isMounted = ref(false);
 
 // Close mobile menu when clicking outside
 const handleClickOutside = (event) => {
@@ -628,6 +582,9 @@ const handleClickOutside = (event) => {
 onMounted(() => {
   document.addEventListener('click', handleClickOutside);
   
+  // Mark as mounted first to enable client-side rendering
+  isMounted.value = true;
+  
   // Update login state after mount to avoid hydration mismatches
   // Use nextTick to ensure this happens after Vue's hydration completes
   nextTick(() => {
@@ -641,7 +598,10 @@ onUnmounted(() => {
 });
 
 // Check if user can review suggestions (admin or editor with permission)
+// Always return false during SSR to avoid hydration mismatches
 const canReviewSuggestions = computed(() => {
+  // On server, always return false to ensure consistent SSR
+  if (typeof window === 'undefined') return false;
   if (!isLoggedIn.value) return false;
   const role = userRole.value;
   // For now, we'll show the link to admins and editors
@@ -650,7 +610,10 @@ const canReviewSuggestions = computed(() => {
 });
 
 // Check if user is admin or editor (for showing admin dropdown)
+// Always return false during SSR to avoid hydration mismatches
 const isAdminOrEditor = computed(() => {
+  // On server, always return false to ensure consistent SSR
+  if (typeof window === 'undefined') return false;
   if (!isLoggedIn.value) return false;
   const role = userRole.value;
   return role === 'admin' || role === 'editor';

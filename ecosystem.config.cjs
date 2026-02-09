@@ -86,16 +86,42 @@ const logEntry3 = {
 fs.appendFileSync(logPath, JSON.stringify(logEntry3) + '\n')
 // #endregion
 
+// Determine environment from multiple sources:
+// 1. PM2_ENV (set by deploy script)
+// 2. Check if running in production directory (contains 'processordb-website' but not 'staging')
+// 3. NODE_ENV
+// 4. Default to staging for backward compatibility
+let environment = process.env.PM2_ENV
+
+// If PM2_ENV not set, try to detect from directory path
+if (!environment) {
+  const cwd = process.cwd()
+  if (cwd.includes('processordb-website') && !cwd.includes('staging')) {
+    environment = 'production'
+  } else if (cwd.includes('processordb-website-staging')) {
+    environment = 'staging'
+  }
+}
+
+// Fall back to NODE_ENV or default
+environment = environment || process.env.NODE_ENV || 'staging'
+const isProduction = environment === 'production' || environment === 'prod'
+
+// Set app name and instance count based on environment
+const appName = isProduction ? "ProcessorDB-website" : "ProcessorDB-website-staging"
+// Production can use more instances, staging limited to 2 for resource constraints
+const instanceCount = isProduction ? "max" : 2
+
 module.exports = {
   apps : [{
-    name: "ProcessorDB-website-staging",
+    name: appName,
     port: "3000",
     exec_mode: "cluster",
-    instances: 2, // Limited to 2 instances to prevent memory issues on systems with limited RAM
+    instances: instanceCount,
     max_memory_restart: "500M", // Restart if memory exceeds 500MB per instance
     script: "./.output/server/index.mjs",
     env: {
-      NODE_ENV: "production",
+      NODE_ENV: isProduction ? "production" : "staging",
       ...env
     }
   }]
