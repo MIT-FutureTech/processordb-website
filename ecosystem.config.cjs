@@ -68,6 +68,9 @@ if (process.env.NUXT_PUBLIC_SITE_URL) {
 if (process.env.NUXT_PUBLIC_BACKEND_URL) {
   env.NUXT_PUBLIC_BACKEND_URL = process.env.NUXT_PUBLIC_BACKEND_URL
 }
+if (process.env.NUXT_PUBLIC_ENABLE_GALAXY !== undefined) {
+  env.NUXT_PUBLIC_ENABLE_GALAXY = process.env.NUXT_PUBLIC_ENABLE_GALAXY
+}
 
 // #region agent log
 const logEntry3 = {
