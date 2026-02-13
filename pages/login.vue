@@ -128,6 +128,18 @@
 </template>
 
 <script setup>
+// #region agent log
+fetch('http://127.0.0.1:7253/ingest/65e8388e-fc0b-44e5-9ecd-bf527d204089',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pages/login.vue:131',message:'Login page script setup executing',data:{timestamp:Date.now()},timestamp:Date.now(),runId:'debug-1',hypothesisId:'E'})}).catch(()=>{});
+// #endregion
+
+definePageMeta({
+  middleware: 'auth-guard'
+});
+
+// #region agent log
+fetch('http://127.0.0.1:7253/ingest/65e8388e-fc0b-44e5-9ecd-bf527d204089',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'pages/login.vue:137',message:'definePageMeta called with authGuard middleware',data:{timestamp:Date.now()},timestamp:Date.now(),runId:'debug-1',hypothesisId:'E'})}).catch(()=>{});
+// #endregion
+
 import { ref, onMounted } from 'vue';
 import { setItemWithExpiry } from '../lib/encrypter';
 import { isLogged } from '../lib/isLogged';

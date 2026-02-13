@@ -152,6 +152,10 @@
 </template>
 
 <script setup>
+definePageMeta({
+  middleware: 'auth-guard'
+});
+
 import { ref } from 'vue';
 import { isLogged } from '../lib/isLogged';
 import FormFieldLabel from '@/components/FormFieldLabel.vue';

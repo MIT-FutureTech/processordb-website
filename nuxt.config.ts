@@ -26,7 +26,8 @@ export default defineNuxtConfig({
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || process.env.SITE_URL,
       backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:3001',
-      enableGalaxy: process.env.NUXT_PUBLIC_ENABLE_GALAXY === 'true' || false
+      enableGalaxy: process.env.NUXT_PUBLIC_ENABLE_GALAXY === 'true' || false,
+      enableAuth: process.env.NUXT_PUBLIC_ENABLE_AUTH === 'true' || process.env.NODE_ENV !== 'production' || false
     }
   },
 

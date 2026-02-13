@@ -19,7 +19,7 @@
           <div class="bg-white p-1 rounded inline-flex items-center">
             <img alt="processor db logo" class="h-[1.125rem] md:h-[1.5rem]" src="/logo-trans-cropped.png">
           </div>
-          <div class="menu-item has-dropdown relative group">
+          <div v-if="enableAuth" class="menu-item has-dropdown relative group">
             <a
               href="#"
               class="menu-item-link flex items-center gap-2"
@@ -256,7 +256,7 @@
             <img alt="processor db logo" class="h-[1.125rem]" src="/logo-trans-cropped.png">
           </div>
           <!-- Database Dropdown (kept separate on mobile) -->
-          <div class="menu-item has-dropdown relative group">
+          <div v-if="enableAuth" class="menu-item has-dropdown relative group">
             <a
               href="#"
               class="menu-item-link flex items-center gap-2"
@@ -559,6 +559,7 @@ import { getItemWithExpiry } from '../lib/encrypter';
 
 const config = useRuntimeConfig();
 const enableGalaxy = computed(() => config.public.enableGalaxy || false);
+const enableAuth = computed(() => config.public.enableAuth || false);
 
 // Initialize as false/null for consistent SSR rendering
 // These will update on client after hydration completes
@@ -618,15 +619,23 @@ const isAdminOrEditor = computed(() => {
   return role === 'admin' || role === 'editor';
 });
 
-const links = ref([
-  { text: 'Login', to: '/login', icon: 'md-login' },
-  // { text: 'Manufacturers', to: '/manufacturers/list', icon: 'md-precisionmanufacturing' },
-  { text: 'CPUs', to: '/cpu/list', icon: 'bi-cpu' },
-  { text: 'GPUs', to: '/gpu/list', icon: 'bi-gpu-card' },
-  { text: 'FPGAs', to: '/fpga/list', icon: 'gi-logic-gate-xor' },
-  { text: 'SoCs', to: '/soc/list', icon: 'gi-circuitry' },
-  // { text: 'Economics', to: '/economics', icon: 'md-attachmoney' },
-  // { text: 'Performances', to: '/performances', icon: 'gi-chart' },
-]);
+const links = computed(() => {
+  const baseLinks = [
+    // { text: 'Manufacturers', to: '/manufacturers/list', icon: 'md-precisionmanufacturing' },
+    { text: 'CPUs', to: '/cpu/list', icon: 'bi-cpu' },
+    { text: 'GPUs', to: '/gpu/list', icon: 'bi-gpu-card' },
+    { text: 'FPGAs', to: '/fpga/list', icon: 'gi-logic-gate-xor' },
+    { text: 'SoCs', to: '/soc/list', icon: 'gi-circuitry' },
+    // { text: 'Economics', to: '/economics', icon: 'md-attachmoney' },
+    // { text: 'Performances', to: '/performances', icon: 'gi-chart' },
+  ];
+  
+  // Only include login link when auth is enabled
+  if (enableAuth.value) {
+    return [{ text: 'Login', to: '/login', icon: 'md-login' }, ...baseLinks];
+  }
+  
+  return baseLinks;
+});
 
 </script>

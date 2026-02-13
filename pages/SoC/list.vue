@@ -121,7 +121,8 @@
 <script setup lang="js">
 // Make this page client-side only to avoid SSR/build issues
 definePageMeta({
-  ssr: false
+  ssr: false,
+  middleware: 'auth-guard'
 });
 
 import { ref, computed, defineAsyncComponent, onMounted, nextTick, watch } from 'vue'

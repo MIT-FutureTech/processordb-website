@@ -122,7 +122,8 @@
 <script setup lang="js">
 // Make this page client-side only to avoid SSR issues
 definePageMeta({
-  ssr: false
+  ssr: false,
+  middleware: 'auth-guard'
 });
 
 import { ref, computed, onMounted, onActivated, watch, onUnmounted, defineAsyncComponent, nextTick } from 'vue';

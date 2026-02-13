@@ -10,6 +10,15 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Check if authentication is enabled
+  const config = useRuntimeConfig();
+  if (!config.public.enableAuth) {
+    throw createError({
+      statusCode: 403,
+      message: 'Authentication is currently disabled'
+    })
+  }
+
   try {
     const body = await readBody(event)
     

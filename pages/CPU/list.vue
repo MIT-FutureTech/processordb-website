@@ -122,7 +122,8 @@
 <script setup lang="js">
 // Make this page client-side only to avoid SSR issues
 definePageMeta({
-  ssr: false
+  ssr: false,
+  middleware: 'auth-guard'
 });
 
 import { isLogged } from '../lib/isLogged';
