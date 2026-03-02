@@ -52,11 +52,24 @@ if [ -f "scripts/deploy.sh" ]; then
     sed -i 's/\r$//' scripts/deploy.sh
 fi
 
-# Load nvm
+# Load nvm (non-critical if it fails)
 if [ -s "$HOME/.nvm/nvm.sh" ]; then
+    set +e  # Temporarily disable exit on error
     source "$HOME/.nvm/nvm.sh"
+    NVM_SOURCE_EXIT=$?
+    set -e  # Re-enable exit on error
+    
+    if [ $NVM_SOURCE_EXIT -ne 0 ]; then
+        echo "Warning: Failed to source nvm.sh (exit code $NVM_SOURCE_EXIT), continuing without nvm..."
+    fi
 else
     echo "Warning: nvm not found, assuming node is in PATH"
+fi
+
+# Verify node is available
+if ! command -v node &> /dev/null; then
+    echo "Error: node is not available. Please install Node.js or configure nvm."
+    exit 1
 fi
 
 # Install dependencies
