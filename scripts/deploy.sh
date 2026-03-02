@@ -62,15 +62,22 @@ fi
 # Install dependencies
 echo "Installing dependencies..."
 # Ensure devDependencies are installed (npm ci installs them by default unless NODE_ENV=production)
-NODE_ENV=development npm ci || {
-    echo "Warning: npm ci failed, trying npm install..."
+set +e  # Temporarily disable exit on error for this section
+NODE_ENV=development npm ci
+NPM_CI_EXIT_CODE=$?
+set -e  # Re-enable exit on error
+
+if [ $NPM_CI_EXIT_CODE -ne 0 ]; then
+    echo "Warning: npm ci failed (exit code $NPM_CI_EXIT_CODE), trying npm install..."
+    set +e
     npm install
-}
-# Check for outdated packages (informational only, non-blocking)
-echo "Checking for outdated packages..."
-npm outdated || {
-    echo "Note: Some packages may be outdated (this is informational only)"
-}
+    NPM_INSTALL_EXIT_CODE=$?
+    set -e
+    if [ $NPM_INSTALL_EXIT_CODE -ne 0 ]; then
+        echo "Error: Both npm ci and npm install failed. Please check package.json and package-lock.json"
+        exit $NPM_INSTALL_EXIT_CODE
+    fi
+fi
 
 # Audit packages for security vulnerabilities (non-blocking)
 echo "Auditing packages for security vulnerabilities..."
