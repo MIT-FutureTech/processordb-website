@@ -40,7 +40,7 @@
         </div>
 
       </div>
-      <div>
+      <div v-if="enableAuth" >
         <h3 class="font-medium text-md mb-2">Support</h3>
         <button
           @click="showBugReportModal = true"
@@ -65,7 +65,7 @@
     </div>
 
     <!-- Bug Report Modal -->
-    <div v-if="showBugReportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="closeBugReportModal">
+    <div v-if="enableAuth && showBugReportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="closeBugReportModal">
       <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-gray-800">Report a Bug</h2>
@@ -130,10 +130,11 @@
 </template>
 
 <script setup lang="js">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRuntimeConfig } from '#app';
 
 const config = useRuntimeConfig();
+const enableAuth = computed(() => config.public.enableAuth || false);
 const showBugReportModal = ref(false);
 const bugReportForm = ref({
   title: '',
@@ -157,6 +158,10 @@ const closeBugReportModal = () => {
 };
 
 const submitBugReport = async () => {
+  if (!enableAuth.value) {
+    return;
+  }
+
   if (!bugReportForm.value.title.trim() || !bugReportForm.value.description.trim()) {
     return;
   }
