@@ -62,8 +62,10 @@ fi
 # Install dependencies
 echo "Installing dependencies..."
 # Ensure devDependencies are installed (npm ci installs them by default unless NODE_ENV=production)
-NODE_ENV=development npm ci
-
+NODE_ENV=development npm ci || {
+    echo "Warning: npm ci failed, trying npm install..."
+    npm install
+}
 # Check for outdated packages (informational only, non-blocking)
 echo "Checking for outdated packages..."
 npm outdated || {
