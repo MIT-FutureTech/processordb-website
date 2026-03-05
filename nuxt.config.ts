@@ -1,3 +1,20 @@
+import { join } from 'path';
+import { tmpdir } from 'os';
+
+// Determine cache directory: use Linux-native path in WSL to avoid Windows filesystem rename issues
+const getCacheDir = () => {
+  const isWSL = process.platform === 'linux' && (process.env.WSL_DISTRO_NAME !== undefined || process.env.WSL_INTEROP !== undefined);
+  const isWindowsMount = process.cwd().startsWith('/mnt/');
+  
+  if (isWSL && isWindowsMount) {
+    // Use Linux-native temp directory to avoid Windows filesystem atomic rename issues
+    return join(tmpdir(), 'vite-cache-processordb');
+  } else {
+    // Use project-local cache for non-WSL or non-Windows-mount scenarios
+    return join(process.cwd(), '.vite-cache');
+  }
+};
+
 export default defineNuxtConfig({
   devtools: { enabled: process.env.NODE_ENV === 'development' },
   modules: ["@nuxtjs/tailwindcss", "nuxt-plotly"],
@@ -26,7 +43,9 @@ export default defineNuxtConfig({
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || process.env.SITE_URL,
       backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:3001',
-      enableGalaxy: process.env.NUXT_PUBLIC_ENABLE_GALAXY === 'true' || false
+      enableGalaxy: process.env.NUXT_PUBLIC_ENABLE_GALAXY === 'true' || false,
+      enableAuth: process.env.NUXT_PUBLIC_ENABLE_AUTH === 'true' || false,
+      enableAboutDropdown: (process.env.NUXT_PUBLIC_ENABLE_ABOUT_DROPDOWN === 'true' && process.env.NUXT_PUBLIC_ENABLE_AUTH === 'true') || false
     }
   },
 
@@ -44,6 +63,8 @@ export default defineNuxtConfig({
   // },
 
   vite: {
+    // Workaround for WSL permission issues: use Linux-native cache directory when on Windows-mounted filesystem
+    cacheDir: getCacheDir(),
     define: {
       // Workaround for crypto.hash issue in @vitejs/plugin-vue 5.0.0
       'global': 'globalThis',
@@ -63,7 +84,8 @@ export default defineNuxtConfig({
         "exceljs",
         "jspdf",
         "file-saver",
-        "jszip"
+        "jszip",
+        "radix-vue"
       ],
       // Exclude TanStack Query from optimization to prevent class inheritance issues
       exclude: ['@tanstack/vue-query', '@tanstack/query-core'],
@@ -261,6 +283,20 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: "icon", type: "image/png", href: "/cpu.png", sizes: "32x32" }
+      ],
+      script: [
+        {
+          src: 'https://www.googletagmanager.com/gtag/js?id=G-H88YQHDYJ5',
+          async: true
+        },
+        {
+          innerHTML: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-H88YQHDYJ5');
+          `
+        }
       ]
     }
   },

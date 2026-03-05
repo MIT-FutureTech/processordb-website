@@ -254,7 +254,11 @@ const filteredGroupOptions = computed(() => {
 // Initialize axes with first available options, with fallbacks
 const xAxis = ref(numericOptions.value.find(opt => opt.value === 'release_date') || numericOptions.value[0] || { label: 'X-Axis', value: '', source: '' });
 const yAxis = ref(numericOptions.value.find(opt => opt.value === 'core_count') || numericOptions.value[1] || { label: 'Y-Axis', value: '', source: '' });
-const groupBy = ref(filteredGroupOptions.value[0]);
+// Default groupBy to manufacturer/manufacturer_name
+const groupBy = ref(
+  filteredGroupOptions.value.find(opt => opt.value === 'manufacturer_name' || opt.value === 'manufacturer') || 
+  filteredGroupOptions.value[0]
+);
 
 // Axis change handlers
 const handleXAxisChange = (option) => {
@@ -600,7 +604,7 @@ const chartOptions = computed(() => {
           const header = `
             <div class="flex w-full justify-between gap-8">
               <div style="color: ${this.series.color}; white-space: normal;" class="font-bold">${name}</div>
-              <div class="font-bold">${soc.release_date ? new Date(soc.release_date).getFullYear() : '-'}</div>
+              <div class="font-bold">${data.release_year || (soc.release_date ? new Date(soc.release_date).getFullYear() : '-')}</div>
             </div><br>
           `;
 

@@ -101,11 +101,11 @@
             <PrivateTable
               :data="tableData"
               class-name="soc"
-              :total-count="pagination?.totalRecords || 0"
+              :total-count="pagination?.totalCount || 0"
               :current-page="currentPage"
               :page-size="pageSize"
-              :has-previous-page="pagination?.currentPage > 1 || false"
-              :has-next-page="pagination?.currentPage < pagination?.totalPages || false"
+              :has-previous-page="pagination?.hasPreviousPage || false"
+              :has-next-page="pagination?.hasNextPage || false"
               :total-pages="pagination?.totalPages || 0"
               @update:current-page="currentPage = $event"
               @update:page-size="handlePageSizeChange($event)"
@@ -126,6 +126,7 @@ definePageMeta({
 
 import { ref, computed, defineAsyncComponent, onMounted, nextTick, watch } from 'vue'
 import { isLogged } from '../lib/isLogged'
+import { useSocs } from '~/composables/useApi'
 
 // Lazy load the chart component - ensure it's only loaded on client
 const InteractiveGraph = defineAsyncComponent({
@@ -149,16 +150,14 @@ const microarchitectureFilter = ref('')
 const currentPage = ref(1)
 const pageSize = ref(100)
 
-// Data refs - initialize as empty to prevent errors before data loads
-const data = ref(null)
-const pagination = ref(null)
-const chartDataRef = ref([]) // Separate ref for chart data to prevent UI blocking
-const pending = ref(true)
-const error = ref(null)
+// Use API composable
+const { data: socsData, chartData: chartDataRef, pagination, pending, error, fetchData, fetchChartData } = useSocs();
+
+// Alias for compatibility
+const data = socsData
 const hasInitialized = ref(false)
 
-// Function to fetch SOC data - called after components are ready
-// Phase 3: Updated to use chart-data endpoint for chart, keep paginated endpoint for table
+// Function to fetch SOC data using composable
 async function fetchSocsData(forceRefresh = false) {
   // Ensure we're on the client
   if (typeof window === 'undefined' || (typeof process !== 'undefined' && process.server)) {
@@ -167,107 +166,43 @@ async function fetchSocsData(forceRefresh = false) {
   }
 
   try {
-    pending.value = true;
-    error.value = null;
-
-    // Use Nuxt server API route (like CPU/GPU/FPGA pages) - ensures proper component loading order
-    // Add pagination parameters to URL (backend expects pageSize, not limit)
-    const cacheBust = forceRefresh ? `&refresh=true&_t=${Date.now()}` : '';
-    const url = `/api/socs?page=${currentPage.value}&pageSize=${pageSize.value}${cacheBust}`;
-    
-    // #region agent log
-    if (typeof fetch !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/list.vue:fetchSocsData',message:'Fetching from Nuxt API route',data:{url:url,forceRefresh:forceRefresh},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-    }
-    // #endregion
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      cache: forceRefresh ? 'no-cache' : 'default'
+    // Use composable's fetchData method
+    await fetchData({
+      page: currentPage.value,
+      limit: pageSize.value,
+      forceRefresh: forceRefresh
     });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch SOCs: ${response.status} ${response.statusText}`);
-    }
-
-    const responseData = await response.json();
     
-    // #region agent log
-    if (typeof fetch !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/list.vue:fetchSocsData',message:'Transform function called',data:{response:responseData,hasData:!!responseData?.data,dataIsArray:Array.isArray(responseData?.data),dataLength:responseData?.data?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+    // Transform data to add computed fields
+    if (data.value && Array.isArray(data.value)) {
+      data.value = data.value.map(soc => ({
+        ...soc,
+        manufacturer: soc.manufacturer?.name || soc.manufacturer,
+        code_name: soc.code_name || (soc.processors && soc.processors[0]?.code_name)
+      }));
     }
-    // #endregion
-
-    // Handle paginated response - API returns { data: [...], pagination: {...} }
-    const socsArray = responseData?.data || (Array.isArray(responseData) ? responseData : []);
-    const paginationData = responseData?.pagination || null;
-    
-    if (!socsArray || !Array.isArray(socsArray)) {
-      // #region agent log
-      if (typeof fetch !== 'undefined') {
-        fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/list.vue:fetchSocsData',message:'Transform returning empty array',data:{socsArray:socsArray},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-      }
-      // #endregion
-      data.value = [];
-      pending.value = false;
-      return;
-    }
-
-    // #region agent log
-    if (typeof fetch !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/list.vue:fetchSocsData',message:'Transform calling map on socsArray',data:{dataLength:socsArray.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-    }
-    // #endregion
-
-    data.value = socsArray.map(soc => ({
-      ...soc,
-      manufacturer: soc.manufacturer?.name || soc.manufacturer,
-      code_name: soc.code_name || (soc.processors && soc.processors[0]?.code_name)
-    }));
-
-    // Store pagination metadata
-    pagination.value = paginationData;
     
     // Update currentPage if pagination data indicates a different page
-    if (paginationData && paginationData.currentPage) {
-      currentPage.value = paginationData.currentPage;
+    if (pagination.value && pagination.value.currentPage) {
+      currentPage.value = pagination.value.currentPage;
     }
-
-    pending.value = false;
     
-    // Phase 3: Fetch chart data in background (non-critical, uses optimized endpoint)
-    // This ensures table renders immediately while chart data loads
-    // Chart data is kept separate from table data to prevent UI blocking
-    const chartUrl = `/api/socs/chart-data${forceRefresh ? `?refresh=true&_t=${Date.now()}` : ''}`;
-    fetch(chartUrl)
-      .then(response => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        return response.json()
-      })
-      .then(chartResponse => {
-        const chartData = chartResponse.data || []
-        if (chartData.length > 0) {
-          console.log('[SOC List] Chart data loaded:', chartData.length, 'records')
-          // Store chart data separately - don't merge into main data to avoid blocking
-          // The chart component will use this data directly
-          chartDataRef.value = chartData.map(soc => ({
-            ...soc,
-            manufacturer_name: soc.manufacturer_name || soc.manufacturer?.name || soc.manufacturer,
-          }))
-        }
-      })
-      .catch(err => {
-        console.error('[SOC List] Error fetching chart data (non-critical):', err)
-        // Don't throw - chart data is optional
-      })
+    // Fetch chart data in background using composable
+    fetchChartData(forceRefresh).then(() => {
+      if (chartDataRef.value && chartDataRef.value.length > 0) {
+        console.log('[SOC List] Chart data loaded:', chartDataRef.value.length, 'records')
+        // Transform chart data
+        chartDataRef.value = chartDataRef.value.map(soc => ({
+          ...soc,
+          manufacturer_name: soc.manufacturer_name || soc.manufacturer?.name || soc.manufacturer,
+        }))
+      }
+    }).catch(err => {
+      console.error('[SOC List] Error fetching chart data (non-critical):', err)
+    })
   } catch (err) {
     console.error('[SOC List] Error fetching data:', err);
-    error.value = err;
-    pending.value = false;
-    data.value = [];
+    throw err; // Re-throw for caller to handle
   }
 }
 

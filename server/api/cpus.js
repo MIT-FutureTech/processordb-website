@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
         // If backendUrl already includes /api, use it as-is; otherwise add /api
         const apiPrefix = backendUrl.endsWith('/api') ? '' : '/api'
         const searchParam = search ? `&search=${encodeURIComponent(search)}` : ''
-        const url = `${backendUrl}${apiPrefix}/cpus?page=${page}&pageSize=${limit}${searchParam}`
+        const url = `${backendUrl}${apiPrefix}/cpus?page=${page}&limit=${limit}${searchParam}`
         
         console.log(`[CPU API] Fetching from backend: ${url}`, { page, limit, search });
         
@@ -70,11 +70,18 @@ export default defineEventHandler(async (event) => {
         const responseData = await response.json()
         const parseTime = Date.now() - parseStartTime
         
-        // Handle response format:
-        // - Paginated responses: { data: [...], pagination: {...} }
-        // - Non-paginated responses: [...] (array directly)
-        const data = Array.isArray(responseData) ? responseData : (responseData.data || responseData)
-        const pagination = responseData.pagination || null
+        // Handle standardized response format: { success: true, data: [...], pagination: {...}, meta: {...} }
+        // Also handle legacy format for backward compatibility
+        let data, pagination
+        if (responseData.success !== undefined) {
+          // Standardized format
+          data = responseData.data || []
+          pagination = responseData.pagination || null
+        } else {
+          // Legacy format - backward compatibility
+          data = Array.isArray(responseData) ? responseData : (responseData.data || responseData)
+          pagination = responseData.pagination || null
+        }
         
         console.log(`[CPU API] Received ${Array.isArray(data) ? data.length : 0} CPUs from backend`)
         if (pagination) {

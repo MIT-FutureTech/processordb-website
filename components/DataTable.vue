@@ -9,21 +9,21 @@
         <input type="text" v-model="filters.manufacturer" placeholder="Search processors"
           class="mr-8 outline-none bg-white border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2  text-gray-700  text-xs" />
         <div class="mr-4">
-          Showing {{ startRecord }}-{{ endRecord }} of {{ pagination.totalRecords }} records
+          Showing {{ startRecord }}-{{ endRecord }} of {{ pagination.totalCount || pagination.totalRecords || 0 }} records
         </div>
 
         <!-- Pagination Control -->
         <div class="flex items-center ">
-          <button @click="prevPage" :disabled="pagination.currentPage === 1"
+          <button @click="prevPage" :disabled="(pagination.page || pagination.currentPage) === 1"
             class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-gray-700  text-xs">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
               stroke="currentColor" class="size-4">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
             </svg>
           </button>
-          <input type="number" v-model.number="pagination.currentPage" min="1" :max="pagination.totalPages"
+          <input type="number" v-model.number="pagination.page || pagination.currentPage" min="1" :max="pagination.totalPages"
             class=" max-w-12 text-center outline-none bg-white border-[#A3203555] border flex items-center gap-2 rounded px-3 py-2  text-gray-700  text-xs hide-arrow" />
-          <button @click="nextPage" :disabled="pagination.currentPage === pagination.totalPages"
+          <button @click="nextPage" :disabled="(pagination.page || pagination.currentPage) >= pagination.totalPages"
             class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-gray-700  text-xs">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
               stroke="currentColor" class="size-4">
@@ -42,10 +42,10 @@
             <DropdownMenuContent>
               <DropdownMenuLabel>Columns</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem v-for="column in allColumns" :key="column.value" asChild>
+              <DropdownMenuItem v-for="column in (columns.length > 0 ? columns : allColumns)" :key="column.key || column.value" asChild>
                 <label class="flex items-center gap-2 cursor-pointer"
-                  :class="{ 'border border-[#A32035] text-[#A32035] px-2 py-1 rounded': selectedColumns.includes(column.value) }">
-                  <input type="checkbox" class="hidden" v-model="selectedColumns" :value="column.value" />
+                  :class="{ 'border border-[#A32035] text-[#A32035] px-2 py-1 rounded': selectedColumns.includes(column.key || column.value) }">
+                  <input type="checkbox" class="hidden" v-model="selectedColumns" :value="column.key || column.value" />
                   <span>{{ column.label }}</span>
                 </label>
               </DropdownMenuItem>
@@ -61,12 +61,12 @@
       <TableCaption v-if="displayedSocs.length === 0">No SoCs found.</TableCaption>
       <TableHeader>
         <TableRow>
-          <TableHead v-for="column in displayedColumns" :key="column.value"
-            class="cursor-pointer text-white opacity-80" @click="sortBy(column.value)">
+          <TableHead v-for="column in displayedColumns" :key="column.key || column.value"
+            class="cursor-pointer text-white opacity-80" @click="sortBy(column.key || column.value)">
             <div class="flex items-center flex-nowrap gap-2 text-nowrap">
 
               {{ column.label }}
-              <span v-if="sortField === column.value">
+              <span v-if="sortField === (column.key || column.value)">
                 {{ sortOrder === 'asc' ? '↑' : '↓' }}
               </span>
             </div>
@@ -186,6 +186,14 @@ const props = defineProps({
   data: {
     type: Array,
     required: true,
+  },
+  columns: {
+    type: Array,
+    default: () => [],
+  },
+  paginationData: {
+    type: Object,
+    default: () => null,
   }
 })
 
@@ -202,13 +210,29 @@ const socs = ref(props.data)
 //   showColumnDropdown.value = !showColumnDropdown.value
 // }
 
-// State for pagination
+// State for pagination - merge with prop if provided
 const pagination = ref({
   totalRecords: 0,
+  totalCount: 0,
   totalPages: 0,
   currentPage: 1,
+  page: 1,
   pageSize: 50,
+  limit: 50,
 })
+
+// Watch for pagination prop updates
+watch(() => props.paginationData, (newPagination) => {
+  if (newPagination) {
+    pagination.value = {
+      ...pagination.value,
+      ...newPagination,
+      currentPage: newPagination.page || newPagination.currentPage || 1,
+      totalRecords: newPagination.totalCount || newPagination.totalRecords || 0,
+      pageSize: newPagination.limit || newPagination.pageSize || 50,
+    }
+  }
+}, { immediate: true, deep: true })
 
 
 // State for sorting
@@ -222,41 +246,49 @@ const filters = ref({
 })
 // Computed property for the starting record index
 const startRecord = computed(() => {
-  return (pagination.value.currentPage - 1) * pagination.value.pageSize + 1
+  const currentPage = pagination.value.page || pagination.value.currentPage || 1
+  const pageSize = pagination.value.limit || pagination.value.pageSize || 50
+  return (currentPage - 1) * pageSize + 1
 })
 
 // Computed property for the ending record index
 const endRecord = computed(() => {
-  return Math.min(
-    pagination.value.currentPage * pagination.value.pageSize,
-    pagination.value.totalRecords
-  )
+  const currentPage = pagination.value.page || pagination.value.currentPage || 1
+  const pageSize = pagination.value.limit || pagination.value.pageSize || 50
+  const total = pagination.value.totalCount || pagination.value.totalRecords || 0
+  return Math.min(currentPage * pageSize, total)
 })
 
-// State for selected columns
-const allColumns = [
-  { label: 'Manufacturer', value: 'manufacturer_name' },
-  { label: 'Processor Type', value: 'processor_type' },
-  { label: 'Processor Family', value: 'processor_family' },
-  { label: 'Microarchitecture', value: 'microarchitecture' },
-  { label: 'Model', value: 'model' },
-  { label: 'Release Date', value: 'release_date' },
-  { label: 'Clock (MHz)', value: 'clock' },
-  { label: 'TDP (W)', value: 'tdp' },
-  { label: 'Die Size (mm^2)', value: 'die_sizes', hiddenBydefault: true },
-  { label: 'Transistors (million)', value: 'total_transistor_count', hiddenBydefault: true },
-  { label: 'Lithography (nm)', value: 'lithography', hiddenBydefault: true },
-  { label: 'FP64 Operations (GFLOPS)', value: 'fp64_ops', hiddenBydefault: true },
-  { label: 'FP32 Operations (GFLOPS)', value: 'fp32_ops', hiddenBydefault: true },
-  { label: 'FP16 Operations (GFLOPS)', value: 'fp16_ops', hiddenBydefault: true },
-  { label: 'Details', value: 'details' },
-]
+// State for selected columns - use prop columns if provided, otherwise fallback to SoC defaults
+const allColumns = computed(() => {
+  if (props.columns && props.columns.length > 0) {
+    return props.columns
+  }
+  // Default SoC columns for backward compatibility
+  return [
+    { label: 'Manufacturer', value: 'manufacturer_name', key: 'manufacturer_name' },
+    { label: 'Processor Type', value: 'processor_type', key: 'processor_type' },
+    { label: 'Processor Family', value: 'processor_family', key: 'processor_family' },
+    { label: 'Microarchitecture', value: 'microarchitecture', key: 'microarchitecture' },
+    { label: 'Model', value: 'model', key: 'model' },
+    { label: 'Release Date', value: 'release_date', key: 'release_date' },
+    { label: 'Clock (MHz)', value: 'clock', key: 'clock' },
+    { label: 'TDP (W)', value: 'tdp', key: 'tdp' },
+    { label: 'Die Size (mm^2)', value: 'die_sizes', key: 'die_sizes', hiddenBydefault: true },
+    { label: 'Transistors (million)', value: 'total_transistor_count', key: 'total_transistor_count', hiddenBydefault: true },
+    { label: 'Lithography (nm)', value: 'lithography', key: 'lithography', hiddenBydefault: true },
+    { label: 'FP64 Operations (GFLOPS)', value: 'fp64_ops', key: 'fp64_ops', hiddenBydefault: true },
+    { label: 'FP32 Operations (GFLOPS)', value: 'fp32_ops', key: 'fp32_ops', hiddenBydefault: true },
+    { label: 'FP16 Operations (GFLOPS)', value: 'fp16_ops', key: 'fp16_ops', hiddenBydefault: true },
+    { label: 'Details', value: 'details', key: 'details' },
+  ]
+})
 
-const selectedColumns = ref(allColumns.filter((column) => !column.hiddenBydefault).map((column) => column.value))
+const selectedColumns = ref(allColumns.value.filter((column) => !column.hiddenBydefault).map((column) => column.key || column.value))
 
 // Computed property for displayed columns
 const displayedColumns = computed(() =>
-  allColumns.filter((column) => selectedColumns.value.includes(column.value))
+  allColumns.value.filter((column) => selectedColumns.value.includes(column.key || column.value))
 )
 
 // Computed property for displayed SoCs
@@ -335,15 +367,20 @@ const applyFiltersAndSorting = () => {
   }
 
   // Update total records and pages
-  pagination.value.pageSize = Number(pagination.value.pageSize)
+  const pageSize = pagination.value.limit || pagination.value.pageSize || 50
+  pagination.value.pageSize = Number(pageSize)
+  pagination.value.limit = Number(pageSize)
   pagination.value.totalRecords = filteredSocs.length
+  pagination.value.totalCount = filteredSocs.length
   pagination.value.totalPages = Math.ceil(
     pagination.value.totalRecords / pagination.value.pageSize
   )
 
   // Ensure current page is within total pages
-  if (pagination.value.currentPage > pagination.value.totalPages) {
+  const currentPage = pagination.value.page || pagination.value.currentPage || 1
+  if (currentPage > pagination.value.totalPages) {
     pagination.value.currentPage = pagination.value.totalPages || 1
+    pagination.value.page = pagination.value.totalPages || 1
   }
 
   // Apply pagination
@@ -371,14 +408,18 @@ watch(
 
 // Pagination functions
 const nextPage = () => {
-  if (pagination.value.currentPage < pagination.value.totalPages) {
-    pagination.value.currentPage++
+  const currentPage = pagination.value.page || pagination.value.currentPage || 1
+  if (currentPage < pagination.value.totalPages) {
+    pagination.value.page = currentPage + 1
+    pagination.value.currentPage = currentPage + 1
   }
 }
 
 const prevPage = () => {
-  if (pagination.value.currentPage > 1) {
-    pagination.value.currentPage--
+  const currentPage = pagination.value.page || pagination.value.currentPage || 1
+  if (currentPage > 1) {
+    pagination.value.page = currentPage - 1
+    pagination.value.currentPage = currentPage - 1
   }
 }
 

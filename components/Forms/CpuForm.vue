@@ -926,7 +926,8 @@ watch(
         codeName: cpuData.code_name || '',
         microarchitecture: cpuData.microarchitecture || '',
         model: cpuData.model || '',
-        year: socData.release_date ? new Date(socData.release_date).getFullYear().toString() : '',
+        // Prefer release_year from API, fallback to extracting from release_date
+        year: socData.release_year ? socData.release_year.toString() : (socData.release_date ? new Date(socData.release_date).getFullYear().toString() : ''),
         clock: cpuData.clock || '',
         maxClock: cpuData.max_clock || '',
         threadsPerCore: cpuData.threads_per_core || '',
@@ -1499,11 +1500,6 @@ const submitCore = async () => {
     const method = editingCore.value ? 'PUT' : 'POST'
     const authToken = getAuthToken()
     
-    // #region agent log
-    if (typeof fetch !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CpuForm.vue:950',message:'submitCore called',data:{cpuId,url,method,hasAuthToken:!!authToken,windowLocation:typeof window !== 'undefined' ? window.location.href : 'server',isLocalhost:typeof window !== 'undefined' ? window.location.hostname === 'localhost' : false},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    }
-    // #endregion
     
     const response = await fetch(url, {
       method,
@@ -1519,11 +1515,6 @@ const submitCore = async () => {
       })
     })
 
-    // #region agent log
-    if (typeof fetch !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CpuForm.vue:982',message:'submitCore response',data:{status:response.status,statusText:response.statusText,ok:response.ok,url:response.url,actualUrl:url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    }
-    // #endregion
 
     if (response.ok) {
       const success = getSuccessMessage('core', editingCore.value ? 'update' : 'create')
@@ -1553,11 +1544,6 @@ const submitCore = async () => {
         errorFieldName.value = ''
       }, 5000)
       
-      // #region agent log
-      if (typeof fetch !== 'undefined') {
-        fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CpuForm.vue:992',message:'submitCore error response',data:{status:response.status,errorData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      }
-      // #endregion
     }
   } catch (error) {
     console.error('Error submitting core:', error)
@@ -1573,11 +1559,6 @@ const submitCore = async () => {
       errorFieldName.value = ''
     }, 5000)
     
-    // #region agent log
-    if (typeof fetch !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CpuForm.vue:996',message:'submitCore exception',data:{errorMessage:error.message,errorName:error.name,errorStack:error.stack?.substring(0,300)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    }
-    // #endregion
   }
 }
 

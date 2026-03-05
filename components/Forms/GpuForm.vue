@@ -89,13 +89,16 @@
           class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
         >
       </div>
-      <!-- Release Date -->
+      <!-- Release Year -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">Release Date</label>
+        <label class="block text-sm font-medium text-gray-700 pl-2">Release Year</label>
         <input
-          v-model="form.releaseDate"
-          type="date"
+          v-model="form.releaseYear"
+          type="number"
+          min="1900"
+          max="2100"
           :disabled="readOnly"
+          placeholder="Example: 2020"
           class="pl-2 mt-1 block w-full h-10 sm:text-sm border-b border-gray-200 focus:ring-0 focus:border-gray-400 bg-transparent"
         >
       </div>
@@ -981,7 +984,7 @@ const form = ref({
   manufacturer: '',
   name: '',
   variant: '',
-  releaseDate: '',
+  releaseYear: '',
   processNode: '',
   coreCount: '',
   totalTransistorCount: '',
@@ -1038,7 +1041,8 @@ watch(
         manufacturer: newData.manufacturerName || (gpu.SoC?.Manufacturer?.name || ''),
         name: gpu.name || '',
         variant: gpu.variant || '',
-        releaseDate: gpu.SoC?.release_date ? new Date(gpu.SoC.release_date).toISOString().split('T')[0] : '',
+        // Prefer release_year from API, fallback to extracting from release_date
+        releaseYear: gpu.release_year ? gpu.release_year.toString() : (gpu.SoC?.release_year ? gpu.SoC.release_year.toString() : (gpu.SoC?.release_date ? new Date(gpu.SoC.release_date).getFullYear().toString() : '')),
         processNode: gpu.process_size || '',
         coreCount: gpu.core_count || '',
         totalTransistorCount: gpu.SoC?.total_transistor_count || '',
@@ -1125,7 +1129,7 @@ const preparePostRequestBody = () => {
   return {
     soc: {
       name: form.value.name,
-      release_date: form.value.releaseDate ? form.value.releaseDate : null,
+      release_date: form.value.releaseYear ? `${form.value.releaseYear}-01-01` : null,
       platform: form.value.platform,
       process_node: form.value.processNode,
       tdp: form.value.tdp ? parseFloat(form.value.tdp) : null,
@@ -1181,7 +1185,7 @@ const preparePostRequestBody = () => {
       cores: form.value.cores
     },
     economics: {
-      year: form.value.releaseDate ? new Date(form.value.releaseDate).getFullYear() : ''
+      year: form.value.releaseYear || ''
     },
     cores: newCores.value.length > 0 ? newCores.value : undefined
   }

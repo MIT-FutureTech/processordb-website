@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
         // Get query parameters for pagination
         const query = getQuery(event)
         const page = parseInt(query.page) || 1
-        const pageSize = parseInt(query.pageSize) || parseInt(query.limit) || 100
+        const limit = parseInt(query.limit) || parseInt(query.pageSize) || 100
 
         // Check if force refresh is requested
         const forceRefresh = query.refresh === 'true' || query.nocache === 'true'
@@ -36,8 +36,8 @@ export default defineEventHandler(async (event) => {
         backendUrl = backendUrl.replace(/\/$/, '')
         // If backendUrl already includes /api, use it as-is; otherwise add /api
         const apiPrefix = backendUrl.endsWith('/api') ? '' : '/api'
-        // Forward pagination parameters to backend (backend expects pageSize, not limit)
-        const url = `${backendUrl}${apiPrefix}/socs?page=${page}&pageSize=${pageSize}`
+        // Forward pagination parameters to backend (standardized to limit)
+        const url = `${backendUrl}${apiPrefix}/socs?page=${page}&limit=${limit}`
         console.log(`[SoC API] Fetching from backend: ${url}`)
         
         // Add timeout to prevent hanging requests
@@ -60,13 +60,22 @@ export default defineEventHandler(async (event) => {
         
         const responseData = await response.json()
         
-        // Handle response format - API returns { data: [...], pagination: {...} }
-        const data = Array.isArray(responseData) ? responseData : (responseData.data || responseData)
-        const pagination = responseData.pagination || null
+        // Handle standardized response format: { success: true, data: [...], pagination: {...}, meta: {...} }
+        // Also handle legacy format for backward compatibility
+        let data, pagination
+        if (responseData.success !== undefined) {
+          // Standardized format
+          data = responseData.data || []
+          pagination = responseData.pagination || null
+        } else {
+          // Legacy format - backward compatibility
+          data = Array.isArray(responseData) ? responseData : (responseData.data || responseData)
+          pagination = responseData.pagination || null
+        }
         
         console.log(`[SoC API] Data fetched successfully - ${Array.isArray(data) ? data.length : 0} records`)
         if (pagination) {
-            console.log(`[SoC API] Pagination info: totalRecords=${pagination.totalRecords}, totalPages=${pagination.totalPages}`)
+            console.log(`[SoC API] Pagination info: totalCount=${pagination.totalCount || pagination.totalRecords}, totalPages=${pagination.totalPages}`)
         }
         
         // Return data with pagination if available (for backward compatibility, return data directly if no pagination)

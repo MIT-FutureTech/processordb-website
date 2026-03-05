@@ -125,8 +125,16 @@ const { data: rawGpuData, pending, error, refresh } = await useFetch(`/api/gpus/
 const gpuData = computed(() => {
   if (!rawGpuData.value) return null;
   
-  // Handle different response structures
-  const data = rawGpuData.value.data || rawGpuData.value;
+  // Handle standardized response format: { success: true, data: { gpu, cores, manufacturerName, versionHistory } }
+  // Also handle legacy format for backward compatibility
+  let data
+  if (rawGpuData.value.success !== undefined) {
+    // Standardized format
+    data = rawGpuData.value.data || {}
+  } else {
+    // Legacy format - backward compatibility
+    data = rawGpuData.value.data || rawGpuData.value
+  }
   
   const result = {
     gpu: data.gpu || data,

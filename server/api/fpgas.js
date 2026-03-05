@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
         backendUrl = backendUrl.replace(/\/$/, '')
         // If backendUrl already includes /api, use it as-is; otherwise add /api
         const apiPrefix = backendUrl.endsWith('/api') ? '' : '/api'
-        const url = `${backendUrl}${apiPrefix}/fpgas?page=${page}&pageSize=${limit}`
+        const url = `${backendUrl}${apiPrefix}/fpgas?page=${page}&limit=${limit}`
         
         console.log(`[FPGA API] Fetching from backend: ${url}`)
         
@@ -68,11 +68,18 @@ export default defineEventHandler(async (event) => {
         const responseData = await response.json()
         const parseTime = Date.now() - parseStartTime
         
-        // Handle response format:
-        // - Paginated responses: { data: [...], pagination: {...} }
-        // - Non-paginated responses: [...] (array directly)
-        const data = Array.isArray(responseData) ? responseData : (responseData.data || responseData)
-        const pagination = responseData.pagination || null
+        // Handle standardized response format: { success: true, data: [...], pagination: {...}, meta: {...} }
+        // Also handle legacy format for backward compatibility
+        let data, pagination
+        if (responseData.success !== undefined) {
+          // Standardized format
+          data = responseData.data || []
+          pagination = responseData.pagination || null
+        } else {
+          // Legacy format - backward compatibility
+          data = Array.isArray(responseData) ? responseData : (responseData.data || responseData)
+          pagination = responseData.pagination || null
+        }
         
         console.log(`[FPGA API] Received ${Array.isArray(data) ? data.length : 0} FPGAs from backend`)
         if (pagination) {

@@ -47,9 +47,23 @@ export default defineEventHandler(async (event) => {
             })
         }
         
-        const data = await response.json()
-        console.log(`[GPU Chart Data API] Data fetched successfully: ${data.total || data.data?.length || 0} records`)
-        return data
+        const responseData = await response.json()
+        
+        // Handle standardized response format: { success: true, data: [...], total: N, meta: {...} }
+        // Also handle legacy format for backward compatibility
+        let data, total
+        if (responseData.success !== undefined) {
+          // Standardized format
+          data = responseData.data || []
+          total = responseData.total || data.length
+        } else {
+          // Legacy format - backward compatibility
+          data = Array.isArray(responseData) ? responseData : (responseData.data || [])
+          total = responseData.total || data.length
+        }
+        
+        console.log(`[GPU Chart Data API] Data fetched successfully: ${total} records`)
+        return { data, total }
     } catch (error) {
         console.error('[GPU Chart Data API] Error:', error)
         if (error.statusCode) {

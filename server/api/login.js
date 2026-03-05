@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
     
     const data = await response.json()
     console.log(`[Login API] Login successful`)
-    return data
+    return data.data || data
   } catch (error) {
     console.error('[Login API] Error:', error)
     if (error.statusCode) {

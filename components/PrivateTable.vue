@@ -32,6 +32,7 @@
             @click="prevPage"
             :disabled="!hasPreviousPage || currentPage === 1"
             class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-xs has-tooltip disabled:opacity-50 disabled:cursor-not-allowed"
+            @mouseenter="logPaginationState('prev')"
           >
             <span class="tooltip rounded shadow-lg p-2 bg-white text-[#A32035] -mt-12 -ml-12">
               Previous page
@@ -63,6 +64,7 @@
             @click="nextPage"
             :disabled="!hasNextPage || currentPage === totalPages"
             class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded text-gray-700 text-xs has-tooltip disabled:opacity-50 disabled:cursor-not-allowed"
+            @mouseenter="logPaginationState('next')"
           >
             <span class="tooltip rounded shadow-lg p-2 bg-white text-[#A32035] -mt-12 -ml-6">
               Next page
@@ -211,8 +213,8 @@
               :key="column.value"
             >
               <span class="text-black">
-                <template v-if="column.value === 'release_date'">
-                  {{ formatYear(getFieldValue(row, column.value)) }}
+                <template v-if="column.value === 'release_year'">
+                  {{ getFieldValue(row, column.value) || '-' }}
                 </template>
                 <template v-else>
                   {{ getFieldValue(row, column.value) }}
@@ -286,6 +288,7 @@ const formatYear = (date) => {
 const uniqueId = (row) => {
   const socClass = props.className.toLowerCase();
   
+  
   switch (socClass) {
     case 'soc':
     case 'socs':
@@ -299,6 +302,11 @@ const uniqueId = (row) => {
       return row.gpu_id || '';
     case 'fpgas':
       return row.fpga_id || '';
+    case 'aiprocessor':
+    case 'ai-processor':
+    case 'aiprocessors':
+    case 'ai-processors':
+      return row.ai_processor_id || '';
     default:
       return '';
   }
@@ -306,7 +314,14 @@ const uniqueId = (row) => {
 
 const getDetailPath = (row) => {
   const id = uniqueId(row);
-  const basePath = props.className.replace(/s$/i, '');
+  let basePath = props.className.replace(/s$/i, '');
+  
+  // Normalize AI processor paths to use hyphenated format
+  if (basePath === 'aiProcessor' || basePath === 'aiProcessors') {
+    basePath = 'ai-processor';
+  }
+  
+  
   const fullPath = `/${basePath}/${id}`;
   return fullPath;
 }
@@ -323,6 +338,40 @@ function formatColumnLabel(key) {
     .join(' ')
 }
 
+// Helper: Safely extract year from release_date value
+function safeGetYearFromDate(value) {
+  if (value === null || value === undefined) return null;
+  
+  // If it's already a number, check if it looks like a year (1900-2100)
+  if (typeof value === 'number') {
+    const numValue = Math.floor(value);
+    // If it's a reasonable year, return it directly
+    if (numValue >= 1900 && numValue <= 2100) {
+      return numValue;
+    }
+    // Otherwise, try to create a date from it
+    const date = new Date(numValue);
+    return isNaN(date.getTime()) ? null : date.getFullYear();
+  }
+  
+  // If it's a string, try to parse it
+  if (typeof value === 'string') {
+    // Check if it's just a 4-digit year
+    if (/^\d{4}$/.test(value.trim())) {
+      return parseInt(value.trim(), 10);
+    }
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? null : date.getFullYear();
+  }
+  
+  // If it's a Date object, get year
+  if (value instanceof Date) {
+    return isNaN(value.getTime()) ? null : value.getFullYear();
+  }
+  
+  return null;
+}
+
 // --- Helper: Get field value with resilience to missing/renamed fields ---
 function getFieldValue(row, fieldName) {
   if (!row || !fieldName) return '';
@@ -335,8 +384,31 @@ function getFieldValue(row, fieldName) {
     return value;
   }
   
+  // Special handling for release_year: check both flattened and nested structures
+  if (fieldName === 'release_year') {
+    
+    // First check if release_year is already extracted (flattened data or from API)
+    if (row.release_year !== null && row.release_year !== undefined) {
+      return row.release_year;
+    }
+    // Check nested SoC.release_year (from API)
+    if (row.SoC?.release_year !== null && row.SoC?.release_year !== undefined) {
+      return row.SoC.release_year;
+    }
+    // Fallback: extract from release_date if release_year not available
+    // For nested structure (FPGA/CPU/GPU): check SoC.release_date
+    if (row.SoC?.release_date) {
+      return safeGetYearFromDate(row.SoC.release_date);
+    }
+    // For flat structure (SOC): check row.release_date directly
+    if (row.release_date) {
+      return safeGetYearFromDate(row.release_date);
+    }
+    return null;
+  }
+  
   // Try nested SoC access for common SoC fields
-  const socFields = ['release_date', 'die_sizes', 'number_of_die', 'package_size', 
+  const socFields = ['die_sizes', 'number_of_die', 'package_size', 
                      'platform', 'total_transistor_count', 'transistor_density',
                      'voltage_range_high', 'voltage_range_low', 'process_node'];
   if (socFields.includes(fieldName) && row.SoC) {
@@ -362,7 +434,8 @@ const flattenedData = computed(() => {
     return props.data.map((item) => {
       const flattened = { ...item };
       flattened.manufacturer = item.SoC?.Manufacturer?.name || '';
-      flattened.release_date = item.SoC?.release_date || '';
+      // Prefer release_year from API, fallback to extracting from release_date
+      flattened.release_year = item.release_year || item.SoC?.release_year || (item.SoC?.release_date ? safeGetYearFromDate(item.SoC.release_date) : null);
       flattened.processor_type = 'CPU';
       return flattened;
     });
@@ -370,13 +443,49 @@ const flattenedData = computed(() => {
     return props.data.map((item) => {
       const flattened = { ...item };
       flattened.manufacturer = item.SoC?.Manufacturer?.name || '';
-      flattened.release_date = item.SoC?.release_date || '';
+      // Prefer release_year from API, fallback to extracting from release_date
+      flattened.release_year = item.release_year || item.SoC?.release_year || (item.SoC?.release_date ? safeGetYearFromDate(item.SoC.release_date) : null);
       flattened.processor_type = 'GPU';
       flattened.model = item.model || item.name || '';
       flattened.family = item.architecture || '';
       flattened.microarchitecture = item.generation || '';
       flattened.clock = item.base_clock || item.boost_clock || null;
       flattened.tdp = item.tdp || null;
+      return flattened;
+    });
+  } else if (props.className === 'aiProcessor' || props.className === 'ai-processor' || props.className === 'aiProcessors' || props.className === 'ai-processors') {
+    return props.data.map((item) => {
+      const flattened = { ...item };
+      // Ensure ai_processor_id is preserved (it should be in the spread, but explicitly ensure it)
+      flattened.ai_processor_id = item.ai_processor_id || item.id || null;
+      flattened.manufacturer = item.SoC?.Manufacturer?.name || '';
+      // Prefer release_year from API, fallback to extracting from release_date
+      flattened.release_year = item.release_year || item.SoC?.release_year || (item.SoC?.release_date ? safeGetYearFromDate(item.SoC.release_date) : null);
+      flattened.processor_type = 'AI Processor';
+      flattened.model = item.model_name || item.model || item.product_name || '';
+      flattened.family = item.company || '';
+      flattened.clock = item.clock_rate_ghz || null;
+      flattened.tdp = item.tdp_w || item.tdp || null;
+      // Include all AI Processor specific fields
+      flattened.company = item.company || null;
+      flattened.product_name = item.product_name || null;
+      flattened.country = item.country || null;
+      flattened.precision = item.precision || null;
+      flattened.performance_tops = item.performance_tops || null;
+      flattened.die_size_mm2 = item.die_size_mm2 || null;
+      flattened.process_node_nm = item.process_node_nm || null;
+      flattened.sram_mb = item.sram_mb || null;
+      flattened.sram_bandwidth_tbs = item.sram_bandwidth_tbs || null;
+      flattened.dram_gb = item.dram_gb || null;
+      flattened.dram_bandwidth_gbs = item.dram_bandwidth_gbs || null;
+      flattened.peak_bw_gbs = item.peak_bw_gbs || null;
+      flattened.format = item.format || null;
+      flattened.cloud_edge = item.cloud_edge || null;
+      flattened.workload_type = item.workload_type || null;
+      flattened.networking = item.networking || null;
+      flattened.units = item.units || null;
+      
+      
       return flattened;
     });
   } else if (props.className === 'soc' || props.className === 'socs') {
@@ -390,12 +499,15 @@ const flattenedData = computed(() => {
     const flattenedRows = [];
     
     props.data.forEach((soc, socIndex) => {
+      
       // Extract SOC-level fields
       const socBase = {
         soc_id: soc.soc_id,
         soc_name: soc.soc_name || soc.name,
         manufacturer: soc.manufacturer_name || soc.manufacturer || '',
-        release_date: soc.release_date || '',
+        release_date: soc.release_date || null, // Include release_date for getFieldValue to extract year
+        // Prefer release_year from API, fallback to extracting from release_date
+        release_year: soc.release_year || (soc.release_date ? safeGetYearFromDate(soc.release_date) : null),
         process_node: soc.process_node || null,
         total_transistor_count: soc.total_transistor_count || null,
         die_sizes: soc.die_sizes || null,
@@ -411,7 +523,7 @@ const flattenedData = computed(() => {
         // Create one row per processor
         processors.forEach((processor, procIndex) => {
           // Create unique row ID combining soc_id and processor identifier
-          const processorId = processor.cpu_id || processor.gpu_id || processor.fpga_id || procIndex;
+          const processorId = processor.cpu_id || processor.gpu_id || processor.fpga_id || processor.ai_processor_id || procIndex;
           flattenedRows.push({
             ...socBase,
             // Add unique row identifier for Vue key
@@ -420,18 +532,33 @@ const flattenedData = computed(() => {
             family: processor.family || null,
             code_name: processor.code_name || null,
             microarchitecture: processor.microarchitecture || null,
-            model: processor.model || null,
-            clock: processor.clock || null,
+            model: processor.model || processor.model_name || null,
+            clock: processor.clock || processor.clock_rate_ghz || null,
             max_clock: processor.max_clock || null,
-            tdp: processor.tdp || null,
+            tdp: processor.tdp || processor.tdp_w || null,
             lithography: processor.lithography || null,
             fp64_ops: processor.fp64_ops || null,
             fp32_ops: processor.fp32_ops || null,
             fp16_ops: processor.fp16_ops || null,
+            // AI Processor specific fields
+            model_name: processor.model_name || null,
+            company: processor.company || null,
+            product_name: processor.product_name || null,
+            country: processor.country || null,
+            performance_tops: processor.performance_tops || null,
+            precision: processor.precision || null,
+            die_size_mm2: processor.die_size_mm2 || null,
+            process_node_nm: processor.process_node_nm || null,
+            sram_mb: processor.sram_mb || null,
+            dram_gb: processor.dram_gb || null,
+            format: processor.format || null,
+            cloud_edge: processor.cloud_edge || null,
+            workload_type: processor.workload_type || null,
             // Include processor IDs for reference
             cpu_id: processor.cpu_id || null,
             gpu_id: processor.gpu_id || null,
-            fpga_id: processor.fpga_id || null
+            fpga_id: processor.fpga_id || null,
+            ai_processor_id: processor.ai_processor_id || null
           });
         });
       } else {
@@ -452,9 +579,25 @@ const flattenedData = computed(() => {
           fp64_ops: null,
           fp32_ops: null,
           fp16_ops: null,
+          // AI Processor fields
+          model_name: null,
+          company: null,
+          product_name: null,
+          country: null,
+          performance_tops: null,
+          precision: null,
+          die_size_mm2: null,
+          process_node_nm: null,
+          sram_mb: null,
+          dram_gb: null,
+          format: null,
+          cloud_edge: null,
+          workload_type: null,
+          // Processor IDs
           cpu_id: null,
           gpu_id: null,
-          fpga_id: null
+          fpga_id: null,
+          ai_processor_id: null
         });
       }
     });
@@ -466,9 +609,19 @@ const flattenedData = computed(() => {
       console.error('PrivateTable: props.data is not an array:', props.data);
       return [];
     }
-    return props.data.map((item) => {
+    return props.data.map((item, index) => {
+      
       const flattened = { ...item };
-      flattened.release_date = item.SoC?.release_date || '';
+      // Prefer release_year from API, fallback to extracting from release_date
+      flattened.release_year = item.release_year || item.SoC?.release_year || (item.SoC?.release_date ? safeGetYearFromDate(item.SoC.release_date) : null);
+      // Prefer process_node from FPGA, fallback to SoC
+      flattened.process_node = item.process_node || item.SoC?.process_node || null;
+      // Ensure new fields are available (vendor, product_name, etc. should already be in item from API)
+      flattened.vendor = item.vendor || null;
+      flattened.product_name = item.product_name || null;
+      flattened.internal_operating_voltage = item.internal_operating_voltage || null;
+      flattened.logic_resource_type = item.logic_resource_type || null;
+      flattened.equivalent_lut_count = item.equivalent_lut_count || null;
       flattened.die_sizes = item.SoC?.die_sizes || '';
       flattened.number_of_die = item.SoC?.number_of_die || '';
       flattened.package_size = item.SoC?.package_size || '';
@@ -483,24 +636,34 @@ const flattenedData = computed(() => {
 })
 
 // --- Default Columns (Visible by Default) ---
-const defaultColumnsOrder = props.className !== 'fpgas' ? [
+const defaultColumnsOrder = props.className === 'fpgas' ? [
+  { label: 'Vendor', value: 'vendor' },
+  { label: 'Product Name', value: 'product_name' },
+  { label: 'Family SubFamily', value: 'family_subfamily' },
+  { label: 'Model', value: 'model' },
+  { label: 'Release Year', value: 'release_year' },
+  { label: 'Process', value: 'process_node' },
+  { label: 'Internal Operating Voltage', value: 'internal_operating_voltage' },
+  { label: 'Logic Resource Type', value: 'logic_resource_type' },
+  { label: 'Equivalent LUT Count', value: 'equivalent_lut_count' }
+] : props.className === 'aiProcessor' || props.className === 'ai-processor' || props.className === 'aiProcessors' || props.className === 'ai-processors' ? [
+  { label: 'Manufacturer', value: 'manufacturer' },
+  { label: 'Company', value: 'company' },
+  { label: 'Product Name', value: 'product_name' },
+  { label: 'Model Name', value: 'model' },
+  { label: 'Release Year', value: 'release_year' },
+  { label: 'Performance (TOPS)', value: 'performance_tops' },
+  { label: 'Clock Rate (GHz)', value: 'clock' },
+  { label: 'TDP (W)', value: 'tdp' },
+] : [
   { label: 'Manufacturer', value: 'manufacturer' },
   { label: 'Processor Type', value: 'processor_type' },
   { label: 'Processor Family', value: 'family' },
   { label: 'Microarchitecture', value: 'microarchitecture' },
   { label: 'Model', value: 'model' },
-  { label: 'Release Date', value: 'release_date' },
+  { label: 'Release Year', value: 'release_year' },
   { label: 'Clock (MHz)', value: 'clock' },
   { label: 'TDP (W)', value: 'tdp' },
-] : [
-  { label: 'Vendor', value: 'vendor' },
-  { label: 'Model', value: 'model' },
-  { label: 'Release Date', value: 'release_date' },
-  { label: 'CLBS', value: 'clbs' },
-  { label: 'FFS', value: 'ffs' },
-  { label: 'LUTs', value: 'luts' },
-  { label: 'Process Node (nm)', value: 'process_node' },
-  { label: 'Block RAMs', value: 'block_rams' }
 ]
 const defaultColumnsOrderKeys = defaultColumnsOrder.map(col => col.value)
 
@@ -508,14 +671,18 @@ const defaultColumnsOrderKeys = defaultColumnsOrder.map(col => col.value)
 const defaultHiddenKeys = {
   cpu: ['cpu_id', 'createdAt', 'updatedAt', 'soc_id', 'SoC', 'notes'],
   gpu: ['gpu_id', 'createdAt', 'updatedAt', 'soc_id', 'SoC', 'cores', 'notes',
-  'l0_cache', 'l1_cache', 'l2_cache', 'l3_cache', 'fp16', 'fp32', 'fp64',
-  'pixel_shader', 'vertex_shader', 'shader_units', 'texture_mapping_units',
-  'render_output_units', 'compute_units', 'ray_tracing_units', 'system_shared_memory'],
+    'l0_cache', 'l1_cache', 'l2_cache', 'l3_cache', 'fp16', 'fp32', 'fp64',
+    'pixel_shader', 'vertex_shader', 'shader_units', 'texture_mapping_units',
+    'render_output_units', 'compute_units', 'ray_tracing_units', 'system_shared_memory'],
+  aiProcessor: ['ai_processor_id', 'createdAt', 'updatedAt', 'soc_id', 'SoC', 'cores', 'notes',
+    'performance_tops', 'clock_rate_ghz', 'tdp_w', 'die_size_mm2', 'process_node_nm',
+    'sram_mb', 'sram_bandwidth_tbs', 'dram_gb', 'dram_bandwidth_gbs', 'peak_bw_gbs',
+    'networking', 'units', 'format', 'cloud_edge', 'workload_type', 'source', 'usage'],
   soc: ['soc_id', 'soc_name', 'createdAt', 'updatedAt', 'benchmarks', 'economics', 
-  'release_price', 'processors', 'cpu_id', 'gpu_id', 'fpga_id', 'notes',
+  'release_price', 'processors', 'cpu_id', 'gpu_id', 'fpga_id', 'ai_processor_id', 'notes',
   'max_clock', 'lithography', 'fp64_ops', 'fp32_ops', 'fp16_ops', 'code_name', '_rowId'],
   socs: ['soc_id', 'soc_name', 'createdAt', 'updatedAt', 'benchmarks', 'economics', 
-  'release_price', 'processors', 'cpu_id', 'gpu_id', 'fpga_id', 'notes',
+  'release_price', 'processors', 'cpu_id', 'gpu_id', 'fpga_id', 'ai_processor_id', 'notes',
   'max_clock', 'lithography', 'fp64_ops', 'fp32_ops', 'fp16_ops', 'code_name', '_rowId'],
 }
 
@@ -785,10 +952,8 @@ const sortedData = computed(() => {
   let dataToSort = [...filteredData.value]
   if (!sortField.value) {
     return dataToSort.sort((a, b) => {
-      const aDate = getFieldValue(a, 'release_date')
-      const bDate = getFieldValue(b, 'release_date')
-      const aYear = aDate ? new Date(aDate).getFullYear() : -Infinity
-      const bYear = bDate ? new Date(bDate).getFullYear() : -Infinity
+      const aYear = getFieldValue(a, 'release_year') || -Infinity
+      const bYear = getFieldValue(b, 'release_year') || -Infinity
       return bYear - aYear
     })
   }
@@ -848,6 +1013,10 @@ const sortBy = (field) => {
     sortField.value = field
     sortOrder.value = 'asc'
   }
+}
+
+// Log pagination state for debugging
+const logPaginationState = (button) => {
 }
 </script>
 

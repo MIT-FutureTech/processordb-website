@@ -17,9 +17,11 @@
         <!-- Desktop Navigation -->
         <div class="hidden lg:flex items-center justify-end gap-6 pr-4">
           <div class="bg-white p-1 rounded inline-flex items-center">
-            <img alt="processor db logo" class="h-[1.125rem] md:h-[1.5rem]" src="/logo-trans-cropped.png">
+            <a href="https://futuretech.mit.edu" target="_blank" rel="noopener noreferrer">
+              <img alt="processor db logo" class="h-[1.125rem] md:h-[1.5rem]" src="/logo-trans-cropped.png">
+            </a>
           </div>
-          <div class="menu-item has-dropdown relative group">
+          <div v-if="enableAuth" class="menu-item has-dropdown relative group">
             <a
               href="#"
               class="menu-item-link flex items-center gap-2"
@@ -77,7 +79,60 @@
               </ul>
             </div>
           </div>
+          <div v-if="enableAboutDropdown" class="menu-item has-dropdown relative group">
+            <a
+              href="#"
+              class="menu-item-link flex items-center gap-2"
+            >
+              <span class="menu-item-label text-white group-hover:text-[#A32035]">About</span>
+              <svg
+                width="13"
+                height="9"
+                class="chevron text-white group-hover:text-[#A32035] transition-transform duration-200 group-hover:rotate-180"
+                viewBox="0 0 13 9"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M0.5 1L6.5 7.5L12.5 1"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </a>
+            <div
+              class="dropdown-menu invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute top-full left-0 min-w-[150px] bg-white bg-opacity-95 rounded-md transition-all duration-200 transform translate-y-2 group-hover:translate-y-0"
+            >
+              <ul class="py-2">
+                <li>
+                  <NuxtLink
+                    to="/about"
+                    class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
+                    :class="{ 'bg-gray-100': route.path === '/about' }"
+                  >
+                    <span
+                      class="mr-3 text-black ml-4"
+                      :class="{ 'text-[#A32035]': route.path === '/about' }"
+                    >About</span>
+                  </NuxtLink>
+                </li>
+                <li>
+                  <NuxtLink
+                    to="/dataset"
+                    class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
+                    :class="{ 'bg-gray-100': route.path === '/dataset' }"
+                  >
+                    <span
+                      class="mr-3 text-black ml-4"
+                      :class="{ 'text-[#A32035]': route.path === '/dataset' }"
+                    >Dataset</span>
+                  </NuxtLink>
+                </li>
+              </ul>
+            </div>
+          </div>
           <NuxtLink
+            v-else
             to="/about"
             class="text-white hover:text-[#A32035] flex items-center"
           >
@@ -253,10 +308,12 @@
         <!-- Mobile Navigation -->
         <div class="lg:hidden flex items-center gap-4 pr-4">
           <div class="bg-white p-1 rounded inline-flex items-center">
-            <img alt="processor db logo" class="h-[1.125rem]" src="/logo-trans-cropped.png">
+            <a href="https://futuretech.mit.edu" target="_blank" rel="noopener noreferrer">
+              <img alt="processor db logo" class="h-[1.125rem]" src="/logo-trans-cropped.png">
+            </a>
           </div>
           <!-- Database Dropdown (kept separate on mobile) -->
-          <div class="menu-item has-dropdown relative group">
+          <div v-if="enableAuth" class="menu-item has-dropdown relative group">
             <a
               href="#"
               class="menu-item-link flex items-center gap-2"
@@ -342,7 +399,33 @@
               class="dropdown-menu absolute top-full right-0 min-w-[200px] bg-white bg-opacity-95 rounded-md transition-all duration-200 mt-2 shadow-lg"
             >
               <ul class="py-2">
-                <li>
+                <li v-if="enableAboutDropdown">
+                  <NuxtLink
+                    to="/about"
+                    @click="mobileMenuOpen = false"
+                    class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
+                    :class="{ 'bg-gray-100': route.path === '/about' }"
+                  >
+                    <span
+                      class="mr-3 text-black ml-4"
+                      :class="{ 'text-[#A32035]': route.path === '/about' }"
+                    >About</span>
+                  </NuxtLink>
+                </li>
+                <li v-if="enableAboutDropdown">
+                  <NuxtLink
+                    to="/dataset"
+                    @click="mobileMenuOpen = false"
+                    class="flex items-center py-3 text-black hover:bg-gray-200 justify-start"
+                    :class="{ 'bg-gray-100': route.path === '/dataset' }"
+                  >
+                    <span
+                      class="mr-3 text-black ml-4"
+                      :class="{ 'text-[#A32035]': route.path === '/dataset' }"
+                    >Dataset</span>
+                  </NuxtLink>
+                </li>
+                <li v-if="!enableAboutDropdown">
                   <NuxtLink
                     to="/about"
                     @click="mobileMenuOpen = false"
@@ -559,6 +642,13 @@ import { getItemWithExpiry } from '../lib/encrypter';
 
 const config = useRuntimeConfig();
 const enableGalaxy = computed(() => config.public.enableGalaxy || false);
+const enableAuth = computed(() => config.public.enableAuth || false);
+const enableAboutDropdown = computed(() => {
+  // Enforce dependency: enableAboutDropdown requires enableAuth to be true
+  const configValue = config.public.enableAboutDropdown || false;
+  const authEnabled = config.public.enableAuth || false;
+  return configValue && authEnabled;
+});
 
 // Initialize as false/null for consistent SSR rendering
 // These will update on client after hydration completes
@@ -625,6 +715,7 @@ const links = ref([
   { text: 'GPUs', to: '/gpu/list', icon: 'bi-gpu-card' },
   { text: 'FPGAs', to: '/fpga/list', icon: 'gi-logic-gate-xor' },
   { text: 'SoCs', to: '/soc/list', icon: 'gi-circuitry' },
+  { text: 'AI', to: '/ai-processor/list', icon: 'bi-cpu' },
   // { text: 'Economics', to: '/economics', icon: 'md-attachmoney' },
   // { text: 'Performances', to: '/performances', icon: 'gi-chart' },
 ]);

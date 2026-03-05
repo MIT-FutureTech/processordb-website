@@ -1,0 +1,109 @@
+{
+  "hash": "4e7ad119",
+  "configHash": "96c40a7d",
+  "lockfileHash": "5acd7fad",
+  "browserHash": "93cda5a3",
+  "optimized": {
+    "plotly.js-dist-min": {
+      "src": "../../../node_modules/plotly.js-dist-min/plotly.min.js",
+      "file": "plotly__js-dist-min.js",
+      "fileHash": "509fc33c",
+      "needsInterop": true
+    },
+    "oh-vue-icons/icons": {
+      "src": "../../../node_modules/oh-vue-icons/icons/index.js",
+      "file": "oh-vue-icons_icons.js",
+      "fileHash": "6eca8cc0",
+      "needsInterop": false
+    },
+    "highcharts": {
+      "src": "../../../node_modules/highcharts/highcharts.js",
+      "file": "highcharts.js",
+      "fileHash": "bf14607a",
+      "needsInterop": true
+    },
+    "highcharts-vue": {
+      "src": "../../../node_modules/highcharts-vue/dist/highcharts-vue.min.js",
+      "file": "highcharts-vue.js",
+      "fileHash": "5d28950f",
+      "needsInterop": true
+    },
+    "exceljs": {
+      "src": "../../../node_modules/exceljs/dist/exceljs.min.js",
+      "file": "exceljs.js",
+      "fileHash": "62bad130",
+      "needsInterop": true
+    },
+    "jspdf": {
+      "src": "../../../node_modules/jspdf/dist/jspdf.es.min.js",
+      "file": "jspdf.js",
+      "fileHash": "d4aae616",
+      "needsInterop": false
+    },
+    "file-saver": {
+      "src": "../../../node_modules/file-saver/dist/FileSaver.min.js",
+      "file": "file-saver.js",
+      "fileHash": "05ccd550",
+      "needsInterop": true
+    },
+    "jszip": {
+      "src": "../../../node_modules/jszip/dist/jszip.min.js",
+      "file": "jszip.js",
+      "fileHash": "6524e7ec",
+      "needsInterop": true
+    },
+    "radix-vue": {
+      "src": "../../../node_modules/radix-vue/dist/index.js",
+      "file": "radix-vue.js",
+      "fileHash": "19008109",
+      "needsInterop": false
+    },
+    "errx": {
+      "src": "../../../node_modules/errx/dist/index.js",
+      "file": "errx.js",
+      "fileHash": "8607debb",
+      "needsInterop": false
+    },
+    "@vue/devtools-core": {
+      "src": "../../../node_modules/@vue/devtools-core/dist/index.js",
+      "file": "@vue_devtools-core.js",
+      "fileHash": "dc7e57a9",
+      "needsInterop": false
+    },
+    "@vue/devtools-kit": {
+      "src": "../../../node_modules/@vue/devtools-kit/dist/index.js",
+      "file": "@vue_devtools-kit.js",
+      "fileHash": "e6808eb0",
+      "needsInterop": false
+    },
+    "highcharts/modules/exporting": {
+      "src": "../../../node_modules/highcharts/modules/exporting.js",
+      "file": "highcharts_modules_exporting.js",
+      "fileHash": "fdd89518",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "chunk-L4TNRANB": {
+      "file": "chunk-L4TNRANB.js"
+    },
+    "html2canvas.esm-3J3ZSUUB": {
+      "file": "html2canvas__esm-3J3ZSUUB.js"
+    },
+    "purify.es-HODOIKHK": {
+      "file": "purify__es-HODOIKHK.js"
+    },
+    "index.es-SNZKIPSR": {
+      "file": "index__es-SNZKIPSR.js"
+    },
+    "chunk-KAKUHVDH": {
+      "file": "chunk-KAKUHVDH.js"
+    },
+    "chunk-AICO56WJ": {
+      "file": "chunk-AICO56WJ.js"
+    },
+    "chunk-FHM2SDB6": {
+      "file": "chunk-FHM2SDB6.js"
+    }
+  }
+}

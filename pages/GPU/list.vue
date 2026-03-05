@@ -128,8 +128,12 @@ definePageMeta({
 import { ref, computed, onMounted, onActivated, watch, onUnmounted, defineAsyncComponent, nextTick } from 'vue';
 import { isLogged } from '../lib/isLogged';
 import { useRoute } from '#app';
+import { useGpus } from '~/composables/useApi';
 // Lazy load the chart component
 const GPUsGraph = defineAsyncComponent(() => import('~/components/Graphs/GPUsGraph.client.vue'));
+
+// Use API composable
+const { data: gpusData, chartData: allGpusData, pagination, pending, error, fetchData, fetchChartData } = useGpus();
 
 const isLoggedIn = ref(false);
 const isDev = import.meta.env.DEV;
@@ -138,15 +142,17 @@ const isDev = import.meta.env.DEV;
 const currentPage = ref(1);
 const pageSize = ref(100);
 
-// Fetch data for charts - load all available data
-const allGpusData = ref([]);
+// Chart data tracking
 const totalAvailableRecords = ref(null);
 const itemsPerPage = 1000; // Backend maximum per page
 let gpuChartRefreshInterval = null;
 let lastGpuChartRefresh = 0;
 const CHART_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
-// Fetch all chart data by loading all pages
+// Track if this is the first load to decide whether to bust cache
+let isFirstLoad = true;
+
+// Fetch all chart data using composable
 async function fetchAllChartData(forceRefresh = false) {
   // Ensure we're on the client
   if (process.server) {
@@ -162,51 +168,20 @@ async function fetchAllChartData(forceRefresh = false) {
   }
   
   try {
-    console.log('[GPU Chart] Fetching chart data (Phase 3: using chart-data endpoint)..., forceRefresh:', forceRefresh);
+    console.log('[GPU Chart] Fetching chart data using composable..., forceRefresh:', forceRefresh);
     
-    // Phase 3: Use optimized chart-data endpoint (single request, all data)
-    const cacheBust = forceRefresh ? `?refresh=true&_t=${Date.now()}` : '';
-    const url = `/api/gpus/chart-data${cacheBust}`;
-    console.log(`[GPU Chart] Fetching from chart-data endpoint: ${url}`);
+    // Use composable's fetchChartData method
+    await fetchChartData(forceRefresh);
     
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for large datasets
-    
-    try {
-      const response = await fetch(url, {
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const responseData = await response.json();
-      const fetchedData = responseData.data || [];
-      
-      // Update total count
-      if (responseData.total !== undefined) {
-        totalAvailableRecords.value = responseData.total;
-      }
-      
-      // Set chart data (already optimized format from server)
-      allGpusData.value = fetchedData;
-      
-      lastGpuChartRefresh = Date.now();
-      console.log('[GPU Chart] Chart data loaded:', allGpusData.value.length, 'records');
-    } catch (fetchErr) {
-      clearTimeout(timeoutId);
-      if (fetchErr.name === 'AbortError') {
-        throw new Error('Request timeout: Server did not respond in time');
-      }
-      throw fetchErr;
+    // Update total count from chart data length
+    if (allGpusData.value && allGpusData.value.length > 0) {
+      totalAvailableRecords.value = allGpusData.value.length;
     }
+    
+    lastGpuChartRefresh = Date.now();
+    console.log('[GPU Chart] Chart data loaded:', allGpusData.value.length, 'records');
   } catch (err) {
     console.error('[GPU Chart] Fetch error:', err);
-    if (allGpusData.value.length === 0) {
-      allGpusData.value = [];
-    }
   }
 }
 
@@ -236,96 +211,34 @@ function setupChartRefresh() {
   }
 }
 
-// Fetch paginated data for table
-// Use native fetch for more reliable client-side fetching
-const gpusData = ref([]);
-const pagination = ref(null);
-const pending = ref(true);
-const error = ref(null);
-
-// Track if this is the first load to decide whether to bust cache
-let isFirstLoad = true;
-
-// Function to fetch data with retry logic
-async function fetchGpusData(forceRefresh = false, retryCount = 0) {
+// Function to fetch data using composable
+async function fetchGpusData(forceRefresh = false) {
   // Ensure we're on the client
   if (process.server) {
     console.log('[GPU List] fetchGpusData called on server, skipping');
     return;
   }
   
-  const maxRetries = 3;
-  
   try {
-    console.log(`[GPU List] fetchGpusData START - page=${currentPage.value}, limit=${pageSize.value}, forceRefresh=${forceRefresh}, retry=${retryCount}`);
+    console.log(`[GPU List] fetchGpusData START - page=${currentPage.value}, limit=${pageSize.value}, forceRefresh=${forceRefresh}`);
     
-    pending.value = true;
-    error.value = null;
+    // Use composable's fetchData method
+    await fetchData({
+      page: currentPage.value,
+      limit: pageSize.value,
+      forceRefresh: forceRefresh || !isFirstLoad
+    });
     
-    // Add cache-busting parameter on navigation (not first load) to ensure fresh data
-    const cacheBust = forceRefresh || !isFirstLoad ? `&refresh=true&_t=${Date.now()}` : '';
-    const url = `/api/gpus?page=${currentPage.value}&limit=${pageSize.value}${cacheBust}`;
-    console.log(`[GPU List] Fetch URL: ${url}`);
-    
-    // Use native fetch with timeout handling
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-    
-    try {
-      const response = await fetch(url, {
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const responseData = await response.json();
-      
-      console.log('[GPU List] Response received - Type:', typeof responseData, 'IsArray:', Array.isArray(responseData));
-      
-      // Handle response format - API may return { data, pagination } or array directly
-      const processedData = Array.isArray(responseData) ? responseData : (responseData.data || responseData);
-      const paginationData = responseData.pagination || null;
-      
-      console.log('[GPU List] Data length:', processedData.length);
-      console.log('[GPU List] Pagination data:', paginationData);
-      
-      gpusData.value = processedData;
-      pagination.value = paginationData;
-      
-      // Update currentPage if pagination data indicates a different page
-      if (paginationData && paginationData.page) {
-        currentPage.value = paginationData.page;
-      }
-      
-      pending.value = false;
-      isFirstLoad = false; // Mark that we've done the first load
-      
-      console.log('[GPU List] fetchGpusData COMPLETE - length:', gpusData.value.length);
-    } catch (fetchErr) {
-      clearTimeout(timeoutId);
-      if (fetchErr.name === 'AbortError') {
-        throw new Error('Request timeout: Server did not respond in time');
-      }
-      throw fetchErr;
+    // Update currentPage if pagination data indicates a different page
+    if (pagination.value && pagination.value.page) {
+      currentPage.value = pagination.value.page;
     }
+    
+    isFirstLoad = false; // Mark that we've done the first load
+    
+    console.log('[GPU List] fetchGpusData COMPLETE - length:', gpusData.value.length);
   } catch (err) {
     console.error('[GPU List] Fetch error:', err);
-    
-    // Retry logic for transient failures
-    if (retryCount < maxRetries && !forceRefresh && err.status !== 404) {
-      const delay = 1000 * (retryCount + 1); // Exponential backoff
-      console.log(`[GPU List] Retry ${retryCount + 1}/${maxRetries} after ${delay}ms...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      return fetchGpusData(forceRefresh, retryCount + 1);
-    }
-    
-    console.error('[GPU List] Error stack:', err.stack);
-    error.value = err;
-    pending.value = false;
-    gpusData.value = []; // Ensure empty array on error
     throw err; // Re-throw for caller to handle
   }
 }

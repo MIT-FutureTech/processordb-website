@@ -1,7 +1,7 @@
 <template>
-  <div class="text-gray-800">
+  <div class="text-gray-800 flex flex-col min-h-screen">
     <Navbar />
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32 mb-16 mt-16">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32 mb-16 mt-16 flex-1">
       <section>
         <h2 class="text-3xl font-medium text-gray-600 sm:text-4xl">
           About

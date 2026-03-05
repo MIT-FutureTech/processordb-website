@@ -113,22 +113,12 @@ onMounted(() => {
 
 // Add safety check for route params
 const socId = route.params.id;
-// #region agent log
-if (typeof window !== 'undefined') {
-  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/[id].vue:115',message:'[id].vue route handler called',data:{socId,routePath:route.path,routeParams:route.params,routeName:route.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-}
-// #endregion
 
 // Don't throw error for 'null' or 'form' - these should be handled by other routes
 // Redirect to form page if 'form' or 'null', otherwise show error for invalid IDs
 const shouldRedirect = !socId || socId === 'null' || socId === 'form' || isNaN(Number(socId));
 
 if (shouldRedirect) {
-  // #region agent log
-  if (typeof window !== 'undefined') {
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SoC/[id].vue:122',message:'Invalid route param - redirecting to form',data:{socId,routePath:route.path,isNaN:isNaN(Number(socId))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-  }
-  // #endregion
   // Redirect to form page - navigateTo will handle the redirect
   navigateTo('/soc/form', { replace: true });
   // Prevent further execution by throwing an error (this is valid in script setup)
@@ -156,8 +146,16 @@ const socData = computed(() => {
     return null
   }
   
-  // Handle different response structures
-  const data = rawSocData.value.data || rawSocData.value;
+  // Handle standardized response format: { success: true, data: { soc, manufacturerName, versionHistory } }
+  // Also handle legacy format for backward compatibility
+  let data
+  if (rawSocData.value.success !== undefined) {
+    // Standardized format
+    data = rawSocData.value.data || {}
+  } else {
+    // Legacy format - backward compatibility
+    data = rawSocData.value.data || rawSocData.value
+  }
   
   // Check if data.soc is HTML
   if (data.soc && typeof data.soc === 'string' && data.soc.trim().startsWith('<!DOCTYPE')) {

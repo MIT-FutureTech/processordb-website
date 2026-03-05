@@ -77,11 +77,23 @@
         />
       </div>
 
-      <!-- Year -->
+      <!-- Release Year -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 pl-2">Year</label>
-        <input v-model="form.year" type="number" :disabled="readOnly"
-          class="pl-2 mt-1 h-10 block w-full border-1 border-gray-200 rounded-md drop-shadow focus:ring-[#A32035] focus:border-[#A32035] sm:text-sm">
+        <FormFieldLabel 
+          label="Release Year" 
+          field-id="soc_releaseYear"
+          tooltip="The release year of the SoC (format: YYYY)."
+        />
+        <input 
+          id="soc_releaseYear"
+          v-model="form.releaseYear" 
+          type="number" 
+          min="1900"
+          max="2100"
+          :disabled="readOnly"
+          placeholder="Example: 2020"
+          class="pl-2 mt-1 h-10 block w-full border-1 border-gray-200 rounded-md drop-shadow focus:ring-[#A32035] focus:border-[#A32035] sm:text-sm"
+        />
       </div>
 
       <!-- Core Count -->
@@ -754,18 +766,9 @@ const errorMessageCode = ref('')
 const errorType = ref('')
 const errorFieldName = ref('')
 
-// #region agent log
-// Log initial state immediately after declaration
-fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:752',message:'Error message state initialized',data:{errorMessage:errorMessage.value,hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,editMode:props.editMode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-// #endregion
 
 // Watch errorMessage to track when it's set
 watch(errorMessage, (newVal, oldVal) => {
-  // #region agent log
-  if (newVal && (newVal.includes('SoC ID not found') || newVal.includes('soc_id') || newVal.includes('socId'))) {
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:765',message:'errorMessage changed',data:{newVal,oldVal,hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,editMode:props.editMode,stackTrace:new Error().stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  }
-  // #endregion
 }, { immediate: true })
 
 // User role and suggestion note
@@ -778,17 +781,8 @@ const processorNote = ref('')
 // Check if user is logged in
 const isLoggedIn = ref(false)
 onMounted(() => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:766',message:'Component mounted',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,socKeys:props.socData?.soc?Object.keys(props.socData.soc):[],socDataKeys:props.socData?Object.keys(props.socData):[],editMode:props.editMode,readOnly:props.readOnly,errorMessage:errorMessage.value,errorMessageCode:errorMessageCode.value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   isLoggedIn.value = isLogged()
   
-  // #region agent log
-  // Check if error appears after a delay
-  setTimeout(() => {
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:772',message:'After mount delay check',data:{errorMessage:errorMessage.value,errorMessageCode:errorMessageCode.value,hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  }, 100);
-  // #endregion
 })
 
 // Form data
@@ -796,7 +790,7 @@ const form = ref({
   manufacturer: '',
   manufacturerId: null,
   codeName: '',
-  year: '',
+  releaseYear: '',
   processNode: '',
   totalTransistorCount: '',
   dieSizes: '',
@@ -824,7 +818,7 @@ watch(
       manufacturer: newData.manufacturerName || '',
       manufacturerId: soc.soc_manufacturer_id || null,
       codeName: soc.name || '',
-      year: soc.release_date ? new Date(soc.release_date).getFullYear().toString() : '',
+      releaseYear: soc.release_year ? soc.release_year.toString() : (soc.release_date ? new Date(soc.release_date).getFullYear().toString() : ''),
       processNode: soc.process_node || '',
       totalTransistorCount: soc.total_transistor_count || '',
       dieSizes: soc.die_sizes || '',
@@ -1081,16 +1075,10 @@ onUnmounted(() => {
 })
 
 const associateProcessor = async (processor) => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1071',message:'associateProcessor called',data:{hasProcessor:!!processor,processorId:processor?.id,hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,editMode:props.editMode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-  // #endregion
   console.log('[SocForm] associateProcessor called', { processor, socData: props.socData })
   const socId = props.socData?.soc?.soc_id
   console.log('[SocForm] socId:', socId)
   if (!socId) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1075',message:'Setting error in associateProcessor: SOC_SAVE_FIRST_FOR_PROCESSORS',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,errorMessageBefore:errorMessage.value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-    // #endregion
     console.log('[SocForm] No socId - showing error message')
     const error = handleValidationError('SOC_SAVE_FIRST_FOR_PROCESSORS')
     errorMessage.value = error.message
@@ -1186,9 +1174,6 @@ const associateProcessor = async (processor) => {
     console.log('[SocForm] Backend URL from config:', config.public.backendUrl)
     // Normalize backendUrl - remove trailing slash and handle /api prefix
     let backendUrl = config.public.backendUrl || 'http://localhost:3001'
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/Forms/SocForm.vue:893',message:'Client backend URL after fallback',data:{backendUrl,usedFallback:backendUrl==='http://localhost:3001'},timestamp:Date.now(),sessionId:'debug-session',runId:'client-runtime',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     backendUrl = backendUrl.replace(/\/$/, '') // Remove trailing slash
     
     // Check if backendUrl already includes /api
@@ -1323,14 +1308,8 @@ const associateProcessor = async (processor) => {
 }
 
 const removeProcessor = async (processor) => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1295',message:'removeProcessor called',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,processorId:processor?.id,processorType:processor?.type},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   const socId = props.socData?.soc?.soc_id
   if (!socId) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1298',message:'Setting error: SoC ID not found in removeProcessor',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     const error = handleValidationError('PROCESSOR_ASSOCIATION_SOC_ID_NOT_FOUND')
     errorMessage.value = error.message
     errorMessageCode.value = error.code
@@ -1677,9 +1656,6 @@ const submitBenchmark = async () => {
 }
 
 const deleteBenchmark = async (benchmarkId) => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1652',message:'deleteBenchmark called',data:{benchmarkId,hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,editMode:props.editMode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-  // #endregion
   if (!confirm('Are you sure you want to delete this benchmark?')) return
 
   const currentRole = userRole.value
@@ -1698,9 +1674,6 @@ const deleteBenchmark = async (benchmarkId) => {
     try {
       const socId = props.socData?.soc?.soc_id
       if (!socId) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1695',message:'Setting error: SoC ID not found in deleteBenchmark suggestion path',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,benchmarkId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         const error = handleValidationError('PROCESSOR_ASSOCIATION_SOC_ID_NOT_FOUND')
         errorMessage.value = error.message
         errorMessageCode.value = error.code
@@ -1764,9 +1737,6 @@ const deleteBenchmark = async (benchmarkId) => {
     const config = useRuntimeConfig()
     const socId = props.socData?.soc?.soc_id
     if (!socId) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1761',message:'Setting error: SoC ID not found in deleteBenchmark direct path',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,benchmarkId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       const error = handleValidationError('PROCESSOR_ASSOCIATION_SOC_ID_NOT_FOUND')
       errorMessage.value = error.message
       errorMessageCode.value = error.code
@@ -1994,9 +1964,6 @@ const submitEconomic = async () => {
 }
 
 const deleteEconomic = async (economicId) => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1945',message:'deleteEconomic called',data:{economicId,hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,editMode:props.editMode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-  // #endregion
   if (!confirm('Are you sure you want to delete this economic data?')) return
 
   const currentRole = userRole.value
@@ -2015,9 +1982,6 @@ const deleteEconomic = async (economicId) => {
     try {
       const socId = props.socData?.soc?.soc_id
       if (!socId) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:1991',message:'Setting error: SoC ID not found in deleteEconomic suggestion path',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,economicId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
         const error = handleValidationError('PROCESSOR_ASSOCIATION_SOC_ID_NOT_FOUND')
         errorMessage.value = error.message
         errorMessageCode.value = error.code
@@ -2081,9 +2045,6 @@ const deleteEconomic = async (economicId) => {
     const config = useRuntimeConfig()
     const socId = props.socData?.soc?.soc_id
     if (!socId) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SocForm.vue:2078',message:'Setting error: SoC ID not found in deleteEconomic direct path',data:{hasSocData:!!props.socData,hasSoc:!!props.socData?.soc,socId:props.socData?.soc?.soc_id,economicId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
       const error = handleValidationError('PROCESSOR_ASSOCIATION_SOC_ID_NOT_FOUND')
       errorMessage.value = error.message
       errorMessageCode.value = error.code
@@ -2236,7 +2197,7 @@ const submitData = async () => {
       // Include manufacturer name for suggestors (will be used to find/create on approval)
       manufacturer: isSuggestion && form.value.manufacturer ? { name: form.value.manufacturer } : undefined,
       name: form.value.codeName,
-      release_date: form.value.year ? `${form.value.year}-01-01` : null,
+      release_date: form.value.releaseYear ? `${form.value.releaseYear}-01-01` : null,
       core_count: form.value.coreCount ? parseInt(form.value.coreCount) : null,
       process_node: form.value.processNode ? parseFloat(form.value.processNode) : null,
       total_transistor_count: form.value.totalTransistorCount ? parseFloat(form.value.totalTransistorCount) : null,

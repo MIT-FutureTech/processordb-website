@@ -46,13 +46,24 @@ export default defineEventHandler(async (event) => {
         const responseData = await response.json()
         const parseTime = Date.now() - parseStartTime
         
-        console.log(`[Manufacturers API] Received ${Array.isArray(responseData) ? responseData.length : 0} manufacturers from backend`)
+        // Handle standardized response format: { success: true, data: [...], meta: {...} }
+        // Also handle legacy format for backward compatibility
+        let data
+        if (responseData.success !== undefined) {
+          // Standardized format
+          data = responseData.data || []
+        } else {
+          // Legacy format - backward compatibility
+          data = Array.isArray(responseData) ? responseData : (responseData.data || [])
+        }
+        
+        console.log(`[Manufacturers API] Received ${Array.isArray(data) ? data.length : 0} manufacturers from backend`)
 
         const totalTime = Date.now() - fetchStartTime
         console.log(`[PERF] Manufacturers fetch timings - Fetch: ${fetchTime}ms, Parse: ${parseTime}ms, Total: ${totalTime}ms`)
 
         // Return data directly (manufacturers endpoint returns array)
-        return responseData
+        return data
     } catch (error) {
         console.error('Error fetching manufacturers:', error)
         

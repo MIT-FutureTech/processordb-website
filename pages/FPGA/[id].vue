@@ -78,8 +78,16 @@ const fpgaData = computed(() => {
   
   console.log('Raw FPGA Data:', rawFpgaData.value);
   
-  // Handle different response structures
-  const data = rawFpgaData.value.data || rawFpgaData.value;
+  // Handle standardized response format: { success: true, data: { fpga, manufacturerName, versionHistory } }
+  // Also handle legacy format for backward compatibility
+  let data
+  if (rawFpgaData.value.success !== undefined) {
+    // Standardized format
+    data = rawFpgaData.value.data || {}
+  } else {
+    // Legacy format - backward compatibility
+    data = rawFpgaData.value.data || rawFpgaData.value
+  }
   
   return {
     fpga: data.fpga || data,

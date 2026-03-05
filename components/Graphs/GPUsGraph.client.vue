@@ -252,10 +252,50 @@ const filteredGroupOptions = computed(() => {
 // Initialize xAxis and yAxis using the first available numeric option, with fallbacks
 const xAxis = ref(numericOptions.value.find(opt => opt.value === 'release_date') || numericOptions.value[0] || { label: 'X-Axis', value: '', source: '' });
 const yAxis = ref(numericOptions.value.find(opt => opt.value === 'core_count') || numericOptions.value[1] || { label: 'Y-Axis', value: '', source: '' });
-const groupBy = ref(filteredGroupOptions.value[0]);
+// Default groupBy to manufacturer/manufacturer_name
+const groupBy = ref(
+  filteredGroupOptions.value.find(opt => opt.value === 'manufacturer_name' || opt.value === 'manufacturer') || 
+  filteredGroupOptions.value[0]
+);
 
 // Utility: Get the proper value from the data item based on the axis source.
 // Handles both nested structure (from regular API) and flattened structure (from chart-data endpoint)
+// Helper: Safely convert release_date to timestamp for chart use
+const safeDateToTimestamp = (value) => {
+  if (value === null || value === undefined) return null;
+  
+  // If it's already a number, check if it looks like a year (1900-2100)
+  if (typeof value === 'number') {
+    const numValue = Math.floor(value);
+    // If it's a reasonable year, convert to proper date string first
+    if (numValue >= 1900 && numValue <= 2100) {
+      return Date.parse(`${numValue}-01-01`);
+    }
+    // If it's a timestamp (large number), return as-is
+    if (numValue > 946684800000) { // Year 2000 in milliseconds
+      return numValue;
+    }
+    // Otherwise, try to parse as date string
+    return Date.parse(String(value));
+  }
+  
+  // If it's a string, parse it
+  if (typeof value === 'string') {
+    // Check if it's just a 4-digit year
+    if (/^\d{4}$/.test(value.trim())) {
+      return Date.parse(`${value}-01-01`);
+    }
+    return Date.parse(value);
+  }
+  
+  // If it's a Date object, get timestamp
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+  
+  return null;
+};
+
 const getAxisData = (item, axis) => {
   if (axis.source === 'soc') {
     if (axis.value === 'manufacturer_name') {
@@ -294,10 +334,6 @@ const seabornColors = {
 let getColorForCategoryCallCount = 0;
 let getColorForCategoryTotalTime = 0;
 const getColorForCategory = (colorCategory) => {
-  // #region agent log
-  const startTime = performance.now();
-  getColorForCategoryCallCount++;
-  // #endregion
   
   if (!colorCategory) return 'gray';
   
@@ -313,12 +349,6 @@ const getColorForCategory = (colorCategory) => {
   
   const colorIndex = categories.indexOf(colorCategory) % colorPalette.length;
   
-  // #region agent log
-  const endTime = performance.now();
-  const duration = endTime - startTime;
-  getColorForCategoryTotalTime += duration;
-  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GPUsGraph.client.vue:getColorForCategory',message:'getColorForCategory called',data:{callCount:getColorForCategoryCallCount,totalTime:getColorForCategoryTotalTime,duration:duration,dataSize:props.data?.length||0,category:colorCategory},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   
   return colorPalette[colorIndex];
 };
@@ -331,12 +361,6 @@ const currentZoomLevel = ref({ xMin: null, xMax: null, yMin: null, yMax: null })
 const chartInstance = ref(null);
 
 const chartOptions = computed(() => {
-  // #region agent log
-  const chartOptionsStartTime = performance.now();
-  getColorForCategoryCallCount = 0;
-  getColorForCategoryTotalTime = 0;
-  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GPUsGraph.client.vue:chartOptions',message:'chartOptions computation started',data:{dataSize:props.data?.length||0,xAxis:xAxis.value?.value||'null',yAxis:yAxis.value?.value||'null',groupBy:groupBy.value?.value||'null'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   
   // Handle undefined or empty data
   if (!props.data || !props.data.length) {
@@ -360,8 +384,8 @@ const chartOptions = computed(() => {
       const yValue = getAxisData(item, yAxis.value);
       if (xValue === null || yValue === null) return false;
       
-      const x = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
-      const y = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
+      const x = xAxis.value.value === 'release_date' ? safeDateToTimestamp(xValue) : xValue;
+      const y = yAxis.value.value === 'release_date' ? safeDateToTimestamp(yValue) : yValue;
       return x >= zoom.xMin && x <= zoom.xMax && 
              y >= zoom.yMin && y <= zoom.yMax;
     });
@@ -431,11 +455,6 @@ const chartOptions = computed(() => {
   
   // Check if we have cached data
   if (chartDataCache.value.has(cacheKey)) {
-    // #region agent log
-    const cacheHitTime = performance.now();
-    const cacheHitDuration = cacheHitTime - chartOptionsStartTime;
-    fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GPUsGraph.client.vue:chartOptions',message:'Cache hit',data:{cacheKey:cacheKey,cacheHitDuration:cacheHitDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     return chartDataCache.value.get(cacheKey);
   }
 
@@ -467,11 +486,6 @@ const chartOptions = computed(() => {
     return acc;
   }, {});
 
-  // #region agent log
-  const beforeSeriesTime = performance.now();
-  const reduceDuration = beforeSeriesTime - chartOptionsStartTime;
-  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GPUsGraph.client.vue:chartOptions',message:'After reduce, before series mapping',data:{reduceDuration:reduceDuration,getColorForCategoryCallCount:getColorForCategoryCallCount,getColorForCategoryTotalTime:getColorForCategoryTotalTime,groupedDataKeys:Object.keys(groupedData).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   
   series = Object.keys(groupedData)
     .sort((a, b) => groupedData[b].length - groupedData[a].length)
@@ -494,8 +508,8 @@ const chartOptions = computed(() => {
     if (firstItem) {
       const xValue = getAxisData(firstItem, xAxis.value);
       const yValue = getAxisData(firstItem, yAxis.value);
-      const xFormattedValue = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
-      const yFormattedValue = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
+      const xFormattedValue = xAxis.value.value === 'release_date' ? safeDateToTimestamp(xValue) : xValue;
+      const yFormattedValue = yAxis.value.value === 'release_date' ? safeDateToTimestamp(yValue) : yValue;
       series = [{
         name: 'Data',
         data: [{
@@ -510,11 +524,6 @@ const chartOptions = computed(() => {
     }
   }
 
-  // #region agent log
-  const chartOptionsEndTime = performance.now();
-  const totalDuration = chartOptionsEndTime - chartOptionsStartTime;
-  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GPUsGraph.client.vue:chartOptions',message:'chartOptions computation completed',data:{totalDuration:totalDuration,getColorForCategoryCallCount:getColorForCategoryCallCount,getColorForCategoryTotalTime:getColorForCategoryTotalTime,getColorForCategoryAvgTime:getColorForCategoryCallCount>0?getColorForCategoryTotalTime/getColorForCategoryCallCount:0,seriesCount:series.length,dataSize:dataSize},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
 
   const chartConfig = {
     chart: { 
@@ -565,7 +574,16 @@ const chartOptions = computed(() => {
       labels: {
         formatter: function () {
           if (yAxis.value?.value === 'release_date') {
-            return new Date(this.value).getFullYear();
+            // Handle case where value might be a raw number
+            if (typeof this.value === 'number') {
+              const numValue = Math.floor(this.value);
+              // If it looks like a year (1900-2100), return it directly
+              if (numValue >= 1900 && numValue <= 2100) {
+                return numValue;
+              }
+            }
+            const date = new Date(this.value);
+            return isNaN(date.getTime()) ? this.value : date.getFullYear();
           }
           return this.value;
         }
@@ -593,7 +611,7 @@ const chartOptions = computed(() => {
           const header = `
             <div class="flex w-full justify-between gap-8">
               <div style="color: ${this.series.color}; white-space: normal;" class="font-bold">${name}</div>
-              <div class="font-bold">${soc.release_date ? new Date(soc.release_date).getFullYear() : '-'}</div>
+              <div class="font-bold">${data.release_year || (soc.release_date ? new Date(soc.release_date).getFullYear() : '-')}</div>
             </div><br>
           `;
 

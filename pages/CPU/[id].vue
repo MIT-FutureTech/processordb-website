@@ -127,8 +127,16 @@ const cpuData = computed(() => {
   
   console.log('Raw CPU Data:', rawCpuData.value);
   
-  // Handle different response structures
-  const data = rawCpuData.value.data || rawCpuData.value;
+  // Handle standardized response format: { success: true, data: { cpu, cores, manufacturerName, versionHistory } }
+  // Also handle legacy format for backward compatibility
+  let data
+  if (rawCpuData.value.success !== undefined) {
+    // Standardized format
+    data = rawCpuData.value.data || {}
+  } else {
+    // Legacy format - backward compatibility
+    data = rawCpuData.value.data || rawCpuData.value
+  }
   
   const result = {
     cpu: data.cpu || data,
@@ -156,7 +164,13 @@ const handleDataRefreshed = async () => {
   
   // Log cores after refresh
   if (rawCpuData.value) {
-    const data = rawCpuData.value.data || rawCpuData.value
+    // Handle standardized response format
+    let data
+    if (rawCpuData.value.success !== undefined) {
+      data = rawCpuData.value.data || {}
+    } else {
+      data = rawCpuData.value.data || rawCpuData.value
+    }
     const cores = data.cores || []
     console.log('[CPU Detail] Cores after refresh:', cores.length, cores)
   }

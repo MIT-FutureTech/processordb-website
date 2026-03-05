@@ -1,0 +1,127 @@
+{
+  "hash": "4e7ad119",
+  "configHash": "96c40a7d",
+  "lockfileHash": "5acd7fad",
+  "browserHash": "8b24a554",
+  "optimized": {
+    "plotly.js-dist-min": {
+      "src": "../../../node_modules/plotly.js-dist-min/plotly.min.js",
+      "file": "plotly__js-dist-min.js",
+      "fileHash": "82935409",
+      "needsInterop": true
+    },
+    "oh-vue-icons/icons": {
+      "src": "../../../node_modules/oh-vue-icons/icons/index.js",
+      "file": "oh-vue-icons_icons.js",
+      "fileHash": "2c83d39e",
+      "needsInterop": false
+    },
+    "highcharts": {
+      "src": "../../../node_modules/highcharts/highcharts.js",
+      "file": "highcharts.js",
+      "fileHash": "a828781d",
+      "needsInterop": true
+    },
+    "highcharts-vue": {
+      "src": "../../../node_modules/highcharts-vue/dist/highcharts-vue.min.js",
+      "file": "highcharts-vue.js",
+      "fileHash": "09937d68",
+      "needsInterop": true
+    },
+    "exceljs": {
+      "src": "../../../node_modules/exceljs/dist/exceljs.min.js",
+      "file": "exceljs.js",
+      "fileHash": "48f19d3a",
+      "needsInterop": true
+    },
+    "jspdf": {
+      "src": "../../../node_modules/jspdf/dist/jspdf.es.min.js",
+      "file": "jspdf.js",
+      "fileHash": "2438237b",
+      "needsInterop": false
+    },
+    "file-saver": {
+      "src": "../../../node_modules/file-saver/dist/FileSaver.min.js",
+      "file": "file-saver.js",
+      "fileHash": "f186de0f",
+      "needsInterop": true
+    },
+    "jszip": {
+      "src": "../../../node_modules/jszip/dist/jszip.min.js",
+      "file": "jszip.js",
+      "fileHash": "3a7a477f",
+      "needsInterop": true
+    },
+    "radix-vue": {
+      "src": "../../../node_modules/radix-vue/dist/index.js",
+      "file": "radix-vue.js",
+      "fileHash": "9c8b300d",
+      "needsInterop": false
+    },
+    "errx": {
+      "src": "../../../node_modules/errx/dist/index.js",
+      "file": "errx.js",
+      "fileHash": "cb23a956",
+      "needsInterop": false
+    },
+    "@vue/devtools-core": {
+      "src": "../../../node_modules/@vue/devtools-core/dist/index.js",
+      "file": "@vue_devtools-core.js",
+      "fileHash": "b60b9d68",
+      "needsInterop": false
+    },
+    "@vue/devtools-kit": {
+      "src": "../../../node_modules/@vue/devtools-kit/dist/index.js",
+      "file": "@vue_devtools-kit.js",
+      "fileHash": "ab6686e3",
+      "needsInterop": false
+    },
+    "highcharts/modules/exporting": {
+      "src": "../../../node_modules/highcharts/modules/exporting.js",
+      "file": "highcharts_modules_exporting.js",
+      "fileHash": "53f1e39a",
+      "needsInterop": true
+    },
+    "lucide-vue-next": {
+      "src": "../../../node_modules/lucide-vue-next/dist/esm/lucide-vue-next.js",
+      "file": "lucide-vue-next.js",
+      "fileHash": "b30fc6e2",
+      "needsInterop": false
+    },
+    "clsx": {
+      "src": "../../../node_modules/clsx/dist/clsx.mjs",
+      "file": "clsx.js",
+      "fileHash": "ed879d55",
+      "needsInterop": false
+    },
+    "tailwind-merge": {
+      "src": "../../../node_modules/tailwind-merge/dist/bundle-mjs.mjs",
+      "file": "tailwind-merge.js",
+      "fileHash": "198e4be4",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "html2canvas.esm-4ELRCV7V": {
+      "file": "html2canvas__esm-4ELRCV7V.js"
+    },
+    "purify.es-ZTQ53PK5": {
+      "file": "purify__es-ZTQ53PK5.js"
+    },
+    "index.es-QGPQ6452": {
+      "file": "index__es-QGPQ6452.js"
+    },
+    "chunk-LWYPI3C6": {
+      "file": "chunk-LWYPI3C6.js"
+    },
+    "chunk-ZV6WSSX6": {
+      "file": "chunk-ZV6WSSX6.js"
+    },
+    "chunk-3RMYVJA7": {
+      "file": "chunk-3RMYVJA7.js"
+    },
+    "chunk-CCBZZ47G": {
+      "file": "chunk-CCBZZ47G.js"
+    }
+  }
+}

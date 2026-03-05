@@ -128,8 +128,12 @@ definePageMeta({
 import { isLogged } from '../lib/isLogged';
 import { ref, computed, onMounted, onActivated, watch, onUnmounted, defineAsyncComponent, nextTick } from 'vue';
 import { useRoute } from '#app';
+import { useFpgas } from '~/composables/useApi';
 // Lazy load the chart component
 const FPGAsGraph = defineAsyncComponent(() => import('~/components/Graphs/FPGAsGraph.client.vue'));
+
+// Use API composable
+const { data: fpgasData, chartData: allFpgasData, pagination, pending, error, fetchData, fetchChartData } = useFpgas();
 
 const isLoggedIn = ref(false);
 const isDev = import.meta.env.DEV;
@@ -138,69 +142,33 @@ const isDev = import.meta.env.DEV;
 const currentPage = ref(1);
 const pageSize = ref(100);
 
-// Fetch data for charts - start with page 1 for fast initial load, can load more on demand
-// Use native fetch for consistency with table data fetching
-const allFpgasData = ref([]);
+// Chart data tracking
 const loadingMoreChartData = ref(false);
 const totalAvailableRecords = ref(null);
-const currentChartPage = ref(1); // Track which page we're on (backend caps at 1000 per page)
-const itemsPerPage = 1000; // Backend maximum per page
 
-// Phase 3: Use optimized chart-data endpoint (replaces paginated fetching)
-async function fetchChartData(forceRefresh = false) {
+// Fetch chart data using composable
+async function fetchAllChartData(forceRefresh = false) {
   // Ensure we're on the client
   if (process.server) {
-    console.log('[FPGA Chart] fetchChartData called on server, skipping');
+    console.log('[FPGA Chart] fetchAllChartData called on server, skipping');
     return;
   }
   
   try {
-    console.log('[FPGA Chart] Fetching chart data (Phase 3: using chart-data endpoint)..., forceRefresh:', forceRefresh);
+    console.log('[FPGA Chart] Fetching chart data using composable..., forceRefresh:', forceRefresh);
     
-    // Phase 3: Use optimized chart-data endpoint (single request, all data)
-    const cacheBust = forceRefresh ? `?refresh=true&_t=${Date.now()}` : '';
-    const url = `/api/fpgas/chart-data${cacheBust}`;
-    console.log(`[FPGA Chart] Fetch URL: ${url}`);
+    // Use composable's fetchChartData method
+    await fetchChartData(forceRefresh);
     
-    // Use native fetch with timeout handling
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for large datasets
-    
-    try {
-      const response = await fetch(url, {
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const responseData = await response.json();
-      const fetchedData = responseData.data || [];
-      
-      // Update total count
-      if (responseData.total !== undefined) {
-        totalAvailableRecords.value = responseData.total;
-        console.log('[FPGA Chart] Total records:', totalAvailableRecords.value);
-      }
-      
-      // Set chart data (already optimized format from server)
-      allFpgasData.value = fetchedData;
-      
-      console.log('[FPGA Chart] Chart data loaded:', allFpgasData.value.length, 'records');
-    } catch (fetchErr) {
-      clearTimeout(timeoutId);
-      if (fetchErr.name === 'AbortError') {
-        throw new Error('Request timeout: Server did not respond in time');
-      }
-      throw fetchErr;
+    // Update total count from chart data length
+    if (allFpgasData.value && allFpgasData.value.length > 0) {
+      totalAvailableRecords.value = allFpgasData.value.length;
+      console.log('[FPGA Chart] Total records:', totalAvailableRecords.value);
     }
+    
+    console.log('[FPGA Chart] Chart data loaded:', allFpgasData.value.length, 'records');
   } catch (err) {
     console.error('[FPGA Chart] Fetch error:', err);
-    if (allFpgasData.value.length === 0) {
-      allFpgasData.value = [];
-    }
   }
 }
 
@@ -211,96 +179,37 @@ async function loadMoreChartData() {
   loadingMoreChartData.value = false;
 }
 
-// Fetch paginated data for table
-// Use native fetch for more reliable client-side fetching
-const fpgasData = ref([]);
-const pagination = ref(null);
-const pending = ref(true);
-const error = ref(null);
-
 // Track if this is the first load to decide whether to bust cache
 let isFirstLoad = true;
 
-// Function to fetch data with retry logic
-async function fetchFpgasData(forceRefresh = false, retryCount = 0) {
+// Function to fetch data using composable
+async function fetchFpgasData(forceRefresh = false) {
   // Ensure we're on the client
   if (process.server) {
     console.log('[FPGA List] fetchFpgasData called on server, skipping');
     return;
   }
   
-  const maxRetries = 3;
-  
   try {
-    console.log(`[FPGA List] fetchFpgasData START - page=${currentPage.value}, limit=${pageSize.value}, forceRefresh=${forceRefresh}, retry=${retryCount}`);
+    console.log(`[FPGA List] fetchFpgasData START - page=${currentPage.value}, limit=${pageSize.value}, forceRefresh=${forceRefresh}`);
     
-    pending.value = true;
-    error.value = null;
+    // Use composable's fetchData method
+    await fetchData({
+      page: currentPage.value,
+      limit: pageSize.value,
+      forceRefresh: forceRefresh || !isFirstLoad
+    });
     
-    // Add cache-busting parameter on navigation (not first load) to ensure fresh data
-    const cacheBust = forceRefresh || !isFirstLoad ? `&refresh=true&_t=${Date.now()}` : '';
-    const url = `/api/fpgas?page=${currentPage.value}&limit=${pageSize.value}${cacheBust}`;
-    console.log(`[FPGA List] Fetch URL: ${url}`);
-    
-    // Use native fetch with timeout handling
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-    
-    try {
-      const response = await fetch(url, {
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const responseData = await response.json();
-      
-      console.log('[FPGA List] Response received - Type:', typeof responseData, 'IsArray:', Array.isArray(responseData));
-      
-      // Handle response format - API may return { data, pagination } or array directly
-      const processedData = Array.isArray(responseData) ? responseData : (responseData.data || responseData);
-      const paginationData = responseData.pagination || null;
-      
-      console.log('[FPGA List] Data length:', processedData.length);
-      console.log('[FPGA List] Pagination data:', paginationData);
-      
-      fpgasData.value = processedData;
-      pagination.value = paginationData;
-      
-      // Update currentPage if pagination data indicates a different page
-      if (paginationData && paginationData.page) {
-        currentPage.value = paginationData.page;
-      }
-      
-      pending.value = false;
-      isFirstLoad = false; // Mark that we've done the first load
-      
-      console.log('[FPGA List] fetchFpgasData COMPLETE - length:', fpgasData.value.length);
-    } catch (fetchErr) {
-      clearTimeout(timeoutId);
-      if (fetchErr.name === 'AbortError') {
-        throw new Error('Request timeout: Server did not respond in time');
-      }
-      throw fetchErr;
+    // Update currentPage if pagination data indicates a different page
+    if (pagination.value && pagination.value.page) {
+      currentPage.value = pagination.value.page;
     }
+    
+    isFirstLoad = false; // Mark that we've done the first load
+    
+    console.log('[FPGA List] fetchFpgasData COMPLETE - length:', fpgasData.value.length);
   } catch (err) {
     console.error('[FPGA List] Fetch error:', err);
-    
-    // Retry logic for transient failures
-    if (retryCount < maxRetries && !forceRefresh && err.status !== 404) {
-      const delay = 1000 * (retryCount + 1); // Exponential backoff
-      console.log(`[FPGA List] Retry ${retryCount + 1}/${maxRetries} after ${delay}ms...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      return fetchFpgasData(forceRefresh, retryCount + 1);
-    }
-    
-    console.error('[FPGA List] Error stack:', err.stack);
-    error.value = err;
-    pending.value = false;
-    fpgasData.value = []; // Ensure empty array on error
     throw err; // Re-throw for caller to handle
   }
 }
@@ -341,8 +250,6 @@ async function initializeData(forceRefresh = false) {
     // Reset chart data on force refresh only if explicitly needed
     // Don't clear chart data if it's already loaded - just refresh it in background
     if (forceRefresh && allFpgasData.value.length === 0) {
-      allFpgasData.value = [];
-      currentChartPage.value = 1;
       totalAvailableRecords.value = null;
     }
     // Always reset hasInitialized on force refresh to allow re-initialization
@@ -358,8 +265,8 @@ async function initializeData(forceRefresh = false) {
     
     // Chart data (non-critical) - start fetching but don't wait for it
     // This allows the page to render immediately while chart loads in background
-    fetchChartData(forceRefresh, currentChartPage.value).catch(err => {
-      console.error('[FPGA List] fetchChartData failed (non-critical):', err);
+    fetchAllChartData(forceRefresh).catch(err => {
+      console.error('[FPGA List] fetchAllChartData failed (non-critical):', err);
       // Don't throw - chart data is optional and runs in background
     });
     
@@ -405,7 +312,7 @@ onActivated(async () => {
       await fetchFpgasData(true);
       // Start chart data fetch in background if not already loaded
       if (allFpgasData.value.length === 0) {
-        fetchChartData(false, 1).catch(err => {
+        fetchAllChartData(false).catch(err => {
           console.error('[FPGA List] Error fetching chart data in onActivated:', err);
         });
       }

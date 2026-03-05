@@ -69,15 +69,18 @@
       </div>
       <div>
         <FormFieldLabel 
-          label="Release Date" 
-          field-id="fpga_releaseDate"
-          tooltip="The release date of the FPGA (format: YYYY-MM-DD)."
+          label="Release Year" 
+          field-id="fpga_releaseYear"
+          tooltip="The release year of the FPGA (format: YYYY)."
         />
         <input 
-          id="fpga_releaseDate"
-          v-model="form.releaseDate" 
+          id="fpga_releaseYear"
+          v-model="form.releaseYear" 
           :disabled="readOnly" 
-          type="date"
+          type="number"
+          min="1900"
+          max="2100"
+          placeholder="Example: 1985"
           class="mt-1 block w-full h-10 border-0 border-b border-gray-200 focus:ring-0 bg-transparent" 
         />
       </div>
@@ -408,7 +411,7 @@ const getAuthToken = () => {
 const form = ref({
   manufacturer: '',
   socName: '',
-  releaseDate: '',
+  releaseYear: '',
   processNode: '',
   generation: '',
   familySubfamily: '',
@@ -455,10 +458,20 @@ watch(
     if (!data || !data.fpga || !data.fpga.fpga_id) return
 
     const fpga = data.fpga;
+    
+    
+    // Get release year: prefer SoC.release_date (extract year), fallback to fpga.release_year
+    let releaseYear = '';
+    if (fpga.SoC?.release_date) {
+      releaseYear = new Date(fpga.SoC.release_date).getFullYear().toString();
+    } else if (fpga.release_year) {
+      releaseYear = fpga.release_year.toString();
+    }
+    
     form.value = {
       manufacturer: data.manufacturerName || fpga.vendor || '',
       socName: fpga.SoC?.name || '',
-      releaseDate: fpga.SoC?.release_date?.split('T')[0] || '',
+      releaseYear: releaseYear,
       processNode: fpga.SoC?.process_node || '',
       generation: fpga.generation || '',
       familySubfamily: fpga.family_subfamily || '',
@@ -508,7 +521,7 @@ const preparePostRequestBody = () => ({
   soc: {
     soc_id: props.fpgaData.SoC?.soc_id || null,
     name: form.value.socName,
-    release_date: form.value.releaseDate || null,
+    release_date: form.value.releaseYear ? `${form.value.releaseYear}-01-01` : null,
       process_node: form.value.processNode ? parseFloat(form.value.processNode) : null
   },
   manufacturer: {

@@ -128,8 +128,13 @@ definePageMeta({
 import { isLogged } from '../lib/isLogged';
 import { ref, computed, onMounted, onActivated, watch, onUnmounted, defineAsyncComponent, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
+import { useCpus } from '~/composables/useApi';
+import { cpuColumns } from '~/lib/tableColumnConfig';
 // Lazy load the chart component
 const CPUsGraph = defineAsyncComponent(() => import('~/components/Graphs/CPUsGraph.client.vue'));
+
+// Use API composable
+const { data: cpusData, chartData: allCpusData, pagination, pending, error, fetchData, fetchChartData } = useCpus();
 
 const isLoggedIn = ref(false);
 const isDev = import.meta.env.DEV;
@@ -152,8 +157,7 @@ if (typeof window !== 'undefined') {
 const currentPage = ref(1);
 const pageSize = ref(100);
 
-// Fetch data for charts - load all available data
-const allCpusData = ref([]);
+// Chart data tracking
 const totalAvailableRecords = ref(null);
 const itemsPerPage = 1000; // Backend maximum per page
 let chartRefreshInterval = null;
@@ -197,15 +201,25 @@ async function fetchAllChartData(forceRefresh = false) {
       }
       
       const responseData = await response.json();
-      const fetchedData = responseData.data || [];
       
-      // Update total count
-      if (responseData.total !== undefined) {
-        totalAvailableRecords.value = responseData.total;
+      // Handle standardized response format: { success: true, data: [...], total: N, meta: {...} }
+      // Also handle legacy format for backward compatibility
+      let fetchedData, total
+      if (responseData.success !== undefined) {
+        // Standardized format
+        fetchedData = responseData.data || []
+        total = responseData.total || fetchedData.length
+      } else {
+        // Legacy format - backward compatibility
+        fetchedData = Array.isArray(responseData) ? responseData : (responseData.data || [])
+        total = responseData.total || fetchedData.length
       }
       
+      // Update total count
+      totalAvailableRecords.value = total
+      
       // Set chart data (already optimized format from server)
-      allCpusData.value = fetchedData;
+      allCpusData.value = fetchedData
       
       lastChartRefresh = Date.now();
       console.log('[CPU Chart] Chart data loaded:', allCpusData.value.length, 'records');
@@ -252,126 +266,41 @@ function setupChartRefresh() {
 
 // Chart data will be fetched in the main onMounted hook below
 
-// Fetch paginated data for table
-// Use $fetch directly for more reliable client-side fetching
-const cpusData = ref([]);
-const pagination = ref(null);
-const pending = ref(true);
-const error = ref(null);
+// Pagination state - composable provides data, pagination, pending, error
+// Keep currentPage and pageSize for local state management
 
 // Track if this is the first load to decide whether to bust cache
 let isFirstLoad = true;
 
-// Function to fetch data with retry logic
-async function fetchCpusData(forceRefresh = false, retryCount = 0) {
+// Function to fetch data using composable
+async function fetchCpusData(forceRefresh = false) {
   // Ensure we're on the client - use window check as fallback
   if (typeof window === 'undefined' || (typeof process !== 'undefined' && process.server)) {
     console.log('[CPU List] fetchCpusData called on server, skipping');
-    console.log('[CPU List] window:', typeof window !== 'undefined' ? 'defined' : 'undefined');
-    console.log('[CPU List] process.server:', typeof process !== 'undefined' ? process.server : 'process not defined');
     return;
   }
   
-  const maxRetries = 3;
-  
   try {
-    console.log(`[CPU List] fetchCpusData START - page=${currentPage.value}, limit=${pageSize.value}, forceRefresh=${forceRefresh}, retry=${retryCount}`);
+    console.log(`[CPU List] fetchCpusData START - page=${currentPage.value}, limit=${pageSize.value}, forceRefresh=${forceRefresh}`);
     
-    pending.value = true;
-    error.value = null;
+    // Use composable's fetchData method
+    await fetchData({
+      page: currentPage.value,
+      limit: pageSize.value,
+      forceRefresh: forceRefresh || !isFirstLoad
+    });
     
-    // Add cache-busting parameter on navigation (not first load) to ensure fresh data
-    const cacheBust = forceRefresh || !isFirstLoad ? `&refresh=true&_t=${Date.now()}` : '';
-      const url = `/api/cpus?page=${currentPage.value}&limit=${pageSize.value}${cacheBust}`;
-      console.log(`[CPU List] Fetch URL: ${url}`);
-      
-      // Use native fetch with timeout handling
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
-      
-      try {
-        console.log('[CPU List] Starting fetch request...');
-        const response = await fetch(url, {
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        
-        console.log('[CPU List] Fetch response received - status:', response.status, 'ok:', response.ok);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('[CPU List] Response not OK:', response.status, errorText);
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        console.log('[CPU List] Parsing JSON response...');
-        const responseData = await response.json();
-        console.log('[CPU List] JSON parsed successfully');
-      
-      console.log('[CPU List] Response received - Type:', typeof responseData, 'IsArray:', Array.isArray(responseData));
-      console.log('[CPU List] Response keys:', Object.keys(responseData));
-      console.log('[CPU List] Response sample:', JSON.stringify(responseData).substring(0, 200));
-      
-      // Handle response format - API may return { data, pagination } or array directly
-      const processedData = Array.isArray(responseData) ? responseData : (responseData.data || responseData);
-      const paginationData = responseData.pagination || null;
-      
-      console.log('[CPU List] After processing:');
-      console.log('[CPU List]   processedData type:', typeof processedData);
-      console.log('[CPU List]   processedData isArray:', Array.isArray(processedData));
-      console.log('[CPU List]   processedData length:', Array.isArray(processedData) ? processedData.length : 'N/A');
-      console.log('[CPU List]   paginationData:', paginationData);
-      
-      if (!Array.isArray(processedData)) {
-        console.error('[CPU List] ERROR: processedData is not an array!', processedData);
-        throw new Error('Response data is not in expected format');
-      }
-      
-      if (processedData.length === 0) {
-        console.warn('[CPU List] WARNING: processedData is empty array!');
-      }
-      
-      console.log('[CPU List] Setting cpusData.value to', processedData.length, 'items');
-      cpusData.value = processedData;
-      pagination.value = paginationData;
-      console.log('[CPU List] cpusData.value after assignment:', cpusData.value.length, 'items');
-      
-      // Update currentPage if pagination data indicates a different page
-      if (paginationData && paginationData.page) {
-        currentPage.value = paginationData.page;
-      }
-      
-      console.log('[CPU List] Setting pending.value = false');
-      pending.value = false;
-      isFirstLoad = false; // Mark that we've done the first load
-      
-      console.log('[CPU List] fetchCpusData COMPLETE');
-      console.log('[CPU List] Final state - cpusData.length:', cpusData.value.length);
-      console.log('[CPU List] Final state - pending:', pending.value);
-      console.log('[CPU List] Final state - error:', error.value);
-      console.log('[CPU List] Final state - pagination:', pagination.value);
-    } catch (fetchErr) {
-      clearTimeout(timeoutId);
-      if (fetchErr.name === 'AbortError') {
-        throw new Error('Request timeout: Server did not respond in time');
-      }
-      throw fetchErr;
+    // Update currentPage if pagination data indicates a different page
+    if (pagination.value && pagination.value.page) {
+      currentPage.value = pagination.value.page;
     }
+    
+    isFirstLoad = false; // Mark that we've done the first load
+    
+    console.log('[CPU List] fetchCpusData COMPLETE');
+    console.log('[CPU List] Final state - cpusData.length:', cpusData.value.length);
   } catch (err) {
     console.error('[CPU List] Fetch error:', err);
-    
-    // Retry logic for transient failures
-    if (retryCount < maxRetries && !forceRefresh && err.status !== 404) {
-      const delay = 1000 * (retryCount + 1); // Exponential backoff
-      console.log(`[CPU List] Retry ${retryCount + 1}/${maxRetries} after ${delay}ms...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      return fetchCpusData(forceRefresh, retryCount + 1);
-    }
-    
-    console.error('[CPU List] Error stack:', err.stack);
-    error.value = err;
-    pending.value = false;
-    cpusData.value = []; // Ensure empty array on error
     throw err; // Re-throw for caller to handle
   }
 }
