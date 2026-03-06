@@ -2,6 +2,10 @@ name: Trigger Deployment
 
 # This workflow triggers a webhook that your instance listens for
 # The instance will then pull the latest code and rebuild
+# 
+# Branch-specific deployments:
+# - Pushes to 'dev' branch → triggers staging deployment only
+# - Pushes to 'main' branch → triggers production deployment only
 
 on:
   push:
@@ -10,16 +14,81 @@ on:
       - dev
 
 jobs:
-  notify:
+  deploy-staging:
     runs-on: ubuntu-latest
-    
-    # Determine environment based on branch
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    # Only run on dev branch
+    if: github.ref == 'refs/heads/dev'
+    environment: staging
     
     steps:
-      - name: Trigger deployment webhook
+      - name: Trigger staging deployment webhook
         run: |
-          ENVIRONMENT="${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}"
+          ENVIRONMENT="staging"
+          WEBHOOK_URL="${{ secrets.WEBHOOK_URL }}"
+          WEBHOOK_SECRET="${{ secrets.WEBHOOK_SECRET }}"
+          
+          # Trim whitespace from secrets (GitHub secrets can have trailing newlines/spaces)
+          WEBHOOK_URL=$(echo "$WEBHOOK_URL" | tr -d '\r\n' | xargs)
+          WEBHOOK_SECRET=$(echo "$WEBHOOK_SECRET" | tr -d '\r\n' | xargs)
+          
+          # Validate secrets are configured
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "Error: WEBHOOK_URL secret is not configured for $ENVIRONMENT environment"
+            echo "Please configure it in: Repository Settings → Environments → $ENVIRONMENT → Secrets"
+            exit 1
+          fi
+          
+          if [ -z "$WEBHOOK_SECRET" ]; then
+            echo "Error: WEBHOOK_SECRET secret is not configured for $ENVIRONMENT environment"
+            echo "Please configure it in: Repository Settings → Environments → $ENVIRONMENT → Secrets"
+            exit 1
+          fi
+          
+          # Validate URL format
+          if [[ ! "$WEBHOOK_URL" =~ ^https?:// ]]; then
+            echo "Error: WEBHOOK_URL must start with http:// or https://"
+            echo "Current value starts with: ${WEBHOOK_URL:0:20}..."
+            echo "Please check the URL format in: Repository Settings → Environments → $ENVIRONMENT → Secrets"
+            exit 1
+          fi
+          
+          echo "Triggering deployment webhook for $ENVIRONMENT..."
+          echo "Webhook URL: ${WEBHOOK_URL:0:30}..." # Show first 30 chars only for security
+          
+          # Create payload
+          PAYLOAD=$(cat <<EOF
+          {
+            "ref": "${{ github.ref }}",
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}",
+            "environment": "$ENVIRONMENT",
+            "repository": "${{ github.repository }}"
+          }
+          EOF
+          )
+          
+          # Send webhook with secret for authentication
+          curl -X POST "$WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -H "X-GitHub-Event: push" \
+            -H "X-Webhook-Secret: $WEBHOOK_SECRET" \
+            -d "$PAYLOAD" \
+            --fail --show-error \
+            -w "\nHTTP Status: %{http_code}\n" \
+            --max-time 30
+          
+          echo "Deployment webhook triggered successfully for $ENVIRONMENT"
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    # Only run on main branch
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+      - name: Trigger production deployment webhook
+        run: |
+          ENVIRONMENT="production"
           WEBHOOK_URL="${{ secrets.WEBHOOK_URL }}"
           WEBHOOK_SECRET="${{ secrets.WEBHOOK_SECRET }}"
           

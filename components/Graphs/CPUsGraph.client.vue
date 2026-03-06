@@ -269,6 +269,42 @@ const handleYAxisChange = (option) => {
   yAxis.value = option;
 };
 
+// Helper: Safely convert release_date to timestamp for chart use
+const safeDateToTimestamp = (value) => {
+  if (value === null || value === undefined) return null;
+  
+  // If it's already a number, check if it looks like a year (1900-2100)
+  if (typeof value === 'number') {
+    const numValue = Math.floor(value);
+    // If it's a reasonable year, convert to proper date string first
+    if (numValue >= 1900 && numValue <= 2100) {
+      return Date.parse(`${numValue}-01-01`);
+    }
+    // If it's a timestamp (large number), return as-is
+    if (numValue > 946684800000) { // Year 2000 in milliseconds
+      return numValue;
+    }
+    // Otherwise, try to parse as date string
+    return Date.parse(String(value));
+  }
+  
+  // If it's a string, parse it
+  if (typeof value === 'string') {
+    // Check if it's just a 4-digit year
+    if (/^\d{4}$/.test(value.trim())) {
+      return Date.parse(`${value}-01-01`);
+    }
+    return Date.parse(value);
+  }
+  
+  // If it's a Date object, get timestamp
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+  
+  return null;
+};
+
 // Utility: Get the proper value from a CPU data item based on the axis source.
 // Handles both nested structure (from regular API) and flattened structure (from chart-data endpoint)
 const getAxisData = (item, axis) => {
@@ -347,13 +383,13 @@ const chartOptions = computed(() => {
   // Apply adaptive rendering based on data density
   if (dataSize > 1000 && currentZoomLevel.value.xMin !== null) {
     const zoom = currentZoomLevel.value;
-    const visibleData = dataToProcess.filter(item => {
+      const visibleData = dataToProcess.filter(item => {
       const xValue = getAxisData(item, xAxis.value);
       const yValue = getAxisData(item, yAxis.value);
       if (xValue === null || yValue === null) return false;
       
-      const x = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
-      const y = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
+      const x = xAxis.value.value === 'release_date' ? safeDateToTimestamp(xValue) : xValue;
+      const y = yAxis.value.value === 'release_date' ? safeDateToTimestamp(yValue) : yValue;
       return x >= zoom.xMin && x <= zoom.xMax && 
              y >= zoom.yMin && y <= zoom.yMax;
     });
@@ -367,8 +403,8 @@ const chartOptions = computed(() => {
           const xValue = getAxisData(item, xAxis.value);
           const yValue = getAxisData(item, yAxis.value);
           return {
-            x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
-            y: yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue,
+            x: xAxis.value.value === 'release_date' ? safeDateToTimestamp(xValue) : xValue,
+            y: yAxis.value.value === 'release_date' ? safeDateToTimestamp(yValue) : yValue,
             data: item
           };
         }).filter(p => p.x !== null && p.y !== null && !isNaN(p.x) && !isNaN(p.y));
@@ -381,8 +417,8 @@ const chartOptions = computed(() => {
           const xValue = getAxisData(item, xAxis.value);
           const yValue = getAxisData(item, yAxis.value);
           return {
-            x: xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue,
-            y: yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue,
+            x: xAxis.value.value === 'release_date' ? safeDateToTimestamp(xValue) : xValue,
+            y: yAxis.value.value === 'release_date' ? safeDateToTimestamp(yValue) : yValue,
             data: item
           };
         }).filter(p => p.x !== null && p.y !== null && !isNaN(p.x) && !isNaN(p.y));
@@ -407,15 +443,30 @@ const chartOptions = computed(() => {
   let series = [];
 
   // Group the CPU data points by the selected groupBy field.
+  let skippedCount = 0;
+  let skippedReasons = { xNull: 0, yNull: 0, categoryNull: 0, xNaN: 0, yNaN: 0 };
   groupedData = dataToProcess.reduce((acc, item) => {
     const xValue = getAxisData(item, xAxis.value);
     const yValue = getAxisData(item, yAxis.value);
     const colorCategory = getAxisData(item, groupBy.value);
 
-    if (xValue === null || yValue === null || colorCategory === null) return acc;
+    if (xValue === null || yValue === null || colorCategory === null) {
+      skippedCount++;
+      if (xValue === null) skippedReasons.xNull++;
+      if (yValue === null) skippedReasons.yNull++;
+      if (colorCategory === null) skippedReasons.categoryNull++;
+      return acc;
+    }
 
-    const xFormattedValue = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
-    const yFormattedValue = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
+    const xFormattedValue = xAxis.value.value === 'release_date' ? safeDateToTimestamp(xValue) : xValue;
+    const yFormattedValue = yAxis.value.value === 'release_date' ? safeDateToTimestamp(yValue) : yValue;
+    
+    if (isNaN(xFormattedValue) || isNaN(yFormattedValue) || xFormattedValue === null || yFormattedValue === null) {
+      skippedCount++;
+      if (isNaN(xFormattedValue) || xFormattedValue === null) skippedReasons.xNaN++;
+      if (isNaN(yFormattedValue) || yFormattedValue === null) skippedReasons.yNaN++;
+      return acc;
+    }
     const point = {
       x: xFormattedValue,
       y: yFormattedValue,
@@ -445,7 +496,7 @@ const chartOptions = computed(() => {
   if (series.length === 0 && dataToProcess.length > 0) {
     console.warn('[CPUsGraph] No valid data points after filtering, creating placeholder series');
     // Try to create at least one point from the first valid item
-    const firstItem = dataToProcess.find(item => {
+      const firstItem = dataToProcess.find(item => {
       const xValue = getAxisData(item, xAxis.value);
       const yValue = getAxisData(item, yAxis.value);
       return xValue !== null && yValue !== null;
@@ -453,8 +504,8 @@ const chartOptions = computed(() => {
     if (firstItem) {
       const xValue = getAxisData(firstItem, xAxis.value);
       const yValue = getAxisData(firstItem, yAxis.value);
-      const xFormattedValue = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
-      const yFormattedValue = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
+      const xFormattedValue = xAxis.value.value === 'release_date' ? safeDateToTimestamp(xValue) : xValue;
+      const yFormattedValue = yAxis.value.value === 'release_date' ? safeDateToTimestamp(yValue) : yValue;
       series = [{
         name: 'Data',
         data: [{
@@ -476,8 +527,8 @@ const chartOptions = computed(() => {
       const xValue = getAxisData(item, xAxis.value);
       const yValue = getAxisData(item, yAxis.value);
       if (xValue === null || yValue === null) return null;
-      const xFormattedValue = xAxis.value.value === 'release_date' ? Date.parse(xValue) : xValue;
-      const yFormattedValue = yAxis.value.value === 'release_date' ? Date.parse(yValue) : yValue;
+      const xFormattedValue = xAxis.value.value === 'release_date' ? safeDateToTimestamp(xValue) : xValue;
+      const yFormattedValue = yAxis.value.value === 'release_date' ? safeDateToTimestamp(yValue) : yValue;
       return {
         x: xFormattedValue,
         y: yFormattedValue,
