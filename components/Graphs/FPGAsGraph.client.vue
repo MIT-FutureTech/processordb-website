@@ -528,6 +528,32 @@ const chartOptions = computed(() => {
       }
     }
     
+    // PERFORMANCE FIX: Calculate unique categories ONCE instead of recalculating in getColorForCategory
+    // This reduces complexity from O(N²) to O(N)
+    const groupByValue = groupBy.value.value;
+    const colorPalette = seabornColors[groupByValue] || seabornColors.default;
+    const categories = [...new Set(
+      dataToProcess
+        .map(item => getAxisData(item, groupBy.value))
+        .filter(Boolean)
+    )];
+    
+    // Create color map: category -> color (calculated once)
+    const colorMap = new Map();
+    categories.forEach((category, index) => {
+      colorMap.set(category, colorPalette[index % colorPalette.length]);
+    });
+    
+    // Fast color lookup function (no recalculation)
+    const getColorForCategoryFast = (colorCategory) => {
+      if (!colorCategory) return 'gray';
+      // Special handling for process_node (numeric gradient) - use original function
+      if (groupBy.value?.value === 'process_node') {
+        return seabornColors.processNode(colorCategory);
+      }
+      return colorMap.get(colorCategory) || 'gray';
+    };
+    
     groupedData = dataToProcess.reduce((acc, item, index) => {
       const xValue = getAxisData(item, xAxis.value);
       let yValue = getAxisData(item, yAxis.value);
@@ -555,7 +581,7 @@ const chartOptions = computed(() => {
         x: xFormattedValue,
         y: yFormattedValue,
         name: `${item.generation || '-'} ${item.family_subfamily || '-'} ${item.model || '-'}`,
-        color: getColorForCategory(colorCategory),
+        color: getColorForCategoryFast(colorCategory),
         data: item,
       };
 
@@ -571,7 +597,7 @@ const chartOptions = computed(() => {
       .map(category => ({
       name: category,
       data: groupedData[category],
-      color: getColorForCategory(category),
+      color: getColorForCategoryFast(category),
       marker: { symbol: 'circle' },
       opacity: dataSize > 5000 ? 0.5 : 0.8,
     }));

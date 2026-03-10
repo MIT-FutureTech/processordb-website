@@ -338,7 +338,15 @@ const seabornColors = {
 };
 
 // Determine the color for a given grouping category.
+// #region agent log
+let getColorForCategoryCallCount = 0;
+let getColorForCategoryTotalTime = 0;
+// #endregion
 const getColorForCategory = (colorCategory) => {
+  // #region agent log
+  const startTime = performance.now();
+  getColorForCategoryCallCount++;
+  // #endregion
   if (!colorCategory) return 'gray';
   
   const groupByValue = groupBy.value.value;
@@ -352,6 +360,10 @@ const getColorForCategory = (colorCategory) => {
   )];
   
   const colorIndex = categories.indexOf(colorCategory) % colorPalette.length;
+  // #region agent log
+  const endTime = performance.now();
+  getColorForCategoryTotalTime += (endTime - startTime);
+  // #endregion
   return colorPalette[colorIndex];
 };
 
@@ -363,6 +375,9 @@ const currentZoomLevel = ref({ xMin: null, xMax: null, yMin: null, yMax: null })
 const chartInstance = ref(null);
 
 const chartOptions = computed(() => {
+  // #region agent log
+  const computationStartTime = performance.now();
+  // #endregion
   // Handle undefined or empty data
   if (!props.data || !props.data.length) {
     console.log('[CPUsGraph] No data available, returning empty chart config');
@@ -374,6 +389,10 @@ const chartOptions = computed(() => {
   }
   
   console.log('[CPUsGraph] Computing chartOptions with', props.data.length, 'data points');
+  // #region agent log
+  getColorForCategoryCallCount = 0;
+  getColorForCategoryTotalTime = 0;
+  // #endregion
   
   // Use all data - Highcharts turbo mode and data grouping handle performance
   let dataToProcess = props.data;
@@ -432,12 +451,40 @@ const chartOptions = computed(() => {
   }
   
   // Create cache key based on data length, axis selections, and groupBy
-  const cacheKey = `${dataSize}-${xAxis.value?.value || 'null'}-${yAxis.value?.value || 'null'}-${groupBy.value?.value || 'null'}`
+  // Include processed data length in cache key since LOD may reduce it
+  const cacheKey = `${dataToProcess.length}-${xAxis.value?.value || 'null'}-${yAxis.value?.value || 'null'}-${groupBy.value?.value || 'null'}`
+  
+  // #region agent log
+  const cacheHit = chartDataCache.value.has(cacheKey);
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CPUsGraph.client.vue:437',message:'Cache check',data:{cacheHit,cacheKey,dataSize,dataToProcessLength:dataToProcess.length},timestamp:Date.now(),runId:'initial',hypothesisId:'D'})}).catch(()=>{});
+  // #endregion
   
   // Check if we have cached data
   if (chartDataCache.value.has(cacheKey)) {
     return chartDataCache.value.get(cacheKey)
   }
+
+  // PERFORMANCE FIX: Calculate unique categories ONCE instead of recalculating in getColorForCategory
+  // This reduces complexity from O(N²) to O(N)
+  const groupByValue = groupBy.value.value;
+  const colorPalette = seabornColors[groupByValue] || seabornColors.default;
+  const categories = [...new Set(
+    dataToProcess
+      .map(item => getAxisData(item, groupBy.value))
+      .filter(Boolean)
+  )];
+  
+  // Create color map: category -> color (calculated once)
+  const colorMap = new Map();
+  categories.forEach((category, index) => {
+    colorMap.set(category, colorPalette[index % colorPalette.length]);
+  });
+  
+  // Fast color lookup function (no recalculation)
+  const getColorForCategoryFast = (colorCategory) => {
+    if (!colorCategory) return 'gray';
+    return colorMap.get(colorCategory) || 'gray';
+  };
 
   let groupedData = {};
   let series = [];
@@ -445,6 +492,9 @@ const chartOptions = computed(() => {
   // Group the CPU data points by the selected groupBy field.
   let skippedCount = 0;
   let skippedReasons = { xNull: 0, yNull: 0, categoryNull: 0, xNaN: 0, yNaN: 0 };
+  // #region agent log
+  const reduceStartTime = performance.now();
+  // #endregion
   groupedData = dataToProcess.reduce((acc, item) => {
     const xValue = getAxisData(item, xAxis.value);
     const yValue = getAxisData(item, yAxis.value);
@@ -471,7 +521,7 @@ const chartOptions = computed(() => {
       x: xFormattedValue,
       y: yFormattedValue,
       name: `${item.family || '-'} ${item.code_name || '-'} ${item.model || '-'}`,
-      color: getColorForCategory(colorCategory),
+      color: getColorForCategoryFast(colorCategory),
       data: item,
     };
 
@@ -481,13 +531,18 @@ const chartOptions = computed(() => {
     acc[colorCategory].push(point);
     return acc;
   }, {});
+  // #region agent log
+  const reduceEndTime = performance.now();
+  const reduceTime = reduceEndTime - reduceStartTime;
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CPUsGraph.client.vue:483',message:'Reduce operation complete',data:{reduceTime,dataToProcessLength:dataToProcess.length,getColorForCategoryCallCount,getColorForCategoryTotalTime,skippedCount},timestamp:Date.now(),runId:'initial',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
 
   series = Object.keys(groupedData)
     .sort((a, b) => groupedData[b].length - groupedData[a].length)
     .map(category => ({
       name: category,
       data: groupedData[category],
-      color: getColorForCategory(category),
+      color: getColorForCategoryFast(category),
       marker: { symbol: 'circle' },
       opacity: dataSize > 5000 ? 0.5 : 0.8,
     }));
@@ -729,6 +784,11 @@ const chartOptions = computed(() => {
   }
   
   console.log('[CPUsGraph] Returning chartConfig with', series.length, 'series, heatmapSeries:', !!heatmapSeries);
+  // #region agent log
+  const computationEndTime = performance.now();
+  const totalComputationTime = computationEndTime - computationStartTime;
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CPUsGraph.client.vue:732',message:'ChartOptions computation complete',data:{totalComputationTime,dataSize,dataToProcessLength:dataToProcess.length,seriesCount:series.length,getColorForCategoryCallCount,getColorForCategoryTotalTime,getColorForCategoryAvgTime:getColorForCategoryCallCount>0?getColorForCategoryTotalTime/getColorForCategoryCallCount:0},timestamp:Date.now(),runId:'initial',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   return chartConfig
 });
 </script>

@@ -372,9 +372,6 @@ const chartOptions = computed(() => {
   
   console.log('[InteractiveGraph] Computing chartOptions with', props.data.length, 'data points');
 
-  // Clear color cache when groupBy changes to force recalculation
-  categoryColorMap.value.clear();
-
   // Use all data - Highcharts turbo mode and data grouping handle performance
   let dataToProcess = props.data;
   const dataSize = props.data.length;
@@ -386,6 +383,28 @@ const chartOptions = computed(() => {
   if (chartDataCache.value.has(cacheKey)) {
     return chartDataCache.value.get(cacheKey)
   }
+  
+  // PERFORMANCE FIX: Calculate unique categories ONCE instead of recalculating in getColorForCategory
+  // This reduces complexity from O(N²) to O(N)
+  const groupByValue = groupBy.value.value;
+  const colorPalette = seabornColors[groupByValue] || seabornColors.default;
+  const categories = [...new Set(
+    dataToProcess
+      .map(item => getAxisData(item, groupBy.value))
+      .filter(Boolean)
+  )];
+  
+  // Create color map: category -> color (calculated once)
+  const colorMap = new Map();
+  categories.forEach((category, index) => {
+    colorMap.set(category, colorPalette[index % colorPalette.length]);
+  });
+  
+  // Fast color lookup function (no recalculation)
+  const getColorForCategoryFast = (colorCategory) => {
+    if (!colorCategory) return 'gray';
+    return colorMap.get(colorCategory) || 'gray';
+  };
   
   // Phase 2: Level-of-Detail (LOD) Rendering
   if (dataSize > 1000 && currentZoomLevel.value.xMin !== null) {
@@ -453,7 +472,7 @@ const chartOptions = computed(() => {
       x: xFormattedValue,
       y: yFormattedValue,
       name: item.soc_name || item.name || `SoC ${item.soc_id}`,
-      color: getColorForCategory(colorCategory),
+      color: getColorForCategoryFast(colorCategory),
       data: item,
     };
 
@@ -469,7 +488,7 @@ const chartOptions = computed(() => {
     .map(category => ({
       name: category,
       data: groupedData[category],
-      color: getColorForCategory(category),
+      color: getColorForCategoryFast(category),
       marker: { symbol: 'circle' },
       opacity: dataSize > 5000 ? 0.5 : 0.8,
     }));

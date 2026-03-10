@@ -288,6 +288,9 @@ const formatYear = (date) => {
 const uniqueId = (row) => {
   const socClass = props.className.toLowerCase();
   
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PrivateTable.vue:uniqueId',message:'uniqueId called',data:{className:props.className,socClass:socClass,hasPackageId:!!row.package_id,packageId:row.package_id},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   
   switch (socClass) {
     case 'soc':
@@ -307,6 +310,11 @@ const uniqueId = (row) => {
     case 'aiprocessors':
     case 'ai-processors':
       return row.ai_processor_id || '';
+    case 'package':
+    case 'packages':
+      // For Package, use package_id for linking to detail page
+      // Multiple rows may share same package_id (one per component), which is fine for detail links
+      return row.package_id || '';
     default:
       return '';
   }
@@ -321,6 +329,9 @@ const getDetailPath = (row) => {
     basePath = 'ai-processor';
   }
   
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/a2e5b876-28c3-4b64-9549-c4e9792dd0b0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PrivateTable.vue:getDetailPath',message:'getDetailPath called',data:{className:props.className,basePath:basePath,id:id,fullPath:`/${basePath}/${id}`},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   
   const fullPath = `/${basePath}/${id}`;
   return fullPath;
@@ -488,6 +499,18 @@ const flattenedData = computed(() => {
       
       return flattened;
     });
+  } else if (props.className === 'package' || props.className === 'packages') {
+    // Handle Package data - already flattened from API
+    if (!Array.isArray(props.data)) {
+      console.error('PrivateTable: props.data is not an array:', props.data);
+      return [];
+    }
+    return props.data.map((item, index) => ({
+      ...item,
+      _rowId: `package_${item.package_id}_${item.component_type}_${item.component_id}_${index}`,
+      // component_name, manufacturer, and component_type_display should come from API
+      formatted_component_id: item.formatted_component_id || `${item.component_type}-${item.component_id}`
+    }));
   } else if (props.className === 'soc' || props.className === 'socs') {
     // Handle SOC data with nested processors array
     // Add safety check for data type
@@ -636,7 +659,13 @@ const flattenedData = computed(() => {
 })
 
 // --- Default Columns (Visible by Default) ---
-const defaultColumnsOrder = props.className === 'fpgas' ? [
+const defaultColumnsOrder = props.className === 'package' || props.className === 'packages' ? [
+  { label: 'Package ID', value: 'package_id' },
+  { label: 'Component Name', value: 'component_name' },
+  { label: 'Manufacturer', value: 'manufacturer' },
+  { label: 'Component Type', value: 'component_type_display' },
+  { label: 'Component Count', value: 'component_count' }
+] : props.className === 'fpgas' ? [
   { label: 'Vendor', value: 'vendor' },
   { label: 'Product Name', value: 'product_name' },
   { label: 'Family SubFamily', value: 'family_subfamily' },
@@ -669,6 +698,8 @@ const defaultColumnsOrderKeys = defaultColumnsOrder.map(col => col.value)
 
 // --- Default Hidden Keys ---
 const defaultHiddenKeys = {
+  package: ['package_component_id', 'createdAt', 'updatedAt', 'component_id', 'component_type', 'formatted_component_id'],
+  packages: ['package_component_id', 'createdAt', 'updatedAt', 'component_id', 'component_type', 'formatted_component_id'],
   cpu: ['cpu_id', 'createdAt', 'updatedAt', 'soc_id', 'SoC', 'notes'],
   gpu: ['gpu_id', 'createdAt', 'updatedAt', 'soc_id', 'SoC', 'cores', 'notes',
     'l0_cache', 'l1_cache', 'l2_cache', 'l3_cache', 'fp16', 'fp32', 'fp64',

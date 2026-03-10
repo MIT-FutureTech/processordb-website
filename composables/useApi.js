@@ -178,6 +178,13 @@ export function useSocs() {
 }
 
 /**
+ * Package API composable
+ */
+export function usePackages() {
+  return createApiComposable('packages')
+}
+
+/**
  * Manufacturer API composable
  */
 export function useManufacturers() {

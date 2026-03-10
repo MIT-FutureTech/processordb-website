@@ -715,6 +715,7 @@ const links = ref([
   { text: 'GPUs', to: '/gpu/list', icon: 'bi-gpu-card' },
   { text: 'FPGAs', to: '/fpga/list', icon: 'gi-logic-gate-xor' },
   { text: 'SoCs', to: '/soc/list', icon: 'gi-circuitry' },
+  { text: 'PKGs', to: '/package/list', icon: 'gi-circuitry' },
   { text: 'AI', to: '/ai-processor/list', icon: 'bi-cpu' },
   // { text: 'Economics', to: '/economics', icon: 'md-attachmoney' },
   // { text: 'Performances', to: '/performances', icon: 'gi-chart' },
